@@ -1249,7 +1249,7 @@ function renderHUD(){
   const m = globalMult();
   setTxt(cpsLine, fmt(perSec()) + " / sec &nbsp;·&nbsp; ×" + (m<100 ? m.toFixed(1) : fmt(m)) +
     (critChance()>0 ? " &nbsp;·&nbsp; crit " + Math.round(critChance()*100) + "%" : ""));
-  setCls($("#prestigeBtn"), "on", S.totalEarned >= PRESTIGE_MIN || S.rebirths > 0);
+  setCls($("#prestigeBtn"), "on", true);
 }
 function renderPet(){
   const p = currentPet();
