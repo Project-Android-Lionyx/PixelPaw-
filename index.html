@@ -132,6 +132,18 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   font-size:9px;letter-spacing:.5px;display:none;animation:bob 2.2s ease-in-out infinite;z-index:4;color:#2B2333;
 }
 #bubble.on{display:block}
+#greetBubble{
+  position:absolute;left:50%;top:8%;transform:translateX(-50%) scale(.8);background:var(--card);
+  border:3px solid var(--ink);border-radius:14px;box-shadow:var(--pop-sm);padding:8px 12px;
+  font-size:8.5px;line-height:1.5;max-width:240px;text-align:center;opacity:0;z-index:5;
+}
+#greetBubble.on{animation:greetPop 5s ease-in-out forwards}
+@keyframes greetPop{
+  0%{opacity:0;transform:translateX(-50%) scale(.8)}
+  10%{opacity:1;transform:translateX(-50%) scale(1)}
+  85%{opacity:1;transform:translateX(-50%) scale(1)}
+  100%{opacity:0;transform:translateX(-50%) scale(.9)}
+}
 @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
 
 /* ---------- BANNIÈRE ---------- */
@@ -224,7 +236,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 .tab .dot.on{display:block}
 
 /* ---------- MODALES ---------- */
-#veil{position:absolute;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+#veil{position:absolute;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;padding:20px;z-index:95}
 #veil.on{display:flex}
 .modal{
   background:var(--cream);border:4px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 rgba(0,0,0,.35);
@@ -510,6 +522,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
     <div id="tapHint">Tape l'animal</div>
     <div id="propsStrip"></div>
     <button id="bubble">🎁 Bonus · +50 💎</button>
+    <div id="greetBubble"></div>
     <div id="fx"></div>
   </main>
 
@@ -602,7 +615,6 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
     <div id="homeTop">
       <div id="homeTitle">PIXEL PAW<br>IDLE</div>
       <div id="homeVersion">v?</div>
-      <div id="homeGreet"></div>
     </div>
     <div id="homeBottom">
       <div id="homeBarWrap"><div id="homeBar"></div></div>
@@ -644,7 +656,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.0.0";
+const VERSION = "3.0.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1846,6 +1858,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.0.1", lines:["Salutation en bulle sur l'animal (5s) au lieu d'un texte sur l'accueil","Nouveautés : la modale s'affiche bien par-dessus l'écran d'accueil"]},
   {v:"3.0.0", lines:["Nouvel écran d'accueil : chargement, fond animaux, salutations, journal des nouveautés"]},
   {v:"2.9.4", lines:["Roue : les logos des lots apparaissent sur la roue elle-même","Renaissance : la liste ne remonte plus en haut après un achat"]},
   {v:"2.9.3", lines:["Le menu reste ouvert à chaque lancement, le replier ne dure que la session en cours"]},
@@ -3164,7 +3177,6 @@ function buildHomeBg(){
 function startHome(){
   buildHomeBg();
   document.getElementById("homeVersion").textContent = "v"+VERSION;
-  document.getElementById("homeGreet").textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
   const bar = document.getElementById("homeBar"), txt = document.getElementById("homeBarTxt");
   let p = 0;
   const t = setInterval(()=>{
@@ -3181,7 +3193,13 @@ function startHome(){
     sfx("good");
     const h = document.getElementById("home");
     h.classList.add("leaving");
-    setTimeout(()=>{ h.style.display = "none"; if(S.volBgm > 0) startBgm(); }, 420);
+    setTimeout(()=>{
+      h.style.display = "none";
+      if(S.volBgm > 0) startBgm();
+      const gb = document.getElementById("greetBubble");
+      gb.textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
+      gb.classList.remove("on"); void gb.offsetWidth; gb.classList.add("on");
+    }, 420);
   });
   document.getElementById("homeNews").addEventListener("click", ()=>{
     let html = '<h2>Nouveautés</h2>';
