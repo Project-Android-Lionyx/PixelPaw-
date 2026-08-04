@@ -568,7 +568,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.7.0";
+const VERSION = "2.7.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -817,7 +817,7 @@ const PRESTIGE_UPS = [
   {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:6, rate:1.65, max:20},
   {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:6, rate:1.65, max:15},
   {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:4, rate:1.5,  max:25},
-  {id:"g10",name:"Insomnie dorée",     desc:"+30 min de limite hors-ligne", base:8, rate:1.8,  max:6}
+  {id:"g10",name:"Insomnie dorée",     desc:"+1 h de limite hors-ligne",    base:8, rate:1.55, max:12}
 ];
 /* CORRECTIF v2.3 : courbes adoucies (le seuil d'entrée a baissé, les premières
    Renaissances rapportent moins de Pattes Célestes qu'avant — sans ça, tout
@@ -831,13 +831,13 @@ const OFFLINE_BASE = 3600;              // 1 h de départ
 const OFFLINE_COIN_STEPS = [            // +30 min chacun, jusqu'à 4 h
   5e4, 6e5, 7e6, 9e7, 12e8, 16e9
 ];
-const OFFLINE_GEM_PACKS = [             // jusqu'à 20h en plus, pour un total de 24h avec la base + Renaissance
-  {id:"o2h", name:"Pack 2 h",  add:7200,  gems:300},
-  {id:"o4h", name:"Pack 4 h",  add:14400, gems:700},
-  {id:"o6h", name:"Pack 6 h",  add:21600, gems:1100},
-  {id:"o8h", name:"Pack 8 h",  add:28800, gems:1600}
+const OFFLINE_GEM_PACKS = [              // 4 packs distincts, jusqu'à 12h en argent réel/gemmes
+  {id:"o1h", name:"Pack 1 h",  add:3600,  gems:180},
+  {id:"o2h", name:"Pack 2 h",  add:7200,  gems:320},
+  {id:"o4h", name:"Pack 4 h",  add:14400, gems:650},
+  {id:"o5h", name:"Pack 5 h",  add:18000, gems:800}
 ];
-const OFFLINE_MAX = 24*3600;             // 1h base + jusqu'à 3h Renaissance + jusqu'à 20h en gemmes/€
+const OFFLINE_MAX = 24*3600;             // 1h base + jusqu'à 12h Renaissance (pattes célestes) + jusqu'à 12h gemmes/€ = 24h + marge
 const OFFLINE_RATE = 0.5;               // 50 % du taux passif
 
 const TIME_WARP = [
@@ -1041,7 +1041,7 @@ function perSec(withBoost){
   return Math.floor(s);
 }
 function offlineCap(){
-  let cap = OFFLINE_BASE + pLvl("g10")*1800;
+  let cap = OFFLINE_BASE + pLvl("g10")*3600;
   OFFLINE_GEM_PACKS.forEach(p=>{ if(S.offGemPacks[p.id]) cap += p.add; });
   return Math.min(OFFLINE_MAX, cap);
 }
@@ -1726,6 +1726,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.7.1", lines:["Hors-ligne rééquilibré : 12h max via Pattes Célestes, 12h max via 4 packs en gemmes"]},
   {v:"2.7.0", lines:["Hors-ligne : plafond porté à 24h (base + Renaissance + gemmes)","Série de connexion quotidienne avec succès à 7/14/30 jours"]},
   {v:"2.6.1", lines:["Extension hors-ligne : passe des pièces (perdue à chaque Renaissance) à l'arbre permanent"]},
   {v:"2.6.0", lines:["Cochon, Lama, Singe : 3 nouveaux animaux premium","Renaissance rééquilibrée pour une vraie partie longue (20T) · bouton toujours visible"]},
