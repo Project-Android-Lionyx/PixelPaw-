@@ -582,7 +582,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.9.2";
+const VERSION = "2.9.3";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1782,6 +1782,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.9.3", lines:["Le menu reste ouvert à chaque lancement, le replier ne dure que la session en cours"]},
   {v:"2.9.2", lines:["Le nom de l'animal disparaît aussi avec l'étiquette de rareté, pas juste elle seule"]},
   {v:"2.9.1", lines:["Roue de la chance : bouton ⓘ affichant les vrais % et effets de chaque lot"]},
   {v:"2.9.0", lines:["Cochon remplace Poussin au départ · Cochon Doré (premium) renommé pour éviter le doublon","Renaissance : garde l'animal actif s'il est encore possédé · étiquette de rareté animée"]},
@@ -3082,7 +3083,10 @@ renderHUD();
 if(S.questDate !== today()) rollQuests();
 refreshLists();
 tickBanner();
-if(S.zen) setCls(app,"zen",true);
+/* Le menu s'ouvre toujours au démarrage — le replier reste possible pendant
+   la session (double-tape sur l'animal) mais ne doit pas persister d'une
+   ouverture d'app à l'autre : un testeur ne doit jamais tomber sur un menu
+   caché sans savoir pourquoi. */
 resume();
 if(!S.starter) showStarter();
 if(S.notifs) scheduleNotifs();
