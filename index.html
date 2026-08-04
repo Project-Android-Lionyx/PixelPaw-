@@ -567,7 +567,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.6.0";
+const VERSION = "2.6.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -815,7 +815,8 @@ const PRESTIGE_UPS = [
   {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:5, rate:1.7,  max:10},
   {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:6, rate:1.65, max:20},
   {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:6, rate:1.65, max:15},
-  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:4, rate:1.5,  max:25}
+  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:4, rate:1.5,  max:25},
+  {id:"g10",name:"Insomnie dorée",     desc:"+30 min de limite hors-ligne", base:8, rate:1.8,  max:6}
 ];
 /* CORRECTIF v2.3 : courbes adoucies (le seuil d'entrée a baissé, les premières
    Renaissances rapportent moins de Pattes Célestes qu'avant — sans ça, tout
@@ -1038,7 +1039,7 @@ function perSec(withBoost){
   return Math.floor(s);
 }
 function offlineCap(){
-  let cap = OFFLINE_BASE + S.offCoinSteps*1800;
+  let cap = OFFLINE_BASE + pLvl("g10")*1800;
   OFFLINE_GEM_PACKS.forEach(p=>{ if(S.offGemPacks[p.id]) cap += p.add; });
   return Math.min(OFFLINE_MAX, cap);
 }
@@ -1323,11 +1324,7 @@ function buildLists(){
     r._name.textContent = u.name; $("#listIdle").appendChild(r); R.idle.push({u,r});
   });
 
-  /* extension hors-ligne en pièces */
-  const oc = makeRow({emoji:"💤", onClick:buyOfflineCoin});
-  oc._name.textContent = "Étendre de 30 min";
-  $("#listOffline").appendChild(oc); R.off.push({type:"coin", r:oc});
-  /* packs en gemmes */
+  /* packs en gemmes (l'extension en pièces est passée dans l'arbre de Renaissance) */
   OFFLINE_GEM_PACKS.forEach(p=>{
     const r = makeRow({emoji:"🌙", btnClass:"gemBtn", onClick:()=>buyOfflinePack(p)});
     r._name.textContent = p.name; $("#listOffline").appendChild(r); R.off.push({type:"gem", p, r});
@@ -1441,15 +1438,9 @@ function refreshLists(){
   R.idle.forEach(o=>upd(o," / sec"));
 
   R.off.forEach(o=>{
-    if(o.type === "coin"){
-      const done = S.offCoinSteps >= OFFLINE_COIN_STEPS.length;
-      setTxt(o.r._sub, "Limite actuelle : "+fmtTime(offlineCap()));
-      if(done){ setTxt(o.r._btn,"MAX"); setDis(o.r._btn,true); }
-      else { const c = Math.floor(OFFLINE_COIN_STEPS[S.offCoinSteps]*costMult());
-             setTxt(o.r._btn,"💰<br>"+fmt(c)); setDis(o.r._btn, S.coins < c); }
-    }else{
+    {
       const own = !!S.offGemPacks[o.p.id], full = offlineCap() >= OFFLINE_MAX;
-      setTxt(o.r._sub, own ? "Déjà acheté" : "+"+fmtTime(o.p.add)+" de stockage");
+      setTxt(o.r._sub, own ? ("Déjà acheté · limite actuelle "+fmtTime(offlineCap())) : "+"+fmtTime(o.p.add)+" de stockage");
       if(own){ setTxt(o.r._btn,"OK"); o.r._btn.className="rBtn owned"; setDis(o.r._btn,true); }
       else { setTxt(o.r._btn, full?"MAX":"💎<br>"+fmt(o.p.gems)); setDis(o.r._btn, full || S.gems < o.p.gems); }
     }
@@ -1545,13 +1536,6 @@ function buyWarp(w){
   if(gain <= 0){ toast("Achète d'abord du revenu passif"); return; }
   S.gems -= w.gems; earn(gain); sfx("big"); vibrate(40);
   toast("+"+fmt(gain)+" pièces"); save(); renderHUD(); refreshLists();
-}
-function buyOfflineCoin(){
-  if(S.offCoinSteps >= OFFLINE_COIN_STEPS.length) return;
-  const c = Math.floor(OFFLINE_COIN_STEPS[S.offCoinSteps]*costMult());
-  if(S.coins < c) return;
-  S.coins -= c; S.offCoinSteps++; sfx("buy");
-  toast("Hors-ligne : "+fmtTime(offlineCap())); save(); renderHUD(); refreshLists();
 }
 function buyOfflinePack(p){
   if(S.offGemPacks[p.id] || S.gems < p.gems || offlineCap() >= OFFLINE_MAX) return;
@@ -1726,7 +1710,7 @@ function doPrestige(){
      tout le reste repart à zéro, y compris le labo de fusion. */
   S.coins = 1e3 * Math.pow(6, pLvl("g5"));      // Départ rapide
   S.owned = {poussin:true}; S.animal = "poussin"; S.up = {}; S.aup = {}; S.rup = {};
-  S.inv = {}; S.seen = {}; S.dex = {poussin:1}; S.fc = 0; S.offCoinSteps = 0;
+  S.inv = {}; S.seen = {}; S.dex = {poussin:1}; S.fc = 0;
   S.boostUntil = 0; S.boostMult = 1; S.totalEarned = 0;
   ensureTierCache();
   closeModal(); sfx("big"); vibrate(120);
@@ -1740,6 +1724,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.6.1", lines:["Extension hors-ligne : passe des pièces (perdue à chaque Renaissance) à l'arbre permanent"]},
   {v:"2.6.0", lines:["Cochon, Lama, Singe : 3 nouveaux animaux premium","Renaissance rééquilibrée pour une vraie partie longue (20T) · bouton toujours visible"]},
   {v:"2.5.0", lines:["Paliers de Renaissance (jusqu'à 150), PWA installable (manifest + icônes + hors-ligne)","Renaissance : ne garde vraiment que gemmes et achats en gemmes"]},
   {v:"2.4.0", lines:["Arborescence d'améliorations par animal (18) avec objets visibles à l'écran"]},
