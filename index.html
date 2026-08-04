@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F7C9E0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pixel Paw Idle</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="pastel">
+<div id="app">
+
+  <header id="hud">
+    <div class="hud-row">
+      <div class="stat"><canvas class="ico" id="icoCoin"></canvas><span class="val" id="coinVal">0</span></div>
+      <div class="stat"><canvas class="ico" id="icoGem"></canvas><span class="val" id="gemVal">0</span></div>
+      <div class="stat"><span class="ico" style="font-size:12px;line-height:1">🧪</span><span class="val" id="fcVal">0</span></div>
+      <button class="iconBtn" id="prestigeBtn" aria-label="Renaissance">👑</button>
+      <button class="iconBtn" id="gearBtn" aria-label="Options">⚙️</button>
+    </div>
+    <div id="cpsLine">0 pièces / sec</div>
+  </header>
+
+  <main id="stage">
+    <div id="petName"><span id="petLabel">Poussin</span><span id="rarityTag">Commun</span></div>
+    <div id="petWrap" class="idle">
+      <canvas id="pet" width="16" height="16"></canvas>
+      <div id="shadow"></div>
+    </div>
+    <div id="tapHint">Tape l'animal</div>
+    <div id="propsStrip"></div>
+    <button id="bubble">🎁 Bonus · +50 💎</button>
+    <div id="fx"></div>
+  </main>
+
+  <div id="banner">
+    <span class="bTxt" id="bannerTxt">Bienvenue dans Pixel Paw</span>
+    <button class="bGo" id="bannerBtn">VOIR</button>
+  </div>
+
+  <section id="panel">
+    <div id="panelBar">
+      <span style="width:26px"></span>
+      <div id="panelGrip"></div>
+      <button id="panelClose" aria-label="Réduire le menu">✖</button>
+    </div>
+
+    <div class="tabView on" id="view-animals">
+      <div class="panelTitle">Enclos</div><div id="listAnimals"></div>
+    </div>
+
+    <div class="tabView" id="view-upgrades">
+      <div class="panelTitle">Par tape</div><div id="listTap"></div>
+      <div class="panelTitle">Revenu passif</div><div id="listIdle"></div>
+      <div class="panelTitle">Limite hors-ligne</div><div id="listOffline"></div>
+      <div class="panelTitle">Par animal</div><div id="listAnimalUp"></div>
+      <div class="panelTitle">Paliers de Renaissance</div>
+      <div id="listRebirthTap"></div><div id="listRebirthIdle"></div>
+    </div>
+
+    <div class="tabView" id="view-shop">
+      <div class="panelTitle">Races premium</div><div id="listPremium"></div>
+      <div class="panelTitle">Avance rapide</div><div id="listWarp"></div>
+      <div class="panelTitle">Boosts</div><div id="listBoosts"></div>
+      <div class="panelTitle">Gemmes &amp; pass</div><div id="listPacks"></div>
+      <div class="panelTitle">Cosmétiques (sans avantage de jeu)</div>
+      <div id="cosmGrid" class="cosmGrid"></div>
+    </div>
+
+    <div class="tabView" id="view-labo">
+      <div class="panelTitle">Établi de fusion</div>
+      <div id="bench">
+        <div class="slot" id="slotA"></div>
+        <button id="fuseGo" disabled>FUSION</button>
+        <div class="slot" id="slotB"></div>
+      </div>
+      <div class="panelTitle">Œufs mystères</div><div id="eggRow"></div>
+      <div class="panelTitle">Mini-jeu</div><div id="miniRow"></div>
+      <div class="panelTitle">Tes créatures</div>
+      <div id="invGrid" class="petGrid"></div>
+    </div>
+
+    <div class="tabView" id="view-daily">
+      <div class="panelTitle">Roue de la chance</div>
+      <div id="wheelWrap">
+        <div id="wheelOuter"><div id="wheelPointer"></div><div id="wheelDisc"></div></div>
+        <button id="wheelSpin" class="wheelBtn">LANCER GRATUIT</button>
+        <button id="wheelExtra" class="wheelBtn">💎 40 · relancer</button>
+      </div>
+      <div class="panelTitle">Chaque jour</div><div id="listDaily"></div>
+      <div class="panelTitle">Quêtes du jour</div><div id="listQuests"></div>
+      <div class="panelTitle">Codes cadeaux</div><div id="listCodes"></div>
+    </div>
+
+    <div class="tabView" id="view-dex">
+      <div class="panelTitle">Profil</div><div id="profileBox"></div>
+      <div class="panelTitle">Succès</div><div id="achvList"></div>
+      <div class="panelTitle" id="dexTitle">PixelDex</div>
+      <div id="dexGrid"></div>
+      <div class="panelTitle" id="lineTitle">Créatures</div>
+      <div id="lineGrid" class="petGrid"></div>
+      <div class="panelTitle">Bonus de collection</div><div id="dexBonus"></div>
+    </div>
+  </section>
+
+  <nav id="tabs">
+    <button class="tab on" data-tab="animals"><span class="tIco">🐾</span><span class="tTxt">Animaux</span><i class="dot" id="dot-animals"></i></button>
+    <button class="tab" data-tab="upgrades"><span class="tIco">⚡</span><span class="tTxt">Amélio</span><i class="dot" id="dot-upgrades"></i></button>
+    <button class="tab" data-tab="shop"><span class="tIco">💎</span><span class="tTxt">Boutique</span><i class="dot" id="dot-shop"></i></button>
+    <button class="tab" data-tab="labo"><span class="tIco">🧪</span><span class="tTxt">Labo</span><i class="dot" id="dot-labo"></i></button>
+    <button class="tab" data-tab="daily"><span class="tIco">🎁</span><span class="tTxt">Quotidien</span><i class="dot" id="dot-daily"></i></button>
+    <button class="tab" data-tab="dex"><span class="tIco">📖</span><span class="tTxt">Dex</span><i class="dot" id="dot-dex"></i></button>
+  </nav>
+
+  <button id="reopen">▲ Menus</button>
+  <div id="toast"></div>
+  <div id="veil"><div class="modal" id="modal"></div></div>
+
+  <div id="starter">
+    <h1>Choisis ton compagnon</h1>
+    <p class="sub">Ce choix est définitif.<br>Il t'accompagne pour toujours.</p>
+    <div class="starterRow" id="starterRow"></div>
+  </div>
+  <div id="ghost"></div>
+
+  <div id="fuseFx">
+    <div id="fRays"></div>
+    <div class="orb" id="fA"><canvas></canvas></div>
+    <div class="orb" id="fB"><canvas></canvas></div>
+    <div id="fOut"><canvas></canvas></div>
+    <div id="fLabel"></div>
+    <button id="fSkip">PASSER</button>
+  </div>
+
+  <div id="mini">
+    <div id="miniTop">
+      <span id="miniT">⏱ 45 s</span><span id="miniS">⭐ 0 &nbsp;❤️ 3</span>
+      <button id="miniQuit">Quitter</button>
+    </div>
+    <canvas id="miniCv"></canvas>
+  </div>
+
+  <div id="flash"></div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
