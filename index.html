@@ -567,7 +567,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.5.0";
+const VERSION = "2.6.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -682,6 +682,23 @@ paw:{pal:{p:"#C9A0FF"},px:[
 "................","...pp..pp..pp...","...pp..pp..pp...","................",
 "....pppppppp....","...pppppppppp...","..pppppppppppp..","..pppppppppppp..",
 "..pppppppppppp..","...pppppppppp...","....pppppppp....",".....pppppp.....",
+"................","................","................","................"]},
+
+/* --- animaux phares TikTok --- */
+cochon:{pal:{P:"#FFAFC4",D:"#E88CA6",S:"#FFD6E0",K:"#3B2B20"},px:[
+"................","..PP........PP..","..PPPPPPPPPPPP..","..PPPPPPPPPPPP..",
+"..PPKPPPPPPKPP..","..PPPPPPPPPPPP..",".PPPPPPPPPPPPPP.",".PPPPSSSSSSPPPP.",
+".PPPPSKSSKSPPPP.",".PPPPSSSSSSPPPP.",".PPPPPPPPPPPPPP.","..DDDDDDDDDDDD..",
+"...DD......DD...","................","................","................"]},
+lama:{pal:{L:"#F0E4D0",D:"#CBB89A",F:"#8A6E52",K:"#3B2B20",R:"#FF9FB2"},px:[
+"................","...LL......LL...","...LL......LL...","....LLLLLLLL....",
+"....LDLLLLDL....","....LLLLLLLL....","....LLFFFFLL....","....LFKFFKFL....",
+"....LFFRFFFL....","...LLLFFFLLL....","...LLLLLLLLLL...","...LLLLLLLLLL...",
+"....DD....DD....","................","................","................"]},
+singe:{pal:{M:"#8A6244",D:"#6B4A32",F:"#E8C9A0",K:"#2B2018"},px:[
+"................",".MM..........MM.",".MMM........MMM.","..MMMMMMMMMMMM..",
+"..MFFFFFFFFFFM..","..MFKFFFFFFKFM..","..MFFFFFFFFFFM..","..MFFFDDDDFFM...",
+"..MFFFFFFFFFFM..","..MMMFFFFFMMM...","...MMMMMMMMM....","....DD....DD....",
 "................","................","................","................"]}
 };
 
@@ -740,7 +757,10 @@ const PREMIUM = [
   {id:"sphynx",    name:"Chat Sphynx",      gems:450,  mult:7,  tap:3e7,  rar:"epique",     desc:"Sans poil, sans pitié. ×7 sur tout."},
   {id:"shiba",     name:"Chien Shiba Inu",  gems:700,  mult:10, tap:2e8,  rar:"legendaire", desc:"Le sourire qui rapporte. ×10 sur tout."},
   {id:"bouledogue",name:"Bouledogue Français",gems:1100,mult:14,tap:15e8, rar:"legendaire", desc:"Ronfle en générant des fortunes. ×14."},
-  {id:"berger",    name:"Berger Allemand",  gems:1600, mult:20, tap:1e10, rar:"mythique",   desc:"Garde ton or et le multiplie. ×20."}
+  {id:"berger",    name:"Berger Allemand",  gems:1600, mult:20, tap:1e10, rar:"mythique",   desc:"Garde ton or et le multiplie. ×20."},
+  {id:"cochon",    name:"Cochon",           gems:900,  mult:12, tap:5e9,  rar:"legendaire", desc:"La star potelée de la ferme. ×12 sur tout."},
+  {id:"lama",      name:"Lama",             gems:1400, mult:17, tap:3e10, rar:"mythique",   desc:"Crache le glamour. ×17 sur tout."},
+  {id:"singe",     name:"Singe",            gems:2200, mult:28, tap:2e11, rar:"mythique",   desc:"Le boss de la troupe. ×28 sur tout."}
 ];
 
 const ALL_PETS = ANIMALS.concat(PREMIUM);
@@ -785,14 +805,17 @@ const STARTERS = [
 /* ============================================================
    6. PRESTIGE — "Pattes Célestes"
    ============================================================ */
-const PRESTIGE_MIN = 2e6;           // cumul de pièces requis (abaissé pour rester testable)
+const PRESTIGE_MIN = 2e13;          // 20 000 milliards : première Renaissance en fin de partie normale
 const PRESTIGE_UPS = [
   {id:"g1", name:"Aura dorée",     desc:"+40 % de pièces globales",         base:3, rate:1.55, max:40},
   {id:"g2", name:"Négociant",      desc:"-3 % sur tous les coûts",          base:4, rate:1.62, max:18},
   {id:"g3", name:"Griffe critique",desc:"+2 % de chance de critique (×7)",  base:4, rate:1.6,  max:25},
   {id:"g4", name:"Sommeil profond",desc:"+10 % de gains hors-ligne",        base:5, rate:1.62, max:20},
   {id:"g5", name:"Départ rapide",  desc:"Commence avec plus de pièces",    base:6, rate:1.68, max:15},
-  {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:5, rate:1.7,  max:10}
+  {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:5, rate:1.7,  max:10},
+  {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:6, rate:1.65, max:20},
+  {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:6, rate:1.65, max:15},
+  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:4, rate:1.5,  max:25}
 ];
 /* CORRECTIF v2.3 : courbes adoucies (le seuil d'entrée a baissé, les premières
    Renaissances rapportent moins de Pattes Célestes qu'avant — sans ça, tout
@@ -987,13 +1010,14 @@ function globalMult(withBoost){
   m *= 1 + 0.02 * dexCount();
   m *= collectionMult();                                    // lot 2 : collection                                                          // +2 %/PixelDex
   m *= 1 + 0.50 * pLvl("g1");                                                          // Aura dorée
+  m *= 1 + 0.02 * pLvl("g9");                                                          // Cœur généreux
   m *= 1 + 0.15 * (S.pawPoints||0) / 10;                                               // Pattes Célestes
   if(S.starter === "chat") m *= 1.05;
   if(withBoost !== false) m *= boostMult();
   return m;
 }
 function critChance(){
-  let c = 0.02*pLvl("g3");
+  let c = 0.02*pLvl("g3") + 0.01*pLvl("g7");
   if(S.starter === "lapin") c += 0.05;
   return Math.min(0.75, c);
 }
@@ -1018,7 +1042,7 @@ function offlineCap(){
   OFFLINE_GEM_PACKS.forEach(p=>{ if(S.offGemPacks[p.id]) cap += p.add; });
   return Math.min(OFFLINE_MAX, cap);
 }
-function offlineRate(){ return OFFLINE_RATE * (1 + 0.10*pLvl("g4")); }
+function offlineRate(){ return OFFLINE_RATE * (1 + 0.10*pLvl("g4") + 0.05*pLvl("g8")); }
 function earn(n){ S.coins += n; S.totalEarned += n; S.lifetimeEarned += n; bump("earned", n); }
 
 /* ============================================================
@@ -1651,7 +1675,7 @@ function claimDaily(){
    ============================================================ */
 function pawGain(){
   if(S.totalEarned < PRESTIGE_MIN) return 0;
-  return Math.max(1, Math.floor(20 * Math.sqrt(S.totalEarned / 4e6)));
+  return Math.max(1, Math.floor(20 * Math.sqrt(S.totalEarned / 4e13)));
 }
 function openPrestige(){
   const g = pawGain();
@@ -1716,6 +1740,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.6.0", lines:["Cochon, Lama, Singe : 3 nouveaux animaux premium","Renaissance rééquilibrée pour une vraie partie longue (20T) · bouton toujours visible"]},
   {v:"2.5.0", lines:["Paliers de Renaissance (jusqu'à 150), PWA installable (manifest + icônes + hors-ligne)","Renaissance : ne garde vraiment que gemmes et achats en gemmes"]},
   {v:"2.4.0", lines:["Arborescence d'améliorations par animal (18) avec objets visibles à l'écran"]},
   {v:"2.3.0", lines:["Succès + profil, roue de la chance, cosmétiques, animations de vie","Thèmes : boutons désactivés lisibles partout · Renaissance rééquilibrée"]},
