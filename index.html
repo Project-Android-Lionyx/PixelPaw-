@@ -314,6 +314,12 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 @keyframes petBlink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.86)}}
 #wheelWrap{display:flex;flex-direction:column;align-items:center;margin-bottom:12px}
 #wheelOuter{position:relative;width:150px;height:150px;margin-bottom:10px}
+#wheelInfo{
+  position:absolute;top:-4px;right:-4px;z-index:3;width:24px;height:24px;
+  border:2px solid var(--ink);border-radius:7px;background:var(--cream);
+  font-size:11px;display:grid;place-items:center;box-shadow:var(--pop-sm);
+}
+#wheelInfo:active{transform:translateY(2px);box-shadow:none}
 #wheelDisc{width:100%;height:100%;border-radius:50%;border:4px solid var(--ink);transition:transform 3.2s cubic-bezier(.15,.8,.15,1)}
 #wheelPointer{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:0;height:0;
   border-left:9px solid transparent;border-right:9px solid transparent;border-top:15px solid var(--ink);z-index:2}
@@ -510,7 +516,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
       <div class="panelTitle">Série de connexion</div><div id="streakBox"></div>
       <div class="panelTitle">Roue de la chance</div>
       <div id="wheelWrap">
-        <div id="wheelOuter"><div id="wheelPointer"></div><div id="wheelDisc"></div></div>
+        <div id="wheelOuter"><button id="wheelInfo" aria-label="Détails des lots">ⓘ</button><div id="wheelPointer"></div><div id="wheelDisc"></div></div>
         <button id="wheelSpin" class="wheelBtn">LANCER GRATUIT</button>
         <button id="wheelExtra" class="wheelBtn">💎 40 · relancer</button>
       </div>
@@ -575,7 +581,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.9.0";
+const VERSION = "2.9.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1774,6 +1780,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.9.1", lines:["Roue de la chance : bouton ⓘ affichant les vrais % et effets de chaque lot"]},
   {v:"2.9.0", lines:["Cochon remplace Poussin au départ · Cochon Doré (premium) renommé pour éviter le doublon","Renaissance : garde l'animal actif s'il est encore possédé · étiquette de rareté animée"]},
   {v:"2.8.0", lines:["Vrais paiements PayPal branchés · gemmes créditées automatiquement au retour"]},
   {v:"2.7.1", lines:["Hors-ligne rééquilibré : 12h max via Pattes Célestes, 12h max via 4 packs en gemmes"]},
@@ -2808,15 +2815,27 @@ function refreshProfile(){
    v2.3 — ROUE DE LA CHANCE
    ============================================================ */
 const WHEEL_SEGMENTS = [
-  {label:"10 💎",    type:"gems",  amt:10,  w:22},
-  {label:"×2 · 5 min",type:"boost",mult:2,  secs:300, w:14},
-  {label:"25 💎",    type:"gems",  amt:25,  w:16},
-  {label:"🧪 ×10",   type:"fc",    amt:10,  w:16},
-  {label:"20 💎",    type:"gems",  amt:20,  w:16},
-  {label:"×5 · 1 min",type:"boost",mult:5,  secs:60,  w:8},
-  {label:"100 💎",   type:"gems",  amt:100, w:4},
-  {label:"🧪 ×30",   type:"fc",    amt:30,  w:14}
+  {label:"10 💎",    type:"gems",  amt:10,  w:22, ico:"💎", desc:"10 gemmes directement dans ta réserve."},
+  {label:"×2 · 5 min",type:"boost",mult:2,  secs:300, w:14, ico:"🔥", desc:"Double tous tes gains pendant 5 minutes."},
+  {label:"25 💎",    type:"gems",  amt:25,  w:16, ico:"💎", desc:"25 gemmes directement dans ta réserve."},
+  {label:"🧪 ×10",   type:"fc",    amt:10,  w:16, ico:"🧪", desc:"10 Pièces de Fusion pour le Laboratoire."},
+  {label:"20 💎",    type:"gems",  amt:20,  w:16, ico:"💎", desc:"20 gemmes directement dans ta réserve."},
+  {label:"×5 · 1 min",type:"boost",mult:5,  secs:60,  w:8,  ico:"🔥", desc:"Multiplie tous tes gains par 5 pendant 1 minute."},
+  {label:"100 💎",   type:"gems",  amt:100, w:4,  ico:"💎", desc:"Le gros lot en gemmes."},
+  {label:"🧪 ×30",   type:"fc",    amt:30,  w:14, ico:"🧪", desc:"30 Pièces de Fusion pour le Laboratoire."}
 ];
+function openWheelInfo(){
+  const total = WHEEL_SEGMENTS.reduce((s,x)=>s+x.w,0);
+  let html = '<h2>Ce que tu peux gagner</h2>';
+  WHEEL_SEGMENTS.forEach(s=>{
+    const pct = (s.w/total*100).toFixed(1);
+    html += '<div class="row"><div class="thumb" style="font-size:18px">'+s.ico+'</div>' +
+      '<div class="rInfo"><div class="rName">'+s.label+' · '+pct+'%</div><div class="rSub">'+s.desc+'</div></div></div>';
+  });
+  html += '<button class="mBtn ghost" id="mNo">Fermer</button>';
+  openModal(html);
+  document.getElementById("mNo").onclick = closeModal;
+}
 const WHEEL_COLORS = ["--gold","--gem","--pink","--mint","--paw","--gold","--gem","--pink"];
 function buildWheelGradient(){
   const disc = document.getElementById("wheelDisc"); if(!disc) return;
@@ -2867,6 +2886,7 @@ function refreshWheel(){
   setDis(f, !canFree || wheelSpinning);
   if(e){ setTxt(e, "💎 40 · relancer"); setDis(e, (S.gems<40) || wheelSpinning); }
 }
+document.getElementById("wheelInfo").addEventListener("click", e=>{ e.stopPropagation(); openWheelInfo(); });
 document.getElementById("wheelSpin").addEventListener("click", ()=>spinWheel(true));
 document.getElementById("wheelExtra").addEventListener("click", ()=>spinWheel(false));
 
