@@ -79,6 +79,11 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 #prestigeBtn{background:var(--paw);display:none}
 #prestigeBtn.on{display:grid}
 #cpsLine{margin-top:5px;text-align:center;font-size:9px;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase}
+#frenzyWrap{width:78%;max-width:220px;height:9px;margin:6px auto 0;border:2px solid var(--ink);border-radius:999px;background:var(--card);overflow:hidden}
+#frenzyBar{height:100%;width:0%;background:linear-gradient(90deg,var(--gem),var(--pink));transition:width .12s linear}
+#frenzyWrap.active #frenzyBar{background:linear-gradient(90deg,var(--gold),#FF5C3D)}
+#app.frenzyOn{animation:frenzyGlow .5s ease-in-out infinite alternate}
+@keyframes frenzyGlow{0%{box-shadow:inset 0 0 0 0 rgba(255,196,74,0)}100%{box-shadow:inset 0 0 40px 6px rgba(255,196,74,.55)}}
 
 /* ---------- SCÈNE ---------- */
 #stage{
@@ -511,6 +516,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
       <button class="iconBtn" id="gearBtn" aria-label="Options">⚙️</button>
     </div>
     <div id="cpsLine">0 pièces / sec</div>
+    <div id="frenzyWrap"><div id="frenzyBar"></div></div>
   </header>
 
   <main id="stage">
@@ -656,7 +662,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.2.0";
+const VERSION = "3.3.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1112,6 +1118,7 @@ function freshState(){
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
+    frenzyGauge:0, frenzyTier:0,
     offCoinSteps:0, offGemPacks:{},
     totalEarned:0, lifetimeEarned:0,
     /* --- quotidien --- */
@@ -1484,12 +1491,44 @@ function doTap(cx, cy){
   earn(gain); S.taps++; bump("taps",1);
   const r = stage.getBoundingClientRect();
   spawnFloat(cx-r.left, cy-r.top, (crit?"CRIT +":"+")+fmt(gain), crit);
-  spawnCoins(cx-r.left, cy-r.top, crit ? 10 : 2+rnd(4));
+  spawnCoins(cx-r.left, cy-r.top, (frenzyActive() ? 5 : 0) + (crit ? 10 : 2+rnd(4)));
   petWrap.classList.remove("idle");
   petWrap.classList.add("squish");
   setTimeout(()=>{ petWrap.classList.remove("squish"); petWrap.classList.add("idle"); }, 90);
   sfx("click"); vibrate(crit ? 22 : 8);
+  tickFrenzyGauge();
   renderHUD();
+}
+/* Jauge de frénésie : se remplit en tapant, une fois pleine déclenche 25 s de
+   gains multipliés. Réutilise le système de boost existant (banni pour la durée),
+   donc aucune économie séparée à maintenir ailleurs. */
+const FRENZY_FILL_PER_TAP = 2.6;
+const FRENZY_DURATION = 25000;
+function frenzyActive(){ return boostActive() && S.boostName === "Frénésie"; }
+function frenzyMultBase(){ return S.frenzyTier >= 1 ? 6 : 3; }
+function tickFrenzyGauge(){
+  if(frenzyActive()) return;                      // deja en fenetre active : la jauge ne bouge plus
+  S.frenzyGauge = (S.frenzyGauge||0) + FRENZY_FILL_PER_TAP;
+  if(S.frenzyGauge >= 100){
+    S.frenzyGauge = 0;
+    S.boostMult = frenzyMultBase(); S.boostUntil = Date.now()+FRENZY_DURATION; S.boostName = "Frénésie";
+    setCls(app, "frenzyOn", true);
+    sfx("big"); vibrate(80);
+    toast("Frénésie ! ×"+frenzyMultBase()+" pendant 25 s");
+  }
+}
+function refreshFrenzyBar(){
+  const wrap = document.getElementById("frenzyWrap"), bar = document.getElementById("frenzyBar");
+  if(!wrap || !bar) return;
+  if(frenzyActive()){
+    const left = Math.max(0, S.boostUntil - Date.now());
+    setCls(wrap, "active", true);
+    bar.style.width = (left/FRENZY_DURATION*100)+"%";
+  }else{
+    setCls(wrap, "active", false);
+    bar.style.width = (S.frenzyGauge||0)+"%";
+    if(app.classList.contains("frenzyOn")) setCls(app,"frenzyOn",false);
+  }
 }
 stage.addEventListener("pointerdown", e=>{
   if(bubble.contains(e.target)) return;
@@ -1587,6 +1626,9 @@ function buildLists(){
   const na = makeRow({emoji:"🚫", btnClass:"pawBtn", onClick:buyNoAds});
   na._name.textContent = "Pass Sans Pubs"; na.id = "noAdsRow";
   $("#listPacks").appendChild(na);
+  const fz = makeRow({emoji:"⚡", btnClass:"gemBtn", onClick:buyFrenzyUp});
+  fz._name.textContent = "Frénésie renforcée"; fz.id = "frenzyRow";
+  $("#listPacks").appendChild(fz);
   PACKS.forEach(p=>{
     const r = makeRow({emoji:"💎", btnClass:"gemBtn", onClick:()=>buyPack(p)});
     r._name.textContent = fmt(p.gems)+" gemmes"; r._sub.textContent = "Paiement simulé";
@@ -1712,6 +1754,12 @@ function refreshLists(){
     if(S.noAds){ setTxt(naRow._btn,"ACTIF"); naRow._btn.className="rBtn owned"; setDis(naRow._btn,true); }
     else { setTxt(naRow._btn,"💎<br>"+fmt(NOADS_GEMS)); setDis(naRow._btn, S.gems < NOADS_GEMS); }
   }
+  const fzRow = $("#frenzyRow");
+  if(fzRow){
+    setTxt(fzRow._sub, (S.frenzyTier>=1?"Actif · ":"")+"×"+frenzyMultBase()+" pendant la Frénésie (jauge sous les pièces/sec)");
+    if(S.frenzyTier >= 1){ setTxt(fzRow._btn,"ACTIF"); fzRow._btn.className="rBtn owned"; setDis(fzRow._btn,true); }
+    else { setTxt(fzRow._btn,"💎<br>"+fmt(FRENZY_UP_GEMS)); setDis(fzRow._btn, S.gems < FRENZY_UP_GEMS); }
+  }
 
   refreshDaily(); refreshQuests(); refreshDex(); refreshLab(); refreshLineDex(); refreshDots();
   refreshAchv(); refreshProfile(); refreshWheel();
@@ -1787,6 +1835,12 @@ function buyNoAds(){
   if(S.noAds || S.gems < NOADS_GEMS) return;
   S.gems -= NOADS_GEMS; S.noAds = true; sfx("big");
   toast("Pass Sans Pubs actif"); save(); renderHUD(); refreshLists();
+}
+const FRENZY_UP_GEMS = 350;
+function buyFrenzyUp(){
+  if(S.frenzyTier >= 1 || S.gems < FRENZY_UP_GEMS) return;
+  S.gems -= FRENZY_UP_GEMS; S.frenzyTier = 1; sfx("big"); vibrate(50);
+  toast("Frénésie renforcée : ×6 au lieu de ×3"); save(); renderHUD(); refreshLists();
 }
 function buyPack(p){
   const url = PACK_LINKS[p.id];
@@ -1965,6 +2019,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.3.0", lines:["Jauge de Frénésie : se remplit en tapant, 25s de gains ×3 (×6 avec l'amélioration en gemmes)"]},
   {v:"3.2.0", lines:["Rééquilibrage : animaux ×3 à ×11 selon le palier (facile au début, dur à la fin)","Améliorations : croissance qui s'accélère aux niveaux 50 et 100, comme un vrai mur"]},
   {v:"3.1.2", lines:["Esprit de Meute (+chiens possédés), Zoo Complet (×2 si une rareté de chaque), 2 cadres cosmétiques"]},
   {v:"3.1.1", lines:["Clicker Fou (+crit selon le total de tapes), trickle FC/gemmes ambiant, 3 nouveaux succès"]},
@@ -2133,7 +2188,7 @@ function loop(){
   if(S.fcAccum >= 3600){ S.fc = (S.fc||0) + Math.floor(S.fcAccum/3600); S.fcAccum %= 3600; }
   S.gemAccum = (S.gemAccum||0) + dt;
   if(S.gemAccum >= 14400){ S.gems += Math.floor(S.gemAccum/14400); S.gemAccum %= 14400; }
-  renderHUD(); tickBanner(); tickBubble();
+  renderHUD(); tickBanner(); tickBubble(); refreshFrenzyBar();
 }
 function resume(){
   lastTick = Date.now();
