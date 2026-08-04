@@ -656,7 +656,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.0.1";
+const VERSION = "3.0.2";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -901,16 +901,16 @@ const STARTERS = [
    ============================================================ */
 const PRESTIGE_MIN = 2e13;          // 20 000 milliards : première Renaissance en fin de partie normale
 const PRESTIGE_UPS = [
-  {id:"g1", name:"Aura dorée",     desc:"+40 % de pièces globales",         base:3, rate:1.55, max:40},
-  {id:"g2", name:"Négociant",      desc:"-3 % sur tous les coûts",          base:4, rate:1.62, max:18},
-  {id:"g3", name:"Griffe critique",desc:"+2 % de chance de critique (×7)",  base:4, rate:1.6,  max:25},
-  {id:"g4", name:"Sommeil profond",desc:"+10 % de gains hors-ligne",        base:5, rate:1.62, max:20},
-  {id:"g5", name:"Départ rapide",  desc:"Commence avec plus de pièces",    base:6, rate:1.68, max:15},
-  {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:5, rate:1.7,  max:10},
-  {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:6, rate:1.65, max:20},
-  {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:6, rate:1.65, max:15},
-  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:4, rate:1.5,  max:25},
-  {id:"g10",name:"Insomnie dorée",     desc:"+1 h de limite hors-ligne",    base:8, rate:1.55, max:12}
+  {id:"g1", name:"Aura dorée",     desc:"+40 % de pièces globales",         base:9,  rate:1.85, max:40},
+  {id:"g2", name:"Négociant",      desc:"-3 % sur tous les coûts",          base:12, rate:1.9,  max:18},
+  {id:"g3", name:"Griffe critique",desc:"+2 % de chance de critique (×7)",  base:12, rate:1.88, max:25},
+  {id:"g4", name:"Sommeil profond",desc:"+10 % de gains hors-ligne",        base:14, rate:1.9,  max:20},
+  {id:"g5", name:"Départ rapide",  desc:"Commence avec plus de pièces",    base:16, rate:1.95, max:15},
+  {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:14, rate:1.95, max:10},
+  {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:16, rate:1.9,  max:20},
+  {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:16, rate:1.9,  max:15},
+  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:10, rate:1.8,  max:25},
+  {id:"g10",name:"Insomnie dorée",     desc:"+1 h de limite hors-ligne",    base:22, rate:1.85, max:12}
 ];
 /* CORRECTIF v2.3 : courbes adoucies (le seuil d'entrée a baissé, les premières
    Renaissances rapportent moins de Pattes Célestes qu'avant — sans ça, tout
@@ -1858,6 +1858,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.0.2", lines:["Arbre de Renaissance bien plus cher : coûts de base et croissance fortement augmentés"]},
   {v:"3.0.1", lines:["Salutation en bulle sur l'animal (5s) au lieu d'un texte sur l'accueil","Nouveautés : la modale s'affiche bien par-dessus l'écran d'accueil"]},
   {v:"3.0.0", lines:["Nouvel écran d'accueil : chargement, fond animaux, salutations, journal des nouveautés"]},
   {v:"2.9.4", lines:["Roue : les logos des lots apparaissent sur la roue elle-même","Renaissance : la liste ne remonte plus en haut après un achat"]},
