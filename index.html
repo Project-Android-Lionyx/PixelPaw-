@@ -90,7 +90,14 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   border:3px solid var(--ink);border-radius:999px;padding:5px 14px;box-shadow:var(--pop-sm);
   margin-bottom:6px;display:flex;align-items:center;gap:6px;
 }
-#rarityTag{font-size:8px;padding:2px 6px;border-radius:6px;border:2px solid var(--ink);color:#2B2333}
+#rarityTag{font-size:8px;padding:2px 6px;border-radius:6px;border:2px solid var(--ink);color:#2B2333;opacity:0}
+#rarityTag.pop{animation:rarityPop 1.8s ease-out forwards}
+@keyframes rarityPop{
+  0%{opacity:0;transform:translateY(6px) scale(.8)}
+  15%{opacity:1;transform:translateY(0) scale(1)}
+  75%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-14px) scale(.9)}
+}
 #petWrap{
   position:relative;width:min(58vw,210px);height:min(58vw,210px);
   display:grid;place-items:center;transition:transform .07s ease-out;
@@ -568,7 +575,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.8.0";
+const VERSION = "2.9.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -686,6 +693,11 @@ paw:{pal:{p:"#C9A0FF"},px:[
 "................","................","................","................"]},
 
 /* --- animaux phares TikTok --- */
+cochondore:{pal:{P:"#FFD98A",D:"#E0AC3E",S:"#FFF0C4",K:"#3B2B20"},px:[
+"................","..PP........PP..","..PPPPPPPPPPPP..","..PPPPPPPPPPPP..",
+"..PPKPPPPPPKPP..","..PPPPPPPPPPPP..",".PPPPPPPPPPPPPP.",".PPPPSSSSSSPPPP.",
+".PPPPSKSSKSPPPP.",".PPPPSSSSSSPPPP.",".PPPPPPPPPPPPPP.","..DDDDDDDDDDDD..",
+"...DD......DD...","................","................","................"]},
 cochon:{pal:{P:"#FFAFC4",D:"#E88CA6",S:"#FFD6E0",K:"#3B2B20"},px:[
 "................","..PP........PP..","..PPPPPPPPPPPP..","..PPPPPPPPPPPP..",
 "..PPKPPPPPPKPP..","..PPPPPPPPPPPP..",".PPPPPPPPPPPPPP.",".PPPPSSSSSSPPPP.",
@@ -741,7 +753,7 @@ const RARITIES = {
    animal reste toujours "presque" à portée.
    ============================================================ */
 const ANIMALS = [
-  {id:"poussin", name:"Poussin",       cost:0,      tap:1,      rar:"commun",     desc:"À peine sorti de l'œuf, déjà au travail."},
+  {id:"cochon",  name:"Cochon",        cost:0,      tap:1,      rar:"commun",     desc:"Le premier compagnon de la ferme."},
   {id:"hamster", name:"Hamster",       cost:3e2,    tap:6,      rar:"commun",     desc:"Court dans sa roue, remplit ta bourse."},
   {id:"lapin",   name:"Lapin",         cost:4e3,    tap:45,     rar:"peucommun",  desc:"Bondit d'une pièce à l'autre."},
   {id:"perruche",name:"Perruche",      cost:5.5e4,  tap:320,    rar:"peucommun",  desc:"Ramène des pièces en piqué."},
@@ -759,7 +771,7 @@ const PREMIUM = [
   {id:"shiba",     name:"Chien Shiba Inu",  gems:700,  mult:10, tap:2e8,  rar:"legendaire", desc:"Le sourire qui rapporte. ×10 sur tout."},
   {id:"bouledogue",name:"Bouledogue Français",gems:1100,mult:14,tap:15e8, rar:"legendaire", desc:"Ronfle en générant des fortunes. ×14."},
   {id:"berger",    name:"Berger Allemand",  gems:1600, mult:20, tap:1e10, rar:"mythique",   desc:"Garde ton or et le multiplie. ×20."},
-  {id:"cochon",    name:"Cochon",           gems:900,  mult:12, tap:5e9,  rar:"legendaire", desc:"La star potelée de la ferme. ×12 sur tout."},
+  {id:"cochondore",name:"Cochon Doré",      gems:900,  mult:12, tap:5e9,  rar:"legendaire", desc:"La star dorée de la ferme. ×12 sur tout."},
   {id:"lama",      name:"Lama",             gems:1400, mult:17, tap:3e10, rar:"mythique",   desc:"Crache le glamour. ×17 sur tout."},
   {id:"singe",     name:"Singe",            gems:2200, mult:28, tap:2e11, rar:"mythique",   desc:"Le boss de la troupe. ×28 sur tout."}
 ];
@@ -948,7 +960,7 @@ function freshState(){
   return {
     schema:SCHEMA,
     /* --- remis à zéro par la Renaissance --- */
-    coins:0, animal:"poussin", owned:{poussin:true}, up:{}, aup:{}, evo:{}, rup:{},
+    coins:0, animal:"cochon", owned:{cochon:true}, up:{}, aup:{}, evo:{}, rup:{},
     boostMult:1, boostUntil:0, boostName:"",
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
@@ -976,11 +988,11 @@ function migrate(d){
   n.coins = d.coins||0; n.gems = d.gems||30; n.up = d.up||{}; n.taps = d.taps||0;
   n.owned = d.owned || {poussin:true};
   if(n.owned.chien){ n.owned.corgi = true; delete n.owned.chien; }
-  n.animal = d.animal === "chien" ? "corgi" : (d.animal||"poussin");
+  n.animal = d.animal === "chien" ? "corgi" : d.animal === "poussin" ? "cochon" : (d.animal||"cochon");
   const map = {persan:"mainecoon", shiba:"shiba", royal:"berger"};
   Object.keys(d.premium||{}).forEach(k=>{ if(map[k]) n.premium[map[k]] = true; });
   if(map[n.animal]) n.animal = map[n.animal];
-  if(!petById(n.animal)) n.animal = "poussin";
+  if(!petById(n.animal)) n.animal = "cochon";
   n.volSfx = d.sound === false ? 0 : 70;
   Object.keys(n.owned).forEach(k=>{ n.dex[k] = n.dex[k]||1; });
   Object.keys(n.premium).forEach(k=>{ n.dex[k] = n.dex[k]||1; });
@@ -1001,7 +1013,7 @@ function load(){
   if(legacy || d.schema !== SCHEMA) d = migrate(d);
   S = Object.assign(freshState(), d);                      // les clés manquantes reprennent la valeur par défaut
   S.schema = SCHEMA;
-  if(!petById(S.animal)) S.animal = "poussin";
+  if(!petById(S.animal)) S.animal = "cochon";
   if(legacy) store.del(OLD_KEY);
 }
 
@@ -1531,8 +1543,11 @@ function refreshDots(){
 function discover(id){
   const first = !S.dex[id];
   S.dex[id] = (S.dex[id]||0) + 1;
-  if(first) sfx("evo");
+  if(first){ sfx("evo"); popRarity(); }
   return first;
+}
+function popRarity(){
+  rarityTag.classList.remove("pop"); void rarityTag.offsetWidth; rarityTag.classList.add("pop");
 }
 function animalClick(a){
   if(S.owned[a.id]){ S.animal = a.id; renderPet(); sfx("buy"); toast(a.name+" est sur le terrain"); }
@@ -1742,7 +1757,9 @@ function doPrestige(){
      (races premium, cosmétiques, pass, extensions hors-ligne en gemmes) —
      tout le reste repart à zéro, y compris le labo de fusion. */
   S.coins = 1e3 * Math.pow(6, pLvl("g5"));      // Départ rapide
-  S.owned = {poussin:true}; S.animal = "poussin"; S.up = {}; S.aup = {}; S.rup = {};
+  S.owned = {cochon:true};
+  if(!S.owned[S.animal] && !S.premium[S.animal]) S.animal = "cochon";
+  S.up = {}; S.aup = {}; S.rup = {};
   S.inv = {}; S.seen = {}; S.dex = {poussin:1}; S.fc = 0;
   S.boostUntil = 0; S.boostMult = 1; S.totalEarned = 0;
   ensureTierCache();
@@ -1757,6 +1774,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.9.0", lines:["Cochon remplace Poussin au départ · Cochon Doré (premium) renommé pour éviter le doublon","Renaissance : garde l'animal actif s'il est encore possédé · étiquette de rareté animée"]},
   {v:"2.8.0", lines:["Vrais paiements PayPal branchés · gemmes créditées automatiquement au retour"]},
   {v:"2.7.1", lines:["Hors-ligne rééquilibré : 12h max via Pattes Célestes, 12h max via 4 packs en gemmes"]},
   {v:"2.7.0", lines:["Hors-ligne : plafond porté à 24h (base + Renaissance + gemmes)","Série de connexion quotidienne avec succès à 7/14/30 jours"]},
@@ -2882,8 +2900,8 @@ const PROP_SHAPES = {
   "................","................","................","................"]}
 };
 const ANIMAL_UPS = [
-  {id:"au1",  animal:"poussin",  tier:1, name:"Mangeoire à graines",  add:2,     base:150,    rate:1.16, icon:"nest",  color:"#FFC94A"},
-  {id:"au2",  animal:"poussin",  tier:2, name:"Couveuse chauffante",  add:14,    base:3200,   rate:1.17, icon:"hut",   color:"#F2C94C"},
+  {id:"au1",  animal:"cochon",   tier:1, name:"Mangeoire à graines",  add:2,     base:150,    rate:1.16, icon:"nest",  color:"#FFC94A"},
+  {id:"au2",  animal:"cochon",   tier:2, name:"Couveuse chauffante",  add:14,    base:3200,   rate:1.17, icon:"hut",   color:"#F2C94C"},
   {id:"au3",  animal:"hamster",  tier:1, name:"Roue à dynamo",        add:9,     base:1100,   rate:1.16, icon:"gadget",color:"#E3B98A"},
   {id:"au4",  animal:"hamster",  tier:2, name:"Réserve de noisettes", add:60,    base:2.2e4,  rate:1.17, icon:"nest",  color:"#C99468"},
   {id:"au5",  animal:"lapin",    tier:1, name:"Terrier profond",      add:65,    base:1.6e4,  rate:1.17, icon:"hut",   color:"#C9C9D6"},
@@ -3036,6 +3054,7 @@ buildCosmGrid();
 buildAchvList();
 buildWheelGradient();
 renderPet();
+popRarity();
 renderHUD();
 if(S.questDate !== today()) rollQuests();
 refreshLists();
