@@ -90,8 +90,9 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   border:3px solid var(--ink);border-radius:999px;padding:5px 14px;box-shadow:var(--pop-sm);
   margin-bottom:6px;display:flex;align-items:center;gap:6px;
 }
-#rarityTag{font-size:8px;padding:2px 6px;border-radius:6px;border:2px solid var(--ink);color:#2B2333;opacity:0}
-#rarityTag.pop{animation:rarityPop 1.8s ease-out forwards}
+#rarityTag{font-size:8px;padding:2px 6px;border-radius:6px;border:2px solid var(--ink);color:#2B2333}
+#petName{opacity:0}
+#petName.pop{animation:rarityPop 1.8s ease-out forwards}
 @keyframes rarityPop{
   0%{opacity:0;transform:translateY(6px) scale(.8)}
   15%{opacity:1;transform:translateY(0) scale(1)}
@@ -581,7 +582,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.9.1";
+const VERSION = "2.9.2";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1553,7 +1554,8 @@ function discover(id){
   return first;
 }
 function popRarity(){
-  rarityTag.classList.remove("pop"); void rarityTag.offsetWidth; rarityTag.classList.add("pop");
+  const el = document.getElementById("petName");
+  el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
 }
 function animalClick(a){
   if(S.owned[a.id]){ S.animal = a.id; renderPet(); sfx("buy"); toast(a.name+" est sur le terrain"); }
@@ -1780,6 +1782,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.9.2", lines:["Le nom de l'animal disparaît aussi avec l'étiquette de rareté, pas juste elle seule"]},
   {v:"2.9.1", lines:["Roue de la chance : bouton ⓘ affichant les vrais % et effets de chaque lot"]},
   {v:"2.9.0", lines:["Cochon remplace Poussin au départ · Cochon Doré (premium) renommé pour éviter le doublon","Renaissance : garde l'animal actif s'il est encore possédé · étiquette de rareté animée"]},
   {v:"2.8.0", lines:["Vrais paiements PayPal branchés · gemmes créditées automatiquement au retour"]},
