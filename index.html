@@ -568,7 +568,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.7.1";
+const VERSION = "2.8.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -849,6 +849,41 @@ const TIME_WARP = [
 /* ============================================================
    8. BOUTIQUE
    ============================================================ */
+const PACK_LINKS = {
+  p1: "https://www.paypal.com/ncp/payment/PLB-YBE6FK8T7UZ9",
+  p2: "https://www.paypal.com/ncp/payment/PLB-4PM79PXF6EEN",
+  p3: "https://www.paypal.com/ncp/payment/PLB-UP7CU4NS337C",
+  p4: "https://www.paypal.com/ncp/payment/PLB-PGTLMPR4K957"
+};
+/* Jeton unique par pack, integre a l'URL de retour PayPal. Recu = gemmes donnees
+   automatiquement, sans rien taper. Pas de serveur derriere : quelqu'un qui aurait
+   ce lien exact sans payer pourrait en theorie s'en servir une fois - risque faible
+   pour ce public, mais reel, a savoir. */
+const CLAIM_CODES = {
+  "W95gd7zFDYbO94zB": {gems:100,  label:"100 gemmes"},
+  "NIiLXU4Pfx7cVBkz": {gems:550,  label:"550 gemmes"},
+  "wR-ivY5YgYy-LZOV": {gems:1200, label:"1200 gemmes"},
+  "UZ1Fj8mYWgt0HUSZ": {gems:3000, label:"3000 gemmes"}
+};
+function checkPaypalReturn(){
+  const params = new URLSearchParams(location.search);
+  const claim = params.get("claim");
+  if(!claim) return;
+  history.replaceState(null, "", location.pathname);
+  const c = CLAIM_CODES[claim];
+  if(!c) return;
+  S.claimedTokens = S.claimedTokens || {};
+  if(S.claimedTokens[claim]) return;
+  S.claimedTokens[claim] = true;
+  S.gems += c.gems;
+  save();
+  setTimeout(()=>{
+    openModal('<h2>Paiement reçu !</h2><div class="big">+'+c.gems+' 💎</div><p>Merci pour ton achat.</p><button class="mBtn" id="mOk">Super</button>');
+    const b = document.getElementById("mOk"); if(b) b.onclick = closeModal;
+    sfx("big"); vibrate(60);
+  }, 400);
+}
+
 const PACKS = [
   {id:"p1", gems:100,  price:"1,99 €"},
   {id:"p2", gems:550,  price:"8,99 €"},
@@ -1550,13 +1585,9 @@ function buyNoAds(){
   toast("Pass Sans Pubs actif"); save(); renderHUD(); refreshLists();
 }
 function buyPack(p){
-  openModal(
-    '<h2>Achat simulé</h2><p>Aucun paiement réel.<br>Branche ici Google Play Billing.</p>' +
-    '<div class="big">'+fmt(p.gems)+' 💎 · '+p.price+'</div>' +
-    '<button class="mBtn" id="mOk">Confirmer</button><button class="mBtn ghost" id="mNo">Annuler</button>'
-  );
-  $("#mOk").onclick = ()=>{ S.gems += p.gems; closeModal(); sfx("big"); toast("+"+fmt(p.gems)+" gemmes"); save(); renderHUD(); refreshLists(); };
-  $("#mNo").onclick = closeModal;
+  const url = PACK_LINKS[p.id];
+  if(!url) return;
+  location.href = url;
 }
 function watchAdForGems(){
   if(Date.now() < S.adReadyAt) return;
@@ -1726,6 +1757,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.8.0", lines:["Vrais paiements PayPal branchés · gemmes créditées automatiquement au retour"]},
   {v:"2.7.1", lines:["Hors-ligne rééquilibré : 12h max via Pattes Célestes, 12h max via 4 packs en gemmes"]},
   {v:"2.7.0", lines:["Hors-ligne : plafond porté à 24h (base + Renaissance + gemmes)","Série de connexion quotidienne avec succès à 7/14/30 jours"]},
   {v:"2.6.1", lines:["Extension hors-ligne : passe des pièces (perdue à chaque Renaissance) à l'arbre permanent"]},
@@ -2994,6 +3026,7 @@ function refreshRebirthTiers(){
    35. DÉMARRAGE
    ============================================================ */
 load();
+checkPaypalReturn();
 bumpStreak();
 ensureTierCache();
 applyTheme();
