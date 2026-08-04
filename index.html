@@ -662,7 +662,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.3.1";
+const VERSION = "3.3.2";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2017,7 +2017,7 @@ function doPrestige(){
   S.owned = {cochon:true};
   if(!S.owned[S.animal] && !S.premium[S.animal]) S.animal = "cochon";
   S.up = {}; S.aup = {}; S.rup = {};
-  S.inv = {}; S.seen = {}; S.dex = {poussin:1}; S.fc = 0;
+  S.inv = {}; S.seen = {}; S.dex = {cochon:1}; S.fc = 0;
   S.boostUntil = 0; S.boostMult = 1; S.totalEarned = 0;
   ensureTierCache();
   closeModal(); sfx("big"); vibrate(120);
@@ -2031,6 +2031,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.3.2", lines:["Correctif : l'animal s'affiche bien dès l'ouverture (plus besoin de changer d'animal)","Œufs payables en Pièces de Fusion OU en gemmes, 4e palier (Mythique), récompense du mini-jeu augmentée"]},
   {v:"3.3.1", lines:["Tap Précis (Super Critique au centre), Oiseau de Nuit, piste secrète, Maître Éleveur"]},
   {v:"3.3.0", lines:["Jauge de Frénésie : se remplit en tapant, 25s de gains ×3 (×6 avec l'amélioration en gemmes)"]},
   {v:"3.2.0", lines:["Rééquilibrage : animaux ×3 à ×11 selon le palier (facile au début, dur à la fin)","Améliorations : croissance qui s'accélère aux niveaux 50 et 100, comme un vrai mur"]},
@@ -2523,9 +2524,10 @@ function rollPet(minRar){
    LOT 2 — 38. LABORATOIRE DE FUSION
    ============================================================ */
 const EGGS = [
-  {id:"e1", name:"Œuf commun",     fc:20,  min:0, desc:"Une créature au hasard."},
-  {id:"e2", name:"Œuf rare",       fc:60,  min:2, desc:"Rare ou mieux garanti."},
-  {id:"e3", name:"Œuf légendaire", fc:150, min:4, desc:"Légendaire ou mieux garanti."}
+  {id:"e1", name:"Œuf commun",     fc:20,  gems:150,  min:0, desc:"Une créature au hasard."},
+  {id:"e2", name:"Œuf rare",       fc:60,  gems:450,  min:2, desc:"Rare ou mieux garanti."},
+  {id:"e3", name:"Œuf légendaire", fc:150, gems:1100, min:4, desc:"Légendaire ou mieux garanti."},
+  {id:"e4", name:"Œuf mythique",   fc:400, gems:3000, min:5, desc:"Mythique garanti — le meilleur qu'un œuf puisse donner."}
 ];
 const MINI_FREE_PLAYS = 5;
 
@@ -2595,9 +2597,12 @@ function buildLab(){
 }
 function refreshLab(){
   const fc = document.getElementById("fcVal"); if(fc) setTxt(fc, fmt(S.fc||0));
-  document.querySelectorAll("#eggRow [data-egg]").forEach(b=>{
-    const e = EGGS.find(x=>x.id === b.dataset.egg);
-    setDis(b, (S.fc||0) < e.fc);
+  (R.eggs||[]).forEach(({e,r})=>{
+    const canFc = (S.fc||0) >= e.fc, canGems = (S.gems||0) >= e.gems;
+    if(canFc){ setTxt(r._btn,"🧪<br>"+fmt(e.fc)); r._btn.className="rBtn mintBtn"; }
+    else if(canGems){ setTxt(r._btn,"💎<br>"+fmt(e.gems)); r._btn.className="rBtn gemBtn"; }
+    else { setTxt(r._btn,"🧪"+fmt(e.fc)+"<br>💎"+fmt(e.gems)); r._btn.className="rBtn"; }
+    setDis(r._btn, !canFc && !canGems);
   });
   const mp = document.getElementById("miniBtn");
   if(mp){
@@ -2721,9 +2726,9 @@ function playFusion(inKey, outKey, first){
 /* ============================================================
    41. ŒUFS
    ============================================================ */
-function buyEgg(e){
-  if((S.fc||0) < e.fc) return;
-  S.fc -= e.fc;
+function buyEgg(e, useGems){
+  if(useGems){ if((S.gems||0) < e.gems) return; S.gems -= e.gems; }
+  else{ if((S.fc||0) < e.fc) return; S.fc -= e.fc; }
   const key = rollPet(e.min);
   const first = invAdd(key, 1);
   const inf = petInfo(key);
@@ -2766,7 +2771,7 @@ function stopMini(reward){
   MG.on = false; cancelAnimationFrame(MG.raf);
   document.getElementById("mini").classList.remove("on");
   if(reward){
-    const fc = Math.min(60, 2 + Math.floor(MG.score/4));
+    const fc = Math.min(100, 5 + Math.floor(MG.score/3));
     S.fc = (S.fc||0) + fc;
     sfx("big");
     openModal('<h2>Partie terminée</h2><div class="big">'+MG.score+' points</div>' +
@@ -2885,12 +2890,14 @@ function openLineage(li){
    44. CÂBLAGE DU LABORATOIRE
    ============================================================ */
 function buildLabStatic(){
-  const er = document.getElementById("eggRow"); er.innerHTML = "";
+  const er = document.getElementById("eggRow"); er.innerHTML = ""; R.eggs = [];
   EGGS.forEach(e=>{
-    const r = makeRow({emoji:"🥚", btnClass:"pawBtn", onClick:()=>buyEgg(e)});
+    const r = makeRow({emoji:"🥚", onClick:()=>{
+      if((S.fc||0) >= e.fc) buyEgg(e, false);
+      else if((S.gems||0) >= e.gems) buyEgg(e, true);
+    }});
     r._name.textContent = e.name; r._sub.textContent = e.desc;
-    r._btn.innerHTML = "🧪<br>"+e.fc; r._btn.dataset.egg = e.id;
-    er.appendChild(r);
+    er.appendChild(r); R.eggs.push({e, r});
   });
   const mr = document.getElementById("miniRow"); mr.innerHTML = "";
   const r = makeRow({emoji:"🎮", btnClass:"mintBtn", onClick:startMini});
@@ -3394,6 +3401,7 @@ function startHome(){
     setTimeout(()=>{
       h.style.display = "none";
       if(S.volBgm > 0) startBgm();
+      renderPet();                 // re-peint le canvas, invisible pendant qu'il était sous l'accueil
       const gb = document.getElementById("greetBubble");
       gb.textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
       gb.classList.remove("on"); void gb.offsetWidth; gb.classList.add("on");
