@@ -656,7 +656,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.0.2";
+const VERSION = "3.1.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -793,6 +793,58 @@ singe:{pal:{M:"#8A6244",D:"#6B4A32",F:"#E8C9A0",K:"#2B2018"},px:[
 "................",".MM..........MM.",".MMM........MMM.","..MMMMMMMMMMMM..",
 "..MFFFFFFFFFFM..","..MFKFFFFFFKFM..","..MFFFFFFFFFFM..","..MFFFDDDDFFM...",
 "..MFFFFFFFFFFM..","..MMMFFFFFMMM...","...MMMMMMMMM....","....DD....DD....",
+"................","................","................","................"]},
+
+/* --- Biome Ferme : silhouettes distinctes, pas des recolorations --- */
+cochontirelire:{pal:{P:"#FF9FC4",D:"#E06B98",S:"#FFD6E6",K:"#3B2B20",G:"#FFC94A"},px:[
+"................","..PP........PP..","..PPPPPPPPPPPP..","..PPPPPPPPPPPP..",
+"..PPKPPPPPPKPP..",".PPPPPPPGPPPPPP.",".PPPPPSSSSSPPPP.",".PPPPSKSSKSPPPP.",
+".PPPPSSSSSSPPPP.",".PPPPPPPPPPPPPP.","..DDDDDDDDDDDD..","...DD......DD...",
+"................","................","................","................"]},
+vachelait:{pal:{W:"#FFFFFF",T:"#3B3B45",K:"#2B2018",U:"#FFB3C6",N:"#F5F0E4"},px:[
+"WW............WW","................","..NNNNNNNNNNNN..",".NTNNTNNNNTNNTN.",
+".NNNNNNNNNNNNNN.",".NKNNNNNNNNNKN..","..NNNNTTTTNNNN..",".NNNNNNNNNNNNNN.",
+".NNNNNNNNNNNNNN.","..NNNNNNNNNNNN..","...UUU....UUU...","...UUU....UUU...",
+"................","................","................","................"]},
+moutonor:{pal:{Y:"#FFE27A",D:"#E0A61E",K:"#3B2B20",F:"#4A3A2A"},px:[
+"................",".YY.YYYY.YYY....","YYYYYYYYYYYYYYY.","YYYYYYYYYYYYYYY.",
+"YYFFYYYYYYFFYY..","YYFKFYYYYFKFY...","YYFFFYYYYFFFY...","YYYYYYYYYYYYYY..",
+"YYYYYYYYYYYYYYY.",".YYYYYYYYYYYYY..","..FF........FF..","..FF........FF..",
+"................","................","................","................"]},
+chevrepix:{pal:{H:"#E8E4D8",D:"#B8B29E",K:"#2B2018",B:"#F0EAD6"},px:[
+"................","..DD........DD..","..DD........DD..","...HHHHHHHHHH...",
+"..HHHHHHHHHHHH..","..HKHHHHHHHKH...","..HHHBBBBHHHH...","..HHHHBBHHHHH...",
+"..HHHHHHHHHHH...","...HHHHHHHHH....","....DD....DD....","................",
+"................","................","................","................"]},
+chevaltrait:{pal:{B:"#8A5A34",D:"#5E3A1E",K:"#2B2018",M:"#3B2818"},px:[
+"..MM..........M.","..MM.........MM.","..BB........MMM.","..BBBBBBBBBB....",
+".BBBBBBBBBBBB...",".BKBBBBBBBBB....","..BBBBBBBBBB....","..BBBLLLLBB.....",
+"..BBBBBBBBBB....","..DDDDDDDDDD....","..DD......DD....","................",
+"................","................","................","................"]},
+anetetu:{pal:{G:"#B9B4C2",K:"#2B2018",L:"#EFEFF5"},px:[
+"..G........G....","..G........G....","..GG......GG....","...GGGGGGGG......",
+"..GGGGGGGGGG.....",".GGKGGGGGGKG.....","..GGGGGGGGGG.....","..GGGLLLLGG......",
+"..GGGGGGGGGG.....","...DDDDDDDD......","...DD....DD......","................",
+"................","................","................","................"]},
+oiebavarde:{pal:{W:"#FFFFFF",O:"#FF9F1C",K:"#2B2018",G:"#E8E4D8"},px:[
+"................","................","......WW........",".....WWWW.......",
+"....WWWWWW......","....WKWWWW......","....WOOWWW......","...WWWWWWWW.....",
+"..WWWWWWWWWW....","..WWWWWWWWWW....","...GG......GG...","................",
+"................","................","................","................"]},
+canardplastique:{pal:{Y:"#FFE27A",O:"#FF9F1C",K:"#3B2B20"},px:[
+"................","................","................","......YYYY......",
+".....YYYYYY.....","....YYYYYYYY....","....YKYYYYYY....","...OOYYYYYYY....",
+"..YYYYYYYYYYY...","..YYYYYYYYYYY...","...YYYYYYYYY....","....OO....OO....",
+"................","................","................","................"]},
+dindonfurieux:{pal:{B:"#5E3A2A",R:"#E2384A",Y:"#FFC94A",K:"#2B2018"},px:[
+"................",".RR..........RR.","..R....YYYY....R","...YYYYYYYYYY...",
+"..YBBBBBBBBBBY..","..BBKBBBBBBKBB..","..BBBBRRRRBBBB..","..BBBBBBBBBBBB..",
+"..BBBBBBBBBBBB..","...BBBBBBBBBB...","....OO....OO....","................",
+"................","................","................","................"]},
+chiendeberger:{pal:{N:"#3B3226",W:"#F0EAD6",K:"#1B1510"},px:[
+"................","..NN........NN..","..NNN......NNN..","..NNNNNNNNNNNN..",
+"..NWNNNNNNNNWN..","..NNNNNNNNNNNN..","..WWWWWWWWWWWW..","..WWWNNKKNWWWW..",
+"..WWWWWWWWWWWW..","...WWWWWWWWWW...","....NN....NN....","................",
 "................","................","................","................"]}
 };
 
@@ -854,7 +906,19 @@ const PREMIUM = [
   {id:"berger",    name:"Berger Allemand",  gems:1600, mult:20, tap:1e10, rar:"mythique",   desc:"Garde ton or et le multiplie. ×20."},
   {id:"cochondore",name:"Cochon Doré",      gems:900,  mult:12, tap:5e9,  rar:"legendaire", desc:"La star dorée de la ferme. ×12 sur tout."},
   {id:"lama",      name:"Lama",             gems:1400, mult:17, tap:3e10, rar:"mythique",   desc:"Crache le glamour. ×17 sur tout."},
-  {id:"singe",     name:"Singe",            gems:2200, mult:28, tap:2e11, rar:"mythique",   desc:"Le boss de la troupe. ×28 sur tout."}
+  {id:"singe",     name:"Singe",            gems:2200, mult:28, tap:2e11, rar:"mythique",   desc:"Le boss de la troupe. ×28 sur tout."},
+
+  /* --- Biome Ferme (ajout, rien retiré) --- */
+  {id:"cochontirelire", name:"Cochon Tirelire", gems:60,  mult:1,   tap:8e2,  rar:"peucommun", desc:"+15 % sur tes gains de tape.", tapBonus:0.15, biome:"ferme"},
+  {id:"vachelait",       name:"Vache Laitière",  gems:70,  mult:1,   tap:0,    rar:"peucommun", desc:"+40 pièces/sec dédiées, tout le temps.", idleFlat:40, biome:"ferme"},
+  {id:"moutonor",        name:"Mouton à Laine d'Or", gems:90, mult:3, tap:1.5e3, rar:"rare",    desc:"×3 sur tout.", biome:"ferme"},
+  {id:"chevrepix",       name:"Chèvre Pixel",    gems:50,  mult:2,   tap:900,  rar:"peucommun", desc:"×2 sur tout.", biome:"ferme"},
+  {id:"chevaltrait",     name:"Cheval de Trait", gems:100, mult:4,   tap:2e3,  rar:"rare",      desc:"×4 sur tout.", biome:"ferme"},
+  {id:"anetetu",         name:"Âne Têtu",        gems:80,  mult:1,   tap:1e3,  rar:"rare",      desc:"+3 % de chance de critique.", critBonus:0.03, biome:"ferme"},
+  {id:"oiebavarde",      name:"Oie Bavarde",     gems:45,  mult:2,   tap:700,  rar:"commun",    desc:"×2 sur tout.", biome:"ferme"},
+  {id:"canardplastique", name:"Canard en Plastique", gems:40, mult:1.5, tap:500, rar:"commun",  desc:"×1,5 sur tout.", biome:"ferme"},
+  {id:"dindonfurieux",   name:"Dindon Furieux",  gems:65,  mult:2.5, tap:1.1e3, rar:"peucommun", desc:"×2,5 sur tout.", biome:"ferme"},
+  {id:"chiendeberger",   name:"Chien de Berger", gems:150, mult:1,   tap:2.5e3, rar:"legendaire", desc:"+8 % par animal de la Ferme possédé.", packBonus:0.08, biome:"ferme"}
 ];
 
 const ALL_PETS = ANIMALS.concat(PREMIUM);
@@ -1136,7 +1200,7 @@ function dexCount(){ return Object.keys(S.dex).filter(k=>S.dex[k]>0).length; }
    CORRECTIF v2 : le boost ne comptait pas dans les gains hors-ligne (exploit). */
 function globalMult(withBoost){
   let m = 1;
-  PREMIUM.forEach(p=>{ if(S.premium[p.id]) m *= p.mult; });
+  PREMIUM.forEach(p=>{ if(S.premium[p.id] && p.mult) m *= p.mult; });
   m *= 1 + 0.05 * Math.max(0, Object.keys(S.owned).filter(k=>S.owned[k]).length - 1); // +5 %/animal
   m *= 1 + 0.02 * dexCount();
   m *= collectionMult();                                    // lot 2 : collection                                                          // +2 %/PixelDex
@@ -1144,12 +1208,24 @@ function globalMult(withBoost){
   m *= 1 + 0.02 * pLvl("g9");                                                          // Cœur généreux
   m *= 1 + 0.15 * (S.pawPoints||0) / 10;                                               // Pattes Célestes
   if(S.starter === "chat") m *= 1.05;
+  /* Biome Ferme : Chien de Berger boost les autres animaux de Ferme possédés */
+  const dog = PREMIUM.find(p=>p.id === "chiendeberger");
+  if(dog && S.premium.chiendeberger){
+    const count = PREMIUM.filter(p=>p.biome === "ferme" && p.id !== "chiendeberger" && S.premium[p.id]).length;
+    m *= 1 + dog.packBonus * count;
+  }
   if(withBoost !== false) m *= boostMult();
   return m;
+}
+function farmIdleFlat(){
+  let s = 0;
+  PREMIUM.forEach(p=>{ if(p.idleFlat && S.premium[p.id]) s += p.idleFlat; });
+  return s;
 }
 function critChance(){
   let c = 0.02*pLvl("g3") + 0.01*pLvl("g7");
   if(S.starter === "lapin") c += 0.05;
+  if(S.premium.anetetu) c += 0.03;
   return Math.min(0.75, c);
 }
 function currentPet(){ return petById(S.animal); }
@@ -1157,13 +1233,16 @@ function perTap(){
   let flat = currentPet().tap;
   TAP_UPS.forEach(u=>{ flat += (S.up[u.id]||0) * u.add; });
   _rtTap.forEach(t=>{ flat += (S.rup[t.id]||0) * t.add; });
-  return Math.max(1, Math.floor(flat * globalMult()));
+  let out = Math.max(1, Math.floor(flat * globalMult()));
+  if(S.premium.cochontirelire) out = Math.floor(out * 1.15);
+  return out;
 }
 function perSec(withBoost){
   let s = 0;
   IDLE_UPS.forEach(u=>{ s += (S.up[u.id]||0) * u.add; });
   ANIMAL_UPS.forEach(u=>{ s += (S.aup[u.id]||0) * u.add; });
   _rtIdle.forEach(t=>{ s += (S.rup[t.id]||0) * t.add; });
+  s += farmIdleFlat();
   s *= globalMult(withBoost);
   if(S.starter === "chien") s *= 1.05;
   return Math.floor(s);
@@ -1858,6 +1937,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.1.0", lines:["Biome Ferme : 10 nouveaux animaux premium, silhouettes propres (pas des recolorations)","3 effets uniques : Cochon Tirelire (+tape), Vache Laitière (passif dédié), Chien de Berger (synergie Ferme)"]},
   {v:"3.0.2", lines:["Arbre de Renaissance bien plus cher : coûts de base et croissance fortement augmentés"]},
   {v:"3.0.1", lines:["Salutation en bulle sur l'animal (5s) au lieu d'un texte sur l'accueil","Nouveautés : la modale s'affiche bien par-dessus l'écran d'accueil"]},
   {v:"3.0.0", lines:["Nouvel écran d'accueil : chargement, fond animaux, salutations, journal des nouveautés"]},
