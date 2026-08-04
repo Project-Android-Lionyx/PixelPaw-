@@ -322,6 +322,50 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 }
 #wheelInfo:active{transform:translateY(2px);box-shadow:none}
 #wheelDisc{position:relative;width:100%;height:100%;border-radius:50%;border:4px solid var(--ink);transition:transform 3.2s cubic-bezier(.15,.8,.15,1)}
+
+/* ---------- écran d'accueil ---------- */
+#home{
+  position:absolute;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(120% 60% at 50% 0%, var(--bg1) 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg2) 0%, var(--bg3) 45%, var(--bg4) 100%);
+  transition:opacity .45s ease, transform .45s ease;
+}
+#home.leaving{opacity:0;transform:scale(1.06)}
+#homeBg{position:absolute;inset:0;overflow:hidden;opacity:.5}
+#homeBg canvas{position:absolute;width:34px;height:34px;image-rendering:pixelated;filter:saturate(.7)}
+#homeTop{position:relative;text-align:center;margin-top:6vh}
+#homeTitle{
+  font-size:22px;line-height:1.5;letter-spacing:2px;color:var(--ink);
+  text-shadow:3px 3px 0 rgba(255,255,255,.6), 5px 5px 0 rgba(0,0,0,.12);
+}
+#homeVersion{
+  position:relative;margin-top:10px;display:inline-block;font-size:8px;letter-spacing:1px;
+  background:var(--cream);border:3px solid var(--ink);border-radius:999px;padding:5px 12px;
+  box-shadow:var(--pop-sm);
+}
+#homeGreet{
+  position:relative;margin-top:14px;font-size:9px;color:var(--ink-soft);max-width:260px;
+  line-height:1.8;min-height:32px;
+}
+#homeBottom{position:relative;width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center}
+#homeBarWrap{
+  width:100%;height:16px;border:3px solid var(--ink);border-radius:999px;background:var(--card);
+  overflow:hidden;box-shadow:var(--pop-sm);margin-bottom:6px;
+}
+#homeBar{height:100%;width:0%;background:linear-gradient(90deg,var(--mint),var(--gem));transition:width .12s linear}
+#homeBarTxt{font-size:8px;color:var(--ink-soft);letter-spacing:1px;margin-bottom:16px}
+#homePlay{
+  width:100%;border:4px solid var(--ink);border-radius:16px;background:var(--mint);
+  padding:16px;font-size:13px;letter-spacing:2px;box-shadow:0 5px 0 rgba(0,0,0,.3);
+  color:#1B3A2E;display:none;
+}
+#homePlay:active{transform:translateY(4px);box-shadow:none}
+#homeNews{
+  margin-top:10px;border:2px solid var(--ink);border-radius:10px;background:var(--card);
+  padding:8px 14px;font-size:8px;letter-spacing:.5px;display:none;
+}
 .wheelIcon{position:absolute;top:50%;left:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
   display:flex;align-items:center;justify-content:center;font-size:14px;pointer-events:none;
   text-shadow:0 1px 0 rgba(255,255,255,.5)}
@@ -553,6 +597,21 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   <div id="toast"></div>
   <div id="veil"><div class="modal" id="modal"></div></div>
 
+  <div id="home">
+    <div id="homeBg"></div>
+    <div id="homeTop">
+      <div id="homeTitle">PIXEL PAW<br>IDLE</div>
+      <div id="homeVersion">v?</div>
+      <div id="homeGreet"></div>
+    </div>
+    <div id="homeBottom">
+      <div id="homeBarWrap"><div id="homeBar"></div></div>
+      <div id="homeBarTxt">Chargement…</div>
+      <button id="homePlay">▶ JOUER</button>
+      <button id="homeNews">📰 Nouveautés</button>
+    </div>
+  </div>
+
   <div id="starter">
     <h1>Choisis ton compagnon</h1>
     <p class="sub">Ce choix est définitif.<br>Il t'accompagne pour toujours.</p>
@@ -585,7 +644,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.9.4";
+const VERSION = "3.0.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1787,6 +1846,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.0.0", lines:["Nouvel écran d'accueil : chargement, fond animaux, salutations, journal des nouveautés"]},
   {v:"2.9.4", lines:["Roue : les logos des lots apparaissent sur la roue elle-même","Renaissance : la liste ne remonte plus en haut après un achat"]},
   {v:"2.9.3", lines:["Le menu reste ouvert à chaque lancement, le replier ne dure que la session en cours"]},
   {v:"2.9.2", lines:["Le nom de l'animal disparaît aussi avec l'étiquette de rareté, pas juste elle seule"]},
@@ -3080,9 +3140,66 @@ function refreshRebirthTiers(){
 }
 
 /* ============================================================
+   ÉCRAN D'ACCUEIL
+   ============================================================ */
+const HOME_GREETS = [
+  "Où étais-tu passé ? Tu ne m'oublies pas hein ?!",
+  "Te revoilà ! J'ai gardé la ferme au chaud.",
+  "Enfin ! Je commençais à m'ennuyer tout seul.",
+  "Prêt à taper encore un peu ?",
+  "J'ai compté les secondes, tu sais."
+];
+function buildHomeBg(){
+  const el = document.getElementById("homeBg"); if(!el) return;
+  const pool = ["cochon","hamster","lapin","perruche","chat","corgi","capybara","panda","dragon"];
+  for(let i=0;i<14;i++){
+    const cv = document.createElement("canvas");
+    paint(cv, pool[i % pool.length]);
+    cv.style.left = (Math.random()*90)+"%";
+    cv.style.top = (Math.random()*90)+"%";
+    cv.style.transform = "rotate("+(Math.random()*30-15)+"deg)";
+    el.appendChild(cv);
+  }
+}
+function startHome(){
+  buildHomeBg();
+  document.getElementById("homeVersion").textContent = "v"+VERSION;
+  document.getElementById("homeGreet").textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
+  const bar = document.getElementById("homeBar"), txt = document.getElementById("homeBarTxt");
+  let p = 0;
+  const t = setInterval(()=>{
+    p += 8 + Math.random()*14;
+    if(p >= 100){
+      p = 100; clearInterval(t);
+      txt.textContent = "Prêt !";
+      document.getElementById("homePlay").style.display = "block";
+      document.getElementById("homeNews").style.display = "block";
+    }
+    bar.style.width = p+"%";
+  }, 130);
+  document.getElementById("homePlay").addEventListener("click", ()=>{
+    sfx("good");
+    const h = document.getElementById("home");
+    h.classList.add("leaving");
+    setTimeout(()=>{ h.style.display = "none"; if(S.volBgm > 0) startBgm(); }, 420);
+  });
+  document.getElementById("homeNews").addEventListener("click", ()=>{
+    let html = '<h2>Nouveautés</h2>';
+    CHANGELOG.slice(0,6).forEach(c=>{
+      html += '<div style="text-align:left;font-size:8.5px;color:var(--ink-soft);line-height:1.9;margin-bottom:6px">' +
+        '<b style="color:var(--ink)">v'+c.v+'</b> — '+c.lines.join(" · ")+'</div>';
+    });
+    html += '<button class="mBtn ghost" id="mNo">Fermer</button>';
+    openModal(html);
+    document.getElementById("mNo").onclick = closeModal;
+  });
+}
+
+/* ============================================================
    35. DÉMARRAGE
    ============================================================ */
 load();
+startHome();
 checkPaypalReturn();
 bumpStreak();
 ensureTierCache();
