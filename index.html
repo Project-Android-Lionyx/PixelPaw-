@@ -656,7 +656,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.1.0";
+const VERSION = "3.1.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1226,6 +1226,7 @@ function critChance(){
   let c = 0.02*pLvl("g3") + 0.01*pLvl("g7");
   if(S.starter === "lapin") c += 0.05;
   if(S.premium.anetetu) c += 0.03;
+  c += 0.01 * Math.floor((S.taps||0)/1000);          // Clicker Fou : +1%/1000 tapes cumulées
   return Math.min(0.75, c);
 }
 function currentPet(){ return petById(S.animal); }
@@ -1937,6 +1938,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.1.1", lines:["Clicker Fou (+crit selon le total de tapes), trickle FC/gemmes ambiant, 3 nouveaux succès"]},
   {v:"3.1.0", lines:["Biome Ferme : 10 nouveaux animaux premium, silhouettes propres (pas des recolorations)","3 effets uniques : Cochon Tirelire (+tape), Vache Laitière (passif dédié), Chien de Berger (synergie Ferme)"]},
   {v:"3.0.2", lines:["Arbre de Renaissance bien plus cher : coûts de base et croissance fortement augmentés"]},
   {v:"3.0.1", lines:["Salutation en bulle sur l'animal (5s) au lieu d'un texte sur l'accueil","Nouveautés : la modale s'affiche bien par-dessus l'écran d'accueil"]},
@@ -2096,6 +2098,12 @@ function loop(){
   const dt = Math.min(2, (now-lastTick)/1000);
   lastTick = now;
   if(dt > 0) earn(perSec()*dt);
+  /* Laboratoire Autonome + Ferme à Gemmes : trickle ambiant minime, pas une amélioration
+     achetable — juste un petit plus qui tourne en fond, montants volontairement infimes. */
+  S.fcAccum = (S.fcAccum||0) + dt;
+  if(S.fcAccum >= 3600){ S.fc = (S.fc||0) + Math.floor(S.fcAccum/3600); S.fcAccum %= 3600; }
+  S.gemAccum = (S.gemAccum||0) + dt;
+  if(S.gemAccum >= 14400){ S.gems += Math.floor(S.gemAccum/14400); S.gemAccum %= 14400; }
   renderHUD(); tickBanner(); tickBubble();
 }
 function resume(){
@@ -2915,7 +2923,10 @@ const ACHIEVEMENTS = [
   {id:"a13",name:"150 créatures découvertes", stat:"seen",           target:150,  gems:300},
   {id:"a14",name:"Série de 7 jours",           stat:"streakBest",     target:7,    gems:500},
   {id:"a15",name:"Série de 14 jours",          stat:"streakBest",     target:14,   gems:1200},
-  {id:"a16",name:"Série de 30 jours",          stat:"streakBest",     target:30,   gems:5000}
+  {id:"a16",name:"Série de 30 jours",          stat:"streakBest",     target:30,   gems:5000},
+  {id:"a17",name:"Le Taper Fou",               stat:"taps",           target:1e6,  gems:400},
+  {id:"a18",name:"Le Riche Héritier",          stat:"lifetimeEarned", target:1e18, gems:1000},
+  {id:"a19",name:"L'Alchimiste Fou",           stat:"fusions",        target:500,  gems:600}
 ];
 function achvValue(a){
   if(a.stat === "classicOwned") return Object.keys(S.owned||{}).filter(k=>S.owned[k]).length;
