@@ -500,6 +500,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
     </div>
 
     <div class="tabView" id="view-daily">
+      <div class="panelTitle">Série de connexion</div><div id="streakBox"></div>
       <div class="panelTitle">Roue de la chance</div>
       <div id="wheelWrap">
         <div id="wheelOuter"><div id="wheelPointer"></div><div id="wheelDisc"></div></div>
@@ -567,7 +568,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.6.1";
+const VERSION = "2.7.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -830,12 +831,13 @@ const OFFLINE_BASE = 3600;              // 1 h de départ
 const OFFLINE_COIN_STEPS = [            // +30 min chacun, jusqu'à 4 h
   5e4, 6e5, 7e6, 9e7, 12e8, 16e9
 ];
-const OFFLINE_GEM_PACKS = [             // de 4 h à 8 h max
-  {id:"o30", name:"Pack 30 min", add:1800,  gems:180},
-  {id:"o2h", name:"Pack 2 h",    add:7200,  gems:600},
-  {id:"o4h", name:"Pack 4 h",    add:14400, gems:1000}
+const OFFLINE_GEM_PACKS = [             // jusqu'à 20h en plus, pour un total de 24h avec la base + Renaissance
+  {id:"o2h", name:"Pack 2 h",  add:7200,  gems:300},
+  {id:"o4h", name:"Pack 4 h",  add:14400, gems:700},
+  {id:"o6h", name:"Pack 6 h",  add:21600, gems:1100},
+  {id:"o8h", name:"Pack 8 h",  add:28800, gems:1600}
 ];
-const OFFLINE_MAX = 8*3600;
+const OFFLINE_MAX = 24*3600;             // 1h base + jusqu'à 3h Renaissance + jusqu'à 20h en gemmes/€
 const OFFLINE_RATE = 0.5;               // 50 % du taux passif
 
 const TIME_WARP = [
@@ -917,7 +919,7 @@ function freshState(){
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
-    fusions:0, wheelLast:"", achv:{},
+    fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
     offCoinSteps:0, offGemPacks:{},
     totalEarned:0, lifetimeEarned:0,
     /* --- quotidien --- */
@@ -1478,7 +1480,7 @@ function refreshLists(){
 
   refreshDaily(); refreshQuests(); refreshDex(); refreshLab(); refreshLineDex(); refreshDots();
   refreshAchv(); refreshProfile(); refreshWheel();
-  refreshAnimalUps(); refreshProps(); refreshRebirthTiers();
+  refreshAnimalUps(); refreshProps(); refreshStreak(); refreshRebirthTiers();
 }
 function refreshDots(){
   setCls($("#dot-animals"),"on", R.animals.some(({a})=>!S.owned[a.id] && S.coins >= animalCost(a)));
@@ -1724,6 +1726,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.7.0", lines:["Hors-ligne : plafond porté à 24h (base + Renaissance + gemmes)","Série de connexion quotidienne avec succès à 7/14/30 jours"]},
   {v:"2.6.1", lines:["Extension hors-ligne : passe des pièces (perdue à chaque Renaissance) à l'arbre permanent"]},
   {v:"2.6.0", lines:["Cochon, Lama, Singe : 3 nouveaux animaux premium","Renaissance rééquilibrée pour une vraie partie longue (20T) · bouton toujours visible"]},
   {v:"2.5.0", lines:["Paliers de Renaissance (jusqu'à 150), PWA installable (manifest + icônes + hors-ligne)","Renaissance : ne garde vraiment que gemmes et achats en gemmes"]},
@@ -2687,12 +2690,30 @@ const ACHIEVEMENTS = [
   {id:"a10",name:"10 000 tapes",              stat:"taps",           target:1e4,  gems:30},
   {id:"a11",name:"Toute la ménagerie",        stat:"classicOwned",   target:9,    gems:80},
   {id:"a12",name:"50 créatures découvertes",  stat:"seen",           target:50,   gems:100},
-  {id:"a13",name:"150 créatures découvertes", stat:"seen",           target:150,  gems:300}
+  {id:"a13",name:"150 créatures découvertes", stat:"seen",           target:150,  gems:300},
+  {id:"a14",name:"Série de 7 jours",           stat:"streakBest",     target:7,    gems:500},
+  {id:"a15",name:"Série de 14 jours",          stat:"streakBest",     target:14,   gems:1200},
+  {id:"a16",name:"Série de 30 jours",          stat:"streakBest",     target:30,   gems:5000}
 ];
 function achvValue(a){
   if(a.stat === "classicOwned") return Object.keys(S.owned||{}).filter(k=>S.owned[k]).length;
   if(a.stat === "seen") return seenCount();
   return S[a.stat]||0;
+}
+/* Série de connexion : un jour = une ouverture de l'app, peu importe ce qu'on y fait.
+   Une seule journée manquée et ça repart à 1 — c'est le principe d'une série. */
+function bumpStreak(){
+  const y = new Date(Date.now()-86400000).toDateString();
+  if(S.streakLast === today()) return;
+  S.streak = (S.streakLast === y) ? (S.streak||0)+1 : 1;
+  S.streakLast = today();
+  if(S.streak > (S.streakBest||0)) S.streakBest = S.streak;
+}
+function refreshStreak(){
+  const el = document.getElementById("streakBox"); if(!el) return;
+  setTxt(el, '<div class="row"><div class="thumb" style="font-size:20px">🔥</div><div class="rInfo">' +
+    '<div class="rName">'+(S.streak||0)+' jour'+((S.streak||0)>1?'s':'')+' d\'affilée</div>' +
+    '<div class="rSub">Record : '+(S.streakBest||0)+' · reviens chaque jour pour ne pas la casser</div></div></div>');
 }
 function buildAchvList(){
   const box = document.getElementById("achvList"); if(!box) return;
@@ -2972,6 +2993,7 @@ function refreshRebirthTiers(){
    35. DÉMARRAGE
    ============================================================ */
 load();
+bumpStreak();
 ensureTierCache();
 applyTheme();
 buildLists();
