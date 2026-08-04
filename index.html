@@ -662,7 +662,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.3.0";
+const VERSION = "3.3.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1234,8 +1234,16 @@ function globalMult(withBoost){
   }
   m *= 1 + 0.02 * dogCount();                                                          // Esprit de Meute
   if(zooComplete()) m *= 2;                                                            // Zoo Complet
+  if(nightBirdBonus()) m *= 1.2;                                                       // Oiseau de Nuit
   if(withBoost !== false) m *= boostMult();
   return m;
+}
+const FLYING_IDS = ["perruche","oiebavarde","canardplastique"];
+function nightBirdBonus(){
+  const h = new Date().getHours();
+  const isNight = (h >= 20 || h < 6);
+  if(!isNight) return false;
+  return FLYING_IDS.some(id => S.owned[id] || S.premium[id]);
 }
 const DOG_IDS = ["corgi","shiba","berger","chiendeberger"];
 function dogCount(){ return DOG_IDS.filter(id => S.owned[id] || S.premium[id]).length; }
@@ -1335,7 +1343,8 @@ const BGM_TRACKS = {
   classic:{name:"Classique", bass:[0,0,7,7,5,5,3,3],              arp:[12,16,19,16,12,16,19,24,12,16,19,16,17,14,12,7],  wave:"square",   tempo:190},
   chill:  {name:"Détente",   bass:[0,0,5,5,3,3,0,0],              arp:[7,12,15,12,7,12,15,19,7,12,15,12,10,9,7,3],       wave:"triangle", tempo:230},
   arcade: {name:"Arcade",    bass:[0,3,5,3,0,3,5,3],              arp:[19,24,22,19,17,19,24,22,19,15,17,19,15,12,14,12], wave:"square",   tempo:150},
-  reverie:{name:"Rêverie",   bass:[0,0,2,2,7,7,5,5],              arp:[12,15,19,24,22,19,15,12,10,14,17,22,19,15,12,10], wave:"sine",     tempo:260}
+  reverie:{name:"Rêverie",   bass:[0,0,2,2,7,7,5,5],              arp:[12,15,19,24,22,19,15,12,10,14,17,22,19,15,12,10], wave:"sine",     tempo:260},
+  secrete:{name:"Secrète",   bass:[0,7,3,10,0,7,3,10],            arp:[12,19,15,22,19,12,24,19,17,24,20,27,24,17,29,24], wave:"triangle", tempo:170, locked:"a19"}
 };
 function nt(semi){ return 220 * Math.pow(2, semi/12); }
 function bgmTick(){
@@ -1486,16 +1495,19 @@ function doTap(cx, cy){
   idleSince = Date.now();
   if(petWrap.classList.contains("sleep")) petWrap.classList.remove("sleep");
   let gain = perTap();
-  const crit = Math.random() < critChance();
-  if(crit){ gain *= 7; bump("crits",1); }
+  const pr = petWrap.getBoundingClientRect();
+  const centerDist = Math.hypot(cx-(pr.left+pr.width/2), cy-(pr.top+pr.height/2));
+  const preciseHit = centerDist < pr.width*0.16;
+  const crit = preciseHit || Math.random() < critChance();
+  if(crit){ gain *= preciseHit ? 14 : 7; bump("crits",1); }
   earn(gain); S.taps++; bump("taps",1);
   const r = stage.getBoundingClientRect();
-  spawnFloat(cx-r.left, cy-r.top, (crit?"CRIT +":"+")+fmt(gain), crit);
+  spawnFloat(cx-r.left, cy-r.top, (preciseHit?"SUPER +":crit?"CRIT +":"+")+fmt(gain), crit);
   spawnCoins(cx-r.left, cy-r.top, (frenzyActive() ? 5 : 0) + (crit ? 10 : 2+rnd(4)));
   petWrap.classList.remove("idle");
   petWrap.classList.add("squish");
   setTimeout(()=>{ petWrap.classList.remove("squish"); petWrap.classList.add("idle"); }, 90);
-  sfx("click"); vibrate(crit ? 22 : 8);
+  sfx("click"); vibrate(preciseHit ? 35 : crit ? 22 : 8);
   tickFrenzyGauge();
   renderHUD();
 }
@@ -2019,6 +2031,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.3.1", lines:["Tap Précis (Super Critique au centre), Oiseau de Nuit, piste secrète, Maître Éleveur"]},
   {v:"3.3.0", lines:["Jauge de Frénésie : se remplit en tapant, 25s de gains ×3 (×6 avec l'amélioration en gemmes)"]},
   {v:"3.2.0", lines:["Rééquilibrage : animaux ×3 à ×11 selon le palier (facile au début, dur à la fin)","Améliorations : croissance qui s'accélère aux niveaux 50 et 100, comme un vrai mur"]},
   {v:"3.1.2", lines:["Esprit de Meute (+chiens possédés), Zoo Complet (×2 si une rareté de chaque), 2 cadres cosmétiques"]},
@@ -2054,7 +2067,10 @@ function openSettings(){
   Object.keys(CLICK_SOUNDS).forEach(k=>{ sHtml += '<button class="themeBtn'+(S.clickSound===k?" on":"")+'" data-snd="'+k+'">'+CLICK_SOUNDS[k].name+'</button>'; });
   sHtml += '</div>';
   let bgmHtml = '<div class="themeGrid" style="grid-template-columns:repeat(2,1fr)">';
-  Object.keys(BGM_TRACKS).forEach(k=>{ bgmHtml += '<button class="themeBtn'+(S.bgmTrack===k?" on":"")+'" data-bgm="'+k+'">'+BGM_TRACKS[k].name+'</button>'; });
+  Object.keys(BGM_TRACKS).forEach(k=>{
+    const t = BGM_TRACKS[k], locked = t.locked && !(S.achv && S.achv[t.locked]);
+    bgmHtml += '<button class="themeBtn'+(S.bgmTrack===k?" on":"")+'" data-bgm="'+k+'"'+(locked?' disabled style="opacity:.45"':'')+'>'+(locked?"🔒 ???":t.name)+'</button>';
+  });
   bgmHtml += '</div>';
   let clHtml = '<div style="text-align:left;font-size:8px;color:var(--ink-soft);line-height:1.9;margin:8px 0 4px">';
   CHANGELOG.slice(0,2).forEach(c=>{ clHtml += '<b style="color:var(--ink)">v'+c.v+'</b> — '+c.lines.join(" · ")+'<br>'; });
@@ -2087,7 +2103,10 @@ function openSettings(){
   bind("sBgm","volBgm","lb"); bind("sSfx","volSfx","ls"); bind("sVib","volVib","lv");
   modal.querySelectorAll("[data-th]").forEach(b=>b.onclick = ()=>{ S.theme = b.dataset.th; applyTheme(); save(); openSettings(); });
   modal.querySelectorAll("[data-snd]").forEach(b=>b.onclick = ()=>{ S.clickSound = b.dataset.snd; sfx("click"); save(); openSettings(); });
-  modal.querySelectorAll("[data-bgm]").forEach(b=>b.onclick = ()=>{ S.bgmTrack = b.dataset.bgm; restartBgm(); save(); openSettings(); });
+  modal.querySelectorAll("[data-bgm]").forEach(b=>b.onclick = ()=>{
+    if(b.disabled) return;
+    S.bgmTrack = b.dataset.bgm; restartBgm(); save(); openSettings();
+  });
   $("#mNotif").onclick = askNotifs;
   $("#mNo").onclick = closeModal;
   $("#mWipe").onclick = ()=>{
@@ -3012,7 +3031,8 @@ const ACHIEVEMENTS = [
   {id:"a16",name:"Série de 30 jours",          stat:"streakBest",     target:30,   gems:5000},
   {id:"a17",name:"Le Taper Fou",               stat:"taps",           target:1e6,  gems:400},
   {id:"a18",name:"Le Riche Héritier",          stat:"lifetimeEarned", target:1e18, gems:1000},
-  {id:"a19",name:"L'Alchimiste Fou",           stat:"fusions",        target:500,  gems:600}
+  {id:"a19",name:"L'Alchimiste Fou",           stat:"fusions",        target:500,  gems:600},
+  {id:"a20",name:"Le Maître Éleveur",          stat:"seen",           target:TOTAL_PETS, gems:2000}
 ];
 function achvValue(a){
   if(a.stat === "classicOwned") return Object.keys(S.owned||{}).filter(k=>S.owned[k]).length;
