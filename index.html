@@ -656,7 +656,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.1.2";
+const VERSION = "3.2.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -887,14 +887,14 @@ const RARITIES = {
    ============================================================ */
 const ANIMALS = [
   {id:"cochon",  name:"Cochon",        cost:0,      tap:1,      rar:"commun",     desc:"Le premier compagnon de la ferme."},
-  {id:"hamster", name:"Hamster",       cost:3e2,    tap:6,      rar:"commun",     desc:"Court dans sa roue, remplit ta bourse."},
-  {id:"lapin",   name:"Lapin",         cost:4e3,    tap:45,     rar:"peucommun",  desc:"Bondit d'une pièce à l'autre."},
-  {id:"perruche",name:"Perruche",      cost:5.5e4,  tap:320,    rar:"peucommun",  desc:"Ramène des pièces en piqué."},
-  {id:"chat",    name:"Chat Européen", cost:8e5,    tap:2400,   rar:"rare",       desc:"Rentable et parfaitement indifférent."},
-  {id:"corgi",   name:"Chien Corgi",   cost:1.2e7,  tap:18000,  rar:"rare",       desc:"Petites pattes, énormes revenus."},
-  {id:"capybara",name:"Capybara",      cost:1.8e8,  tap:14e4,   rar:"epique",     desc:"Le calme absolu, la fortune totale."},
-  {id:"panda",   name:"Panda",         cost:3e9,    tap:11e5,   rar:"legendaire", desc:"Mange, dort, encaisse."},
-  {id:"dragon",  name:"Dragon Pixel",  cost:5e10,   tap:9e6,    rar:"mythique",   desc:"Son trésor déborde à chaque tape."}
+  {id:"hamster", name:"Hamster",       cost:9e2,    tap:6,      rar:"commun",     desc:"Court dans sa roue, remplit ta bourse."},
+  {id:"lapin",   name:"Lapin",         cost:1.4e4,  tap:45,     rar:"peucommun",  desc:"Bondit d'une pièce à l'autre."},
+  {id:"perruche",name:"Perruche",      cost:2.2e5,  tap:320,    rar:"peucommun",  desc:"Ramène des pièces en piqué."},
+  {id:"chat",    name:"Chat Européen", cost:4e6,    tap:2400,   rar:"rare",       desc:"Rentable et parfaitement indifférent."},
+  {id:"corgi",   name:"Chien Corgi",   cost:7.2e7,  tap:18000,  rar:"rare",       desc:"Petites pattes, énormes revenus."},
+  {id:"capybara",name:"Capybara",      cost:1.26e9, tap:14e4,   rar:"epique",     desc:"Le calme absolu, la fortune totale."},
+  {id:"panda",   name:"Panda",         cost:2.7e10, tap:11e5,   rar:"legendaire", desc:"Mange, dort, encaisse."},
+  {id:"dragon",  name:"Dragon Pixel",  cost:5.5e11, tap:9e6,    rar:"mythique",   desc:"Son trésor déborde à chaque tape."}
 ];
 
 const PREMIUM = [
@@ -1188,7 +1188,18 @@ function fmtTime(sec){
    ============================================================ */
 function pLvl(id){ return S.prest[id]||0; }
 function costMult(){ return Math.max(0.4, 1 - 0.03*pLvl("g2")); }          // Négociant
-function upCost(u){ return Math.floor(u.base * Math.pow(u.rate, S.up[u.id]||0) * costMult()); }
+function upCost(u){ return Math.floor(tieredCost(u.base, u.rate, S.up[u.id]||0) * costMult()); }
+/* Croissance du coût par paliers : douce jusqu'au niveau 50, puis nettement plus
+   raide (50-99), puis très raide au-delà de 100 — le "mur" décrit dans le document,
+   sans toucher au coût des tout premiers niveaux (le début reste facile). */
+function tieredCost(base, rate, lvl){
+  const r1 = rate, r2 = rate + 0.18, r3 = rate + 0.4;
+  if(lvl < 50) return base * Math.pow(r1, lvl);
+  const at50 = base * Math.pow(r1, 50);
+  if(lvl < 100) return at50 * Math.pow(r2, lvl-50);
+  const at100 = at50 * Math.pow(r2, 50);
+  return at100 * Math.pow(r3, lvl-100);
+}
 function animalCost(a){ return Math.floor(a.cost * costMult()); }
 function prestCost(p){ return Math.floor(p.base * Math.pow(p.rate, pLvl(p.id))); }
 
@@ -1954,6 +1965,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.2.0", lines:["Rééquilibrage : animaux ×3 à ×11 selon le palier (facile au début, dur à la fin)","Améliorations : croissance qui s'accélère aux niveaux 50 et 100, comme un vrai mur"]},
   {v:"3.1.2", lines:["Esprit de Meute (+chiens possédés), Zoo Complet (×2 si une rareté de chaque), 2 cadres cosmétiques"]},
   {v:"3.1.1", lines:["Clicker Fou (+crit selon le total de tapes), trickle FC/gemmes ambiant, 3 nouveaux succès"]},
   {v:"3.1.0", lines:["Biome Ferme : 10 nouveaux animaux premium, silhouettes propres (pas des recolorations)","3 effets uniques : Cochon Tirelire (+tape), Vache Laitière (passif dédié), Chien de Berger (synergie Ferme)"]},
@@ -3142,7 +3154,7 @@ const ANIMAL_UPS = [
   {id:"au17", animal:"dragon",   tier:1, name:"Forge à trésor",      add:12e6,  base:1.1e11, rate:1.2,  icon:"gadget",color:"#FF8A3D"},
   {id:"au18", animal:"dragon",   tier:2, name:"Antre volcanique",    add:85e6,  base:2.2e12, rate:1.21, icon:"nest",  color:"#FF4D6D"}
 ];
-function auCost(u){ return Math.floor(u.base * Math.pow(u.rate, S.aup[u.id]||0) * costMult()); }
+function auCost(u){ return Math.floor(tieredCost(u.base, u.rate, S.aup[u.id]||0) * costMult()); }
 function auUnlocked(u){
   if(!S.owned[u.animal]) return false;
   if(u.tier === 2){
