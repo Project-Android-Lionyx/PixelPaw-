@@ -321,7 +321,10 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   font-size:11px;display:grid;place-items:center;box-shadow:var(--pop-sm);
 }
 #wheelInfo:active{transform:translateY(2px);box-shadow:none}
-#wheelDisc{width:100%;height:100%;border-radius:50%;border:4px solid var(--ink);transition:transform 3.2s cubic-bezier(.15,.8,.15,1)}
+#wheelDisc{position:relative;width:100%;height:100%;border-radius:50%;border:4px solid var(--ink);transition:transform 3.2s cubic-bezier(.15,.8,.15,1)}
+.wheelIcon{position:absolute;top:50%;left:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;pointer-events:none;
+  text-shadow:0 1px 0 rgba(255,255,255,.5)}
 #wheelPointer{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:0;height:0;
   border-left:9px solid transparent;border-right:9px solid transparent;border-top:15px solid var(--ink);z-index:2}
 .wheelBtn{border:3px solid var(--ink);border-radius:12px;padding:9px 18px;font-size:9px;box-shadow:var(--pop-sm);margin-bottom:7px;min-width:170px}
@@ -582,7 +585,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "2.9.3";
+const VERSION = "2.9.4";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1747,7 +1750,9 @@ function openPrestige(){
       const c = prestCost(p);
       if(pLvl(p.id) >= p.max || S.pawPoints < c) return;
       S.pawPoints -= c; S.prest[p.id] = pLvl(p.id)+1;
+      const scroll = modal.scrollTop;
       sfx("good"); save(); renderHUD(); refreshLists(); openPrestige();
+      modal.scrollTop = scroll;
     };
   });
   const reb = $("#mReb");
@@ -1782,6 +1787,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"2.9.4", lines:["Roue : les logos des lots apparaissent sur la roue elle-même","Renaissance : la liste ne remonte plus en haut après un achat"]},
   {v:"2.9.3", lines:["Le menu reste ouvert à chaque lancement, le replier ne dure que la session en cours"]},
   {v:"2.9.2", lines:["Le nom de l'animal disparaît aussi avec l'étiquette de rareté, pas juste elle seule"]},
   {v:"2.9.1", lines:["Roue de la chance : bouton ⓘ affichant les vrais % et effets de chaque lot"]},
@@ -2850,6 +2856,15 @@ function buildWheelGradient(){
     stops.push(col+" "+(i*step)+"deg "+((i+1)*step)+"deg");
   }
   disc.style.background = "conic-gradient("+stops.join(",")+")";
+  disc.querySelectorAll(".wheelIcon").forEach(el=>el.remove());
+  WHEEL_SEGMENTS.forEach((seg,i)=>{
+    const angle = i*step + step/2;
+    const el = document.createElement("div");
+    el.className = "wheelIcon";
+    el.style.transform = "rotate("+angle+"deg) translate(0,-50px) rotate(-"+angle+"deg)";
+    el.textContent = seg.ico;
+    disc.appendChild(el);
+  });
 }
 function wheelPick(){
   const total = WHEEL_SEGMENTS.reduce((s,x)=>s+x.w,0);
