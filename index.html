@@ -656,7 +656,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.1.1";
+const VERSION = "3.1.2";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1214,8 +1214,18 @@ function globalMult(withBoost){
     const count = PREMIUM.filter(p=>p.biome === "ferme" && p.id !== "chiendeberger" && S.premium[p.id]).length;
     m *= 1 + dog.packBonus * count;
   }
+  m *= 1 + 0.02 * dogCount();                                                          // Esprit de Meute
+  if(zooComplete()) m *= 2;                                                            // Zoo Complet
   if(withBoost !== false) m *= boostMult();
   return m;
+}
+const DOG_IDS = ["corgi","shiba","berger","chiendeberger"];
+function dogCount(){ return DOG_IDS.filter(id => S.owned[id] || S.premium[id]).length; }
+function zooComplete(){
+  const tiers = ["commun","peucommun","rare","epique","legendaire","mythique"];
+  return tiers.every(r =>
+    ANIMALS.some(a=>a.rar===r && S.owned[a.id]) || PREMIUM.some(p=>p.rar===r && S.premium[p.id])
+  );
 }
 function farmIdleFlat(){
   let s = 0;
@@ -1490,11 +1500,17 @@ function renderPet(){
   const p = currentPet();
   paint(petCv, p.id);
   drawCosmOverlay(petCv);
+  applyFrame();
   petLabel.textContent = p.name;
   const r = RARITIES[p.rar];
   rarityTag.textContent = r.name;
   rarityTag.style.background = r.col;
   S.dex[p.id] = S.dex[p.id] || 1;
+}
+function applyFrame(){
+  const id = S.equip && S.equip.cadre;
+  const c = COSMETICS.find(x=>x.id === id);
+  petWrap.style.boxShadow = c ? "0 0 0 4px "+c.color+", 0 0 18px "+c.color : "";
 }
 
 /* ============================================================
@@ -1938,6 +1954,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.1.2", lines:["Esprit de Meute (+chiens possédés), Zoo Complet (×2 si une rareté de chaque), 2 cadres cosmétiques"]},
   {v:"3.1.1", lines:["Clicker Fou (+crit selon le total de tapes), trickle FC/gemmes ambiant, 3 nouveaux succès"]},
   {v:"3.1.0", lines:["Biome Ferme : 10 nouveaux animaux premium, silhouettes propres (pas des recolorations)","3 effets uniques : Cochon Tirelire (+tape), Vache Laitière (passif dédié), Chien de Berger (synergie Ferme)"]},
   {v:"3.0.2", lines:["Arbre de Renaissance bien plus cher : coûts de base et croissance fortement augmentés"]},
@@ -2862,7 +2879,9 @@ const COSMETICS = [
   {id:"c_glass", name:"Lunettes",      cat:"yeux", acc:"glasses", color:"#2B2333", gems:30},
   {id:"c_bow",   name:"Nœud papillon", cat:"cou",  acc:"bow",     color:"#E2678D", gems:20},
   {id:"c_scarf", name:"Écharpe",       cat:"cou",  acc:"scarf",   color:"#4C79D6", gems:25},
-  {id:"c_wings", name:"Ailes",         cat:"dos",  acc:"wings",   color:"#7DD3C0", gems:150}
+  {id:"c_wings", name:"Ailes",         cat:"dos",  acc:"wings",   color:"#7DD3C0", gems:150},
+  {id:"c_frameneon", name:"Cadre néon", cat:"cadre", color:"#00E5FF", gems:80},
+  {id:"c_framegold", name:"Cadre doré", cat:"cadre", color:"#FFC94A", gems:120}
 ];
 function drawCosmOverlay(cv){
   const ctx = cv.getContext("2d");
