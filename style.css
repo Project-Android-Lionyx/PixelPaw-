@@ -551,3 +551,115 @@ button.pressPop{animation:pressPop .2s ease-out}
   .confetti{animation-duration:.4s}
   button.pressPop{animation:none}
 }
+
+/* ============================================================
+   POLISH VISUEL FINAL — Blocs 6 & 8 (transitions, profondeur, éclat)
+   Uniquement de l'esthétique : aucune règle de mise en page modifiée.
+   ============================================================ */
+
+/* --- Profondeur sur la scène : vignette douce + lumière du haut --- */
+#stage::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:5;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,.16) 0%, transparent 55%),
+    radial-gradient(100% 100% at 50% 50%, transparent 55%, rgba(40,30,60,.22) 100%);
+}
+
+/* --- Ombre portée sous l'animal, plus douce et vivante --- */
+#shadow{
+  filter:blur(1px);
+  animation:shadowBreathe 2.6s ease-in-out infinite;
+}
+@keyframes shadowBreathe{
+  0%,100%{transform:translateX(-50%) scale(1);opacity:.55}
+  50%{transform:translateX(-50%) scale(.9);opacity:.4}
+}
+
+/* --- L'animal se détache mieux du décor --- */
+#pet{filter:drop-shadow(0 2px 0 rgba(0,0,0,.22))}
+
+/* --- Ouverture des fenêtres : apparition en douceur --- */
+#veil{backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+#veil.on{animation:veilIn .22s ease-out}
+#veil.on .modal{animation:modalIn .3s cubic-bezier(.2,1.2,.4,1)}
+@keyframes veilIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{
+  0%{opacity:0;transform:translateY(18px) scale(.9)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* --- Les lignes de liste apparaissent en cascade --- */
+.row{animation:rowIn .3s ease-out both}
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.row:nth-child(1){animation-delay:.02s}
+.row:nth-child(2){animation-delay:.05s}
+.row:nth-child(3){animation-delay:.08s}
+.row:nth-child(4){animation-delay:.11s}
+.row:nth-child(5){animation-delay:.14s}
+.row:nth-child(6){animation-delay:.17s}
+
+/* --- Un bouton abordable attire l'œil, un bouton bloqué reste discret --- */
+.rBtn:not([disabled]):not(.owned){animation:btnShine 3.4s ease-in-out infinite}
+@keyframes btnShine{
+  0%,92%,100%{box-shadow:var(--pop-sm)}
+  96%{box-shadow:var(--pop-sm), 0 0 10px 2px rgba(255,255,255,.6)}
+}
+
+/* --- Vignette de rareté sur les miniatures --- */
+.thumb{box-shadow:inset 0 -6px 8px -6px rgba(0,0,0,.35)}
+.row.active{box-shadow:var(--pop-sm), 0 0 0 2px var(--mint-d)}
+
+/* --- Onglet sélectionné : plus lisible --- */
+.tab{transition:transform .14s ease, box-shadow .14s ease}
+.tab.on{transform:translateY(-2px)}
+
+/* --- Barre supérieure : léger relief --- */
+#hud{position:relative;z-index:10}
+.stat{transition:transform .15s ease}
+
+/* --- Toast plus présent --- */
+#toast{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+
+/* --- Le bandeau d'annonce respire --- */
+#banner{animation:bannerBreathe 4s ease-in-out infinite}
+@keyframes bannerBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.012)}}
+
+/* --- Panneau du bas : ouverture fluide --- */
+#panel{transition:height .26s cubic-bezier(.2,.9,.3,1), opacity .2s ease, padding .26s ease}
+
+@media (prefers-reduced-motion:reduce){
+  #shadow,.row,.rBtn,#banner{animation:none}
+  #veil.on,#veil.on .modal{animation-duration:.01s}
+}
+
+/* --- Écran d'apparition d'un animal rare (Bloc 18) --- */
+#rareBurst{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+  display:none;align-items:center;justify-content:center;
+}
+#rareBurst.on{display:flex}
+#rareBurst .rbRays{
+  position:absolute;width:150%;aspect-ratio:1;border-radius:50%;
+  background:conic-gradient(var(--rb-col,#FFC94A) 0 6deg, transparent 6deg 24deg);
+  opacity:.22;animation:rbSpin 2s linear;
+}
+#rareBurst .rbLabel{
+  position:relative;font-size:15px;letter-spacing:3px;
+  -webkit-text-stroke:3px #2B2333;paint-order:stroke fill;
+  animation:rbLabel 2s cubic-bezier(.2,1.3,.3,1);
+}
+@keyframes rbSpin{
+  0%{transform:rotate(0) scale(.3);opacity:0}
+  20%{opacity:.3}
+  100%{transform:rotate(150deg) scale(1.15);opacity:0}
+}
+@keyframes rbLabel{
+  0%{opacity:0;transform:scale(.4)}
+  22%{opacity:1;transform:scale(1.15)}
+  35%{transform:scale(1)}
+  80%{opacity:1}
+  100%{opacity:0;transform:scale(1.05) translateY(-12px)}
+}
+@media (prefers-reduced-motion:reduce){
+  #rareBurst .rbRays{animation-duration:.4s}
+}
