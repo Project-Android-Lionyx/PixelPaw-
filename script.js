@@ -456,6 +456,7 @@ function freshState(){
     boostMult:1, boostUntil:0, boostName:"",
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
+    playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0},
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -568,6 +569,8 @@ function globalMult(withBoost){
   m *= 1 + 0.15 * (S.pawPoints||0) / 10;                                               // Pattes Célestes
   if(S.starter === "chat") m *= 1.05;
   if(typeof weatherLuckMult === "function") m *= weatherLuckMult();          // Bloc 3/25 : bonus arc-en-ciel
+  if(typeof skillProdMult === "function") m *= skillProdMult();              // Bloc 9/25 : talent Production
+  if(typeof skillLuckMult === "function") m *= skillLuckMult();              // Bloc 9/25 : talent Collection
   /* Biome Ferme : Chien de Berger boost les autres animaux de Ferme possédés */
   const dog = PREMIUM.find(p=>p.id === "chiendeberger");
   if(dog && S.premium.chiendeberger){
@@ -605,6 +608,7 @@ function critChance(){
   if(S.starter === "lapin") c += 0.05;
   if(S.premium.anetetu) c += 0.03;
   c += 0.01 * Math.floor((S.taps||0)/1000);          // Clicker Fou : +1%/1000 tapes cumulées
+  if(typeof skillCritBonus === "function") c += skillCritBonus();  // Bloc 9/25 : talent Bonheur
   return Math.min(0.75, c);
 }
 function currentPet(){ return petById(S.animal); }
@@ -851,6 +855,7 @@ function doTap(cx, cy){
   setTimeout(()=>{ petWrap.classList.remove("squish"); petWrap.classList.add("idle"); }, 90);
   sfx("click"); vibrate(preciseHit ? 35 : crit ? 22 : 8);
   tickFrenzyGauge();
+  if(typeof gainPlayerXP === "function") gainPlayerXP(1);          // Bloc 9/25 : XP de soin
   renderHUD();
 }
 /* Jauge de frénésie : se remplit en tapant, une fois pleine déclenche 25 s de
@@ -1148,6 +1153,7 @@ function animalClick(a){
     S.coins -= cost; S.owned[a.id] = true; S.animal = a.id;
     discover(a.id); renderPet(); vibrate(40);
     toast(a.name+" débloqué !");
+    if(typeof gainPlayerXP === "function") gainPlayerXP(25);       // Bloc 9/25 : XP de découverte
   }
   save(); renderHUD(); refreshLists();
 }
@@ -1156,6 +1162,7 @@ function buyUp(u){
   if(S.coins < c) return;
   S.coins -= c; S.up[u.id] = (S.up[u.id]||0)+1;
   bump("buys",1); sfx("buy"); vibrate(6);
+  if(typeof gainPlayerXP === "function") gainPlayerXP(3);          // Bloc 9/25 : XP d'amélioration
   save(); renderHUD(); refreshLists();
 }
 function premiumClick(p){
@@ -1165,6 +1172,7 @@ function premiumClick(p){
     S.gems -= p.gems; S.premium[p.id] = true; S.animal = p.id;
     discover(p.id); renderPet(); sfx("big"); vibrate(60);
     toast(p.name+" · ×"+p.mult+" pour toujours !");
+    if(typeof gainPlayerXP === "function") gainPlayerXP(40);       // Bloc 9/25 : XP de découverte premium
   }
   save(); renderHUD(); refreshLists();
 }
@@ -3006,4 +3014,75 @@ save();
   applyHabitat();
   setWeather(pickWeather());
   tickDayNight();
+})();
+
+/* ============================================================
+   PROGRESSION — Bloc 9/25 : Niveau du joueur, XP, arbre de compétences
+   Module additif : n'écrase aucune mécanique existante. Les hooks vers
+   doTap/buyUp/animalClick/premiumClick/globalMult/critChance ajoutent
+   un seul appel chacun, rien d'autre n'est modifié dans ces fonctions.
+   ============================================================ */
+(function(){
+  const hudRow = document.querySelector("#hud .hud-row");
+  const badge = document.createElement("div");
+  badge.className = "stat";
+  badge.id = "lvlBadge";
+  badge.innerHTML = '<span class="ico" style="font-size:12px;line-height:1">⭐</span><span class="val" id="lvlVal">Niv. 1</span>';
+  if(hudRow) hudRow.insertBefore(badge, hudRow.firstChild);
+
+  function xpForLevel(n){ return Math.floor(60 * Math.pow(1.32, n-1)); }
+
+  window.gainPlayerXP = function(amount){
+    if(typeof S === "undefined" || !amount) return;
+    amount *= (1 + 0.02*(S.skills ? S.skills.explo : 0));   // talent Exploration : +2%/pt sur l'XP gagnée
+    S.playerXP = (S.playerXP||0) + amount;
+    let leveled = false;
+    while(S.playerXP >= xpForLevel(S.playerLvl||1)){
+      S.playerXP -= xpForLevel(S.playerLvl||1);
+      S.playerLvl = (S.playerLvl||1) + 1;
+      S.skillPts = (S.skillPts||0) + 1;
+      const rc = Math.floor(50 * S.playerLvl);
+      S.coins += rc; S.totalEarned += rc; S.lifetimeEarned += rc;
+      if(S.playerLvl % 5 === 0) S.gems += 5;
+      leveled = true;
+    }
+    if(leveled){
+      sfx("evo"); vibrate(50);
+      toast("Niveau "+S.playerLvl+" ! +1 point de talent");
+      if(typeof applyHabitat === "function") applyHabitat();
+    }
+    updateLvlBadge();
+  };
+
+  function updateLvlBadge(){
+    const el = document.getElementById("lvlVal");
+    if(el && typeof S !== "undefined") el.textContent = "Niv. "+(S.playerLvl||1);
+  }
+
+  /* --- Arbre de compétences : 4 branches, 1 pt/niveau, bonus modestes --- */
+  const SKILL_INFO = {
+    prod:    {name:"Production",  desc:"+2% production / pt"},
+    happy:   {name:"Bonheur",     desc:"+1% chance critique / pt"},
+    explo:   {name:"Exploration", desc:"+2% XP gagnée / pt"},
+    collect: {name:"Collection",  desc:"+1% chance objets rares / pt"}
+  };
+  window.SKILL_INFO = SKILL_INFO;
+
+  window.spendSkillPoint = function(branch){
+    if(typeof S === "undefined") return false;
+    if(!SKILL_INFO[branch]) return false;
+    if((S.skillPts||0) <= 0) return false;
+    S.skills = S.skills || {prod:0,happy:0,explo:0,collect:0};
+    S.skills[branch] = (S.skills[branch]||0) + 1;
+    S.skillPts -= 1;
+    sfx("good"); toast(SKILL_INFO[branch].name+" amélioré");
+    save(); renderHUD();
+    return true;
+  };
+
+  window.skillProdMult  = function(){ return 1 + 0.02 * ((typeof S!=="undefined" && S.skills) ? S.skills.prod    : 0); };
+  window.skillCritBonus = function(){ return       0.01 * ((typeof S!=="undefined" && S.skills) ? S.skills.happy   : 0); };
+  window.skillLuckMult  = function(){ return 1 + 0.01 * ((typeof S!=="undefined" && S.skills) ? S.skills.collect : 0); };
+
+  updateLvlBadge();
 })();
