@@ -2353,7 +2353,15 @@ function buildCosmGrid(){
     const cv = document.createElement("canvas"); cv.width=16; cv.height=16;
     const pctx = cv.getContext("2d");
     const pat = ACC[c.acc];
-    for(let y=0;y<16;y++){ const row=(pat.px[y]||"").padEnd(16,"."); for(let x=0;x<16;x++){ if(row[x]==="A"){ pctx.fillStyle=c.color; pctx.fillRect(x,y,1,1); } } }
+    if(pat){
+      for(let y=0;y<16;y++){ const row=(pat.px[y]||"").padEnd(16,"."); for(let x=0;x<16;x++){ if(row[x]==="A"){ pctx.fillStyle=c.color; pctx.fillRect(x,y,1,1); } } }
+    } else {
+      /* CORRECTIF : les cosmétiques de catégorie "cadre" n'ont pas d'accessoire (acc),
+         ACC[undefined] plantait ici et stoppait tout le script. On dessine un aperçu de cadre. */
+      pctx.fillStyle = c.color;
+      pctx.fillRect(1,1,14,2); pctx.fillRect(1,13,14,2);
+      pctx.fillRect(1,1,2,14); pctx.fillRect(13,1,2,14);
+    }
     const lbl = document.createElement("span"); lbl.className = "px";
     lbl.textContent = owned ? c.name : "💎"+c.gems;
     cell.append(cv, lbl);
@@ -3028,12 +3036,13 @@ save();
    un seul appel chacun, rien d'autre n'est modifié dans ces fonctions.
    ============================================================ */
 (function(){
-  const hudRow = document.querySelector("#hud .hud-row");
-  const badge = document.createElement("div");
-  badge.className = "stat";
-  badge.id = "lvlBadge";
-  badge.innerHTML = '<span class="ico" style="font-size:12px;line-height:1">⭐</span><span class="val" id="lvlVal">Niv. 1</span>';
-  if(hudRow) hudRow.insertBefore(badge, hudRow.firstChild);
+  /* Le niveau s'affiche sur la ligne d'info sous le HUD : la grille .hud-row est
+     déjà pleine (5 colonnes / 5 éléments), y ajouter un 6e la ferait déborder. */
+  const lvlLine = document.createElement("div");
+  lvlLine.id = "lvlLine";
+  lvlLine.innerHTML = '<span id="lvlVal">⭐ Niv. 1</span><span id="xpBar"><i></i></span>';
+  const cps = document.getElementById("cpsLine");
+  if(cps && cps.parentNode) cps.parentNode.insertBefore(lvlLine, cps.nextSibling);
 
   function xpForLevel(n){ return Math.floor(60 * Math.pow(1.32, n-1)); }
 
@@ -3060,9 +3069,19 @@ save();
   };
 
   function updateLvlBadge(){
+    if(typeof S === "undefined") return;
     const el = document.getElementById("lvlVal");
-    if(el && typeof S !== "undefined") el.textContent = "Niv. "+(S.playerLvl||1);
+    if(el){
+      el.textContent = "⭐ Niv. "+(S.playerLvl||1) +
+        ((S.skillPts||0) > 0 ? "  ·  "+S.skillPts+" pt" + (S.skillPts>1?"s":"") : "");
+    }
+    const bar = document.querySelector("#xpBar i");
+    if(bar){
+      const need = xpForLevel(S.playerLvl||1);
+      bar.style.width = Math.max(0, Math.min(100, ((S.playerXP||0)/need)*100)) + "%";
+    }
   }
+  setInterval(updateLvlBadge, 600);
 
   /* --- Arbre de compétences : 4 branches, 1 pt/niveau, bonus modestes --- */
   const SKILL_INFO = {
