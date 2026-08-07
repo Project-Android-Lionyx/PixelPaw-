@@ -1155,6 +1155,7 @@ function animalClick(a){
     S.coins -= cost; S.owned[a.id] = true; S.animal = a.id;
     discover(a.id); renderPet(); vibrate(40);
     toast(a.name+" débloqué !");
+    if(typeof confetti === "function") confetti(26);
     if(typeof gainPlayerXP === "function") gainPlayerXP(25);       // Bloc 9/25 : XP de découverte
   }
   save(); renderHUD(); refreshLists();
@@ -1174,6 +1175,7 @@ function premiumClick(p){
     S.gems -= p.gems; S.premium[p.id] = true; S.animal = p.id;
     discover(p.id); renderPet(); sfx("big"); vibrate(60);
     toast(p.name+" · ×"+p.mult+" pour toujours !");
+    if(typeof confetti === "function") confetti(34);
     if(typeof gainPlayerXP === "function") gainPlayerXP(40);       // Bloc 9/25 : XP de découverte premium
   }
   save(); renderHUD(); refreshLists();
@@ -2905,7 +2907,11 @@ save();
     stageEl.style.setProperty("--habitat-c1", h.colors[0]);
     stageEl.style.setProperty("--habitat-c2", h.colors[1]);
     badge.textContent = h.emoji + " " + h.name;
+    AMB.habitat = h.id;
+    window.dispatchEvent(new Event("habitatchange"));
   }
+  window.applyHabitat = applyHabitat;
+  window.currentHabitat = currentHabitat;
 
   /* --- Cycle jour / nuit (BLOC 3/25) : cycle accéléré de 6 min, 4 phases --- */
   const DAY_CYCLE_MS = 6 * 60 * 1000;
@@ -3062,6 +3068,7 @@ save();
     }
     if(leveled){
       sfx("evo"); vibrate(50);
+      if(typeof confetti === "function") confetti(30);
       toast("Niveau "+S.playerLvl+" ! +1 point de talent");
       if(typeof applyHabitat === "function") applyHabitat();
     }
@@ -3178,4 +3185,321 @@ save();
   }
 
   setInterval(refreshWeekQuests, 500);
+})();
+
+/* ============================================================
+   DÉCOR VIVANT — Bloc 3/25 (parallaxe, décor, particules)
+                  Bloc 11/25 (qualité graphique adaptative)
+   Rendu en pixel art authentique : canvas basse résolution agrandi
+   par CSS (image-rendering:pixelated). Les couches fixes (collines,
+   arbres, sol) sont pré-rendues une seule fois par habitat, seules
+   les particules et les nuages sont recalculés — pour tenir 60 FPS
+   sur téléphone modeste.
+   ============================================================ */
+(function(){
+  const stageEl = document.getElementById("stage");
+  if(!stageEl) return;
+
+  const cv = document.createElement("canvas");
+  cv.id = "decorCv";
+  stageEl.insertBefore(cv, stageEl.firstChild);
+  const ctx = cv.getContext("2d");
+
+  const W = 120;                 // résolution interne (pixel art)
+  let H = 200;
+  let scenery = null;            // couches fixes pré-rendues
+
+  /* Palettes par habitat : ciel, collines, arbres, sol, fleurs */
+  const PAL = {
+    prairie:      {hill:["#8FCF7A","#79BC64"], tree:"#4E9B4E", trunk:"#7A5230", ground:"#A5DB90", deco:["#FF8FB1","#FFE066","#FFFFFF"], kind:"tree"},
+    foret:        {hill:["#6FAF66","#588F52"], tree:"#2F7A3E", trunk:"#5E4326", ground:"#7FBE74", deco:["#FFFFFF","#FFD9E8"],           kind:"pine"},
+    montagne:     {hill:["#9FB3C8","#8296AC"], tree:"#5C7A6B", trunk:"#5E4326", ground:"#B6C6D6", deco:["#FFFFFF"],                     kind:"rock"},
+    desert:       {hill:["#E3C67F","#CFAF66"], tree:"#7FA85C", trunk:"#8A6B3A", ground:"#EBD79C", deco:["#FF9E6B","#FFE066"],           kind:"cactus"},
+    banquise:     {hill:["#BFE2F0","#A2CFE2"], tree:"#8FBFD6", trunk:"#7FA8BC", ground:"#DCF1F8", deco:["#FFFFFF"],                     kind:"ice"},
+    jungle:       {hill:["#63A855","#4C8E44"], tree:"#2E7D32", trunk:"#5E4326", ground:"#77BC66", deco:["#FF6B9D","#FFD54F","#FF8A65"], kind:"palm"},
+    savane:       {hill:["#DCC177","#C4A85F"], tree:"#8B9F4B", trunk:"#7A5230", ground:"#E6D293", deco:["#FFB74D"],                     kind:"acacia"},
+    marais:       {hill:["#7E9C6A","#657F55"], tree:"#4A7A46", trunk:"#4E3B22", ground:"#8FAA78", deco:["#C5E1A5","#AED581"],           kind:"reed"},
+    volcan:       {hill:["#8C6A62","#6E504A"], tree:"#5C4038", trunk:"#4A332C", ground:"#A07C72", deco:["#FF7043","#FFAB40"],           kind:"rock"},
+    iletropicale: {hill:["#7FD3C4","#5FBBA9"], tree:"#3E9C7A", trunk:"#8A6B3A", ground:"#F0E2B8", deco:["#FF80AB","#FFD180"],           kind:"palm"},
+    mondeceleste: {hill:["#C7B8EA","#AB99D9"], tree:"#9C86D0", trunk:"#7A66A8", ground:"#DCD0F2", deco:["#FFFFFF","#FFE066"],           kind:"cloudtree"},
+    mondecosmique:{hill:["#5A4C87","#463A6B"], tree:"#6E5CA0", trunk:"#4A3C72", ground:"#6B5C99", deco:["#FFFFFF","#8FE3FF","#FFD1F0"], kind:"crystal"}
+  };
+
+  function qLevel(){
+    const q = (typeof S !== "undefined" && S.gfxQ) ? S.gfxQ : "haute";
+    return q === "faible" ? 0 : q === "moyenne" ? 1 : 2;
+  }
+
+  function resize(){
+    const r = stageEl.getBoundingClientRect();
+    if(!r.width || !r.height) return;
+    H = Math.max(80, Math.round(W * (r.height / r.width)));
+    cv.width = W; cv.height = H;
+    ctx.imageSmoothingEnabled = false;
+    scenery = null;                       // force le re-rendu des couches fixes
+  }
+
+  /* --- Pré-rendu des couches fixes (une fois par habitat / redimensionnement) --- */
+  function buildScenery(){
+    const id = (typeof AMB !== "undefined" && AMB.habitat) ? AMB.habitat : "prairie";
+    const p = PAL[id] || PAL.prairie;
+    const off = document.createElement("canvas");
+    off.width = W; off.height = H;
+    const c = off.getContext("2d");
+    c.imageSmoothingEnabled = false;
+
+    const horizon = Math.round(H * 0.62);
+
+    /* Collines lointaines (2 couches, effet de profondeur) */
+    for(let layer=0; layer<2; layer++){
+      c.fillStyle = p.hill[layer];
+      const base = horizon + layer*6;
+      const amp  = 10 - layer*3;
+      const freq = 0.05 + layer*0.02;
+      for(let x=0; x<W; x++){
+        const y = Math.round(base - amp*Math.sin(x*freq + layer*2) - amp*0.4*Math.sin(x*freq*2.3));
+        c.fillRect(x, y, 1, H-y);
+      }
+    }
+
+    /* Sol au premier plan */
+    c.fillStyle = p.ground;
+    c.fillRect(0, Math.round(H*0.80), W, H);
+
+    /* Végétation : silhouettes simples selon l'habitat */
+    const treeCount = 7;
+    for(let i=0;i<treeCount;i++){
+      const x = Math.round(6 + i*(W-12)/(treeCount-1) + (i%2?3:-3));
+      const y = horizon - 2 + (i%3);
+      drawPlant(c, p, x, y, 1 + (i%2)*0.35);
+    }
+    for(let i=0;i<5;i++){
+      const x = Math.round(10 + i*(W-20)/4 + (i%2?5:-5));
+      drawPlant(c, p, x, Math.round(H*0.80)+2, 1.5);
+    }
+
+    /* Touffes d'herbe et fleurs sur le sol */
+    for(let i=0;i<26;i++){
+      const x = Math.round(Math.random()*W);
+      const y = Math.round(H*0.80 + 2 + Math.random()*(H*0.18));
+      c.fillStyle = p.deco[i % p.deco.length];
+      if(i%3===0){ c.fillRect(x, y, 2, 2); }
+      else { c.fillStyle = p.tree; c.fillRect(x, y, 1, 3); c.fillRect(x-1, y+1, 1, 2); c.fillRect(x+1, y+1, 1, 2); }
+    }
+    scenery = off;
+  }
+
+  function drawPlant(c, p, x, y, s){
+    const h = Math.round(10*s), w = Math.round(9*s);
+    if(p.kind === "pine"){
+      c.fillStyle = p.trunk; c.fillRect(x-1, y-3, 2, 4);
+      c.fillStyle = p.tree;
+      for(let k=0;k<3;k++){
+        const ww = Math.round(w - k*2.5), hh = Math.round(3*s);
+        c.fillRect(x - ww/2, y - 3 - hh*(k+1), ww, hh);
+      }
+    } else if(p.kind === "cactus"){
+      c.fillStyle = p.tree;
+      c.fillRect(x-1, y-h, 3, h);
+      c.fillRect(x-4, y-h+3, 3, 2); c.fillRect(x-4, y-h+3, 2, 5);
+      c.fillRect(x+2, y-h+5, 3, 2); c.fillRect(x+3, y-h+1, 2, 6);
+    } else if(p.kind === "palm"){
+      c.fillStyle = p.trunk; c.fillRect(x-1, y-h, 2, h);
+      c.fillStyle = p.tree;
+      c.fillRect(x-6, y-h-1, 5, 2); c.fillRect(x+1, y-h-1, 5, 2);
+      c.fillRect(x-4, y-h-3, 3, 2); c.fillRect(x+1, y-h-3, 3, 2);
+    } else if(p.kind === "acacia"){
+      c.fillStyle = p.trunk; c.fillRect(x-1, y-h, 2, h);
+      c.fillStyle = p.tree;  c.fillRect(x-w/2, y-h-3, w, 3);
+    } else if(p.kind === "rock" || p.kind === "ice"){
+      c.fillStyle = p.tree;
+      c.fillRect(x-3, y-5, 6, 5); c.fillRect(x-2, y-7, 4, 2);
+    } else if(p.kind === "reed"){
+      c.fillStyle = p.tree;
+      for(let k=-2;k<=2;k++) c.fillRect(x+k*2, y-6-Math.abs(k), 1, 6);
+    } else if(p.kind === "crystal"){
+      c.fillStyle = p.tree;
+      c.fillRect(x-2, y-8, 4, 8); c.fillRect(x-1, y-11, 2, 3);
+      c.fillStyle = p.deco[0]; c.fillRect(x-1, y-9, 1, 5);
+    } else if(p.kind === "cloudtree"){
+      c.fillStyle = p.trunk; c.fillRect(x-1, y-6, 2, 6);
+      c.fillStyle = p.tree;  c.fillRect(x-4, y-11, 8, 4); c.fillRect(x-3, y-13, 6, 2);
+    } else {                                   /* arbre feuillu par défaut */
+      c.fillStyle = p.trunk; c.fillRect(x-1, y-5, 2, 5);
+      c.fillStyle = p.tree;
+      c.fillRect(x-w/2, y-11, w, 6); c.fillRect(x-w/2+1, y-13, w-2, 2);
+    }
+  }
+
+  /* --- Éléments animés --- */
+  const clouds = [], motes = [], flyers = [];
+  function seedAmbient(){
+    clouds.length = 0; motes.length = 0; flyers.length = 0;
+    const q = qLevel();
+    for(let i=0;i<3+q;i++) clouds.push({x:Math.random()*W, y:6+Math.random()*22, s:0.05+Math.random()*0.06, w:12+Math.random()*10});
+    const moteN = q===0 ? 6 : q===1 ? 14 : 22;
+    for(let i=0;i<moteN;i++) motes.push({x:Math.random()*W, y:Math.random()*H, ph:Math.random()*6.28, sp:0.1+Math.random()*0.2});
+    const flyN = q===0 ? 1 : q===1 ? 2 : 3;
+    for(let i=0;i<flyN;i++) flyers.push({x:Math.random()*W, y:20+Math.random()*(H*0.5), ph:Math.random()*6.28, sp:0.15+Math.random()*0.2, up:Math.random()<0.5});
+  }
+
+  let t = 0, last = 0;
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(document.hidden) return;
+    if(now - last < 33) return;                 // ~30 FPS suffit pour l'ambiance
+    last = now; t += 1;
+
+    if(!cv.width) { resize(); return; }
+    if(!scenery) buildScenery();
+
+    ctx.clearRect(0,0,W,H);
+
+    /* Nuages (derrière les collines) */
+    const night = (typeof AMB !== "undefined" && AMB.phase === "Nuit");
+    ctx.fillStyle = night ? "rgba(255,255,255,.18)" : "rgba(255,255,255,.62)";
+    clouds.forEach(cl=>{
+      cl.x += cl.s; if(cl.x > W+cl.w) cl.x = -cl.w;
+      ctx.fillRect(cl.x, cl.y, cl.w, 3);
+      ctx.fillRect(cl.x+3, cl.y-2, cl.w-6, 2);
+    });
+
+    /* Étoiles la nuit */
+    if(night){
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      for(let i=0;i<14;i++){
+        const sx = (i*37) % W, sy = (i*17) % Math.round(H*0.45);
+        if((t + i*9) % 120 < 90) ctx.fillRect(sx, sy, 1, 1);
+      }
+    }
+
+    /* Couches fixes pré-rendues */
+    ctx.drawImage(scenery, 0, 0);
+
+    /* Herbe qui ondule au premier plan */
+    const p = PAL[(typeof AMB!=="undefined" && AMB.habitat) || "prairie"] || PAL.prairie;
+    const windy = (typeof AMB !== "undefined" && (AMB.weather === "vent" || AMB.weather === "orage"));
+    ctx.fillStyle = p.tree;
+    const sway = Math.sin(t*0.05) * (windy ? 2 : 0.8);
+    for(let i=0;i<18;i++){
+      const gx = Math.round((i*7 + 3) % W);
+      const gy = Math.round(H - 4 - (i%3));
+      ctx.fillRect(gx + Math.round(sway*((i%3)+1)/3), gy-3, 1, 3);
+    }
+
+    /* Particules ambiantes : pollen le jour, lucioles la nuit */
+    motes.forEach(m=>{
+      m.ph += 0.02; m.y -= m.sp*0.35; m.x += Math.sin(m.ph)*0.25;
+      if(m.y < -2){ m.y = H+2; m.x = Math.random()*W; }
+      if(night){
+        const blink = (Math.sin(m.ph*1.7)+1)/2;
+        ctx.fillStyle = "rgba(255,238,140,"+(0.25+blink*0.65).toFixed(2)+")";
+        ctx.fillRect(Math.round(m.x), Math.round(m.y), 1, 1);
+        if(blink > 0.85) ctx.fillRect(Math.round(m.x), Math.round(m.y)-1, 1, 1);
+      } else {
+        ctx.fillStyle = "rgba(255,255,255,.45)";
+        ctx.fillRect(Math.round(m.x), Math.round(m.y), 1, 1);
+      }
+    });
+
+    /* Papillons le jour, chauves-souris/oiseaux qui traversent */
+    if(!night){
+      flyers.forEach(f=>{
+        f.ph += 0.12;
+        f.x += f.up ? f.sp : -f.sp;
+        f.y += Math.sin(f.ph)*0.35;
+        if(f.x > W+3){ f.x = -3; f.y = 20+Math.random()*(H*0.5); }
+        if(f.x < -3){ f.x = W+3; f.y = 20+Math.random()*(H*0.5); }
+        const open = Math.sin(f.ph) > 0;
+        ctx.fillStyle = p.deco[0];
+        ctx.fillRect(Math.round(f.x), Math.round(f.y), 1, 1);
+        if(open){ ctx.fillRect(Math.round(f.x)-1, Math.round(f.y)-1, 1, 1); ctx.fillRect(Math.round(f.x)+1, Math.round(f.y)-1, 1, 1); }
+        else    { ctx.fillRect(Math.round(f.x)-1, Math.round(f.y), 1, 1);   ctx.fillRect(Math.round(f.x)+1, Math.round(f.y), 1, 1); }
+      });
+    }
+
+    /* Rayons de lumière discrets en journée */
+    if(!night && qLevel() === 2){
+      ctx.fillStyle = "rgba(255,250,200,.05)";
+      for(let i=0;i<3;i++){
+        const rx = Math.round(((t*0.08) + i*40) % (W+40)) - 20;
+        ctx.fillRect(rx, 0, 6, Math.round(H*0.6));
+      }
+    }
+  }
+
+  window.addEventListener("resize", ()=>{ resize(); });
+  window.addEventListener("habitatchange", ()=>{ scenery = null; });
+  resize(); seedAmbient(); requestAnimationFrame(frame);
+})();
+
+/* ============================================================
+   EFFETS — Bloc 8/25 (aura des raretés, animations avancées)
+            Bloc 6/25 (retours visuels de l'interface)
+   ============================================================ */
+(function(){
+  const stageEl = document.getElementById("stage");
+  const wrap = document.getElementById("petWrap");
+  if(!stageEl || !wrap) return;
+
+  /* --- Aura derrière l'animal, colorée selon sa rareté --- */
+  const aura = document.createElement("div");
+  aura.id = "petAura";
+  wrap.insertBefore(aura, wrap.firstChild);
+
+  function refreshAura(){
+    if(typeof S === "undefined" || typeof currentPet !== "function") return;
+    let p, r;
+    try { p = currentPet(); r = p && RARITIES[p.rar]; } catch(e){ return; }
+    if(!r){ aura.style.display = "none"; return; }
+    /* Seules les raretés élevées brillent : garde l'effet lisible et rare. */
+    const strong = ["epique","legendaire","mythique","divin","cosmique","secret"];
+    const key = String(p.rar).toLowerCase();
+    const on = strong.some(s=>key.indexOf(s) >= 0);
+    aura.style.display = on ? "block" : "none";
+    if(on){ aura.style.background = "radial-gradient(circle, "+r.col+"66 0%, transparent 68%)"; }
+  }
+  setInterval(refreshAura, 700);
+
+  /* --- Confettis : déclenchés sur les moments forts --- */
+  window.confetti = function(n){
+    const host = document.getElementById("fx") || stageEl;
+    const r = stageEl.getBoundingClientRect();
+    const cols = ["#FF8FB1","#FFE066","#7DD3C0","#B47BFF","#FFC94A","#FF7043"];
+    const count = Math.min(n || 26, 40);
+    for(let i=0;i<count;i++){
+      const d = document.createElement("i");
+      d.className = "confetti";
+      d.style.left = (r.width*0.5 + (Math.random()*120-60)) + "px";
+      d.style.top  = (r.height*0.42) + "px";
+      d.style.background = cols[i % cols.length];
+      d.style.setProperty("--cx", (Math.random()*220-110).toFixed(0)+"px");
+      d.style.setProperty("--cy", (-60-Math.random()*130).toFixed(0)+"px");
+      d.style.setProperty("--cr", (Math.random()*720-360).toFixed(0)+"deg");
+      d.style.animationDelay = (i*0.012)+"s";
+      host.appendChild(d);
+      setTimeout(()=>d.remove(), 1500);
+    }
+  };
+
+  /* --- Petites animations de vie : bâillement, clin d'œil, étirement --- */
+  const MOODS = ["blink","yawn","dance","jump"];
+  setInterval(()=>{
+    if(document.hidden) return;
+    if(!wrap || wrap.classList.contains("sleep")) return;
+    if(Math.random() < 0.35 && typeof setMood === "function"){
+      const m = MOODS[Math.floor(Math.random()*MOODS.length)];
+      try { setMood(m, 900); } catch(e){}
+    }
+  }, 6000);
+
+  /* --- Bloc 6 : chaque bouton réagit au toucher --- */
+  document.addEventListener("pointerdown", e=>{
+    const b = e.target.closest("button");
+    if(!b) return;
+    b.classList.remove("pressPop"); void b.offsetWidth; b.classList.add("pressPop");
+    setTimeout(()=>b.classList.remove("pressPop"), 220);
+  }, {passive:true});
+
+  refreshAura();
 })();
