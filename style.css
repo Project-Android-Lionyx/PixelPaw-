@@ -508,3 +508,14 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   letter-spacing:.5px;text-transform:uppercase;display:flex;align-items:center;gap:4px;
   box-shadow:var(--pop-sm);pointer-events:none
 }
+
+/* Ligne de niveau joueur (Bloc 9/25) — placée sous #cpsLine, hors de la grille du HUD */
+#lvlLine{
+  margin-top:3px;display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-soft);
+}
+#xpBar{
+  width:70px;height:5px;border:2px solid var(--ink);border-radius:999px;
+  background:rgba(0,0,0,.10);overflow:hidden;display:block;
+}
+#xpBar i{display:block;height:100%;width:0%;background:var(--ink);transition:width .4s ease}
