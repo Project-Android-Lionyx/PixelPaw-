@@ -79,6 +79,8 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 #stage{
   flex:1 1 auto;position:relative;display:flex;flex-direction:column;
   align-items:center;justify-content:center;overflow:hidden;min-height:0;
+  background:linear-gradient(180deg, var(--habitat-c1, transparent) 0%, var(--habitat-c2, transparent) 100%);
+  transition:background 1.5s ease;
 }
 #petName{
   font-size:10px;letter-spacing:1px;text-transform:uppercase;background:var(--cream);
