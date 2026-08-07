@@ -663,3 +663,70 @@ button.pressPop{animation:pressPop .2s ease-out}
 @media (prefers-reduced-motion:reduce){
   #rareBurst .rbRays{animation-duration:.4s}
 }
+
+/* ============================================================
+   PASSE ESTHÉTIQUE (propositions Gemini, adaptées au code réel)
+   Corrections apportées : les transforms de centrage (#shadow, #toast)
+   sont préservés, et #petWrap n'est pas animé directement pour ne pas
+   écraser le squish au tap ni les animations d'humeur.
+   ============================================================ */
+
+/* Enfoncement premium au toucher sur boutons et onglets */
+.iconBtn, .rBtn, .tab{ transition:transform .1s cubic-bezier(.4,0,.2,1), filter .2s ease-out; }
+.iconBtn:active, .rBtn:active, .tab:active{ transform:scale(.92); filter:brightness(.9); }
+
+/* Contour "sticker" sur les textes clés — 1px : à 8-11px, 2px empâtait la police pixel */
+.stat, #cpsLine, #petName, .rName, #rarityTag{
+  text-shadow:1px 1px 0 var(--ink), 0 2px 3px rgba(0,0,0,.12);
+}
+
+/* Lévitation de l'animal — portée sur #pet et non #petWrap,
+   pour laisser intacts le squish au tap et les animations d'humeur */
+@keyframes idleFloat{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+#pet{ animation:idleFloat 3.2s ease-in-out infinite; }
+#petWrap.idle{ animation-duration:3.2s; }          /* synchronise la respiration avec la lévitation */
+
+/* Ombre synchronisée — le translateX(-50%) de centrage est conservé dans chaque étape */
+@keyframes shadowPulse{
+  0%,100%{ transform:translateX(-50%) scale(1);   opacity:.55 }
+  50%    { transform:translateX(-50%) scale(.84); opacity:.3  }
+}
+#shadow{ animation:shadowPulse 3.2s ease-in-out infinite; }
+
+/* Battement d'invitation sur "Tape l'animal" */
+@keyframes pulseHint{ 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.08);opacity:1} }
+#tapHint{ animation:pulseHint 2s ease-in-out infinite; }
+
+/* Retour tactile sur les lignes de liste
+   (fill-mode backwards : sinon l'animation d'entrée figeait le transform et bloquait cet effet) */
+.row{ animation-fill-mode:backwards; transition:transform .15s ease, opacity .15s ease; }
+.row:active{ transform:scale(.97); opacity:.85; }
+
+/* Apparition rebondissante des fenêtres */
+@keyframes popInModal{ 0%{transform:scale(.85);opacity:0} 100%{transform:scale(1);opacity:1} }
+#veil.on .modal{ animation:popInModal .4s cubic-bezier(.34,1.56,.64,1); }
+
+/* Notification qui monte en douceur — le centrage translate(-50%,-50%) est préservé */
+#toast{ transform:translate(-50%,-50%) translateY(15px) scale(.9); transition:.28s cubic-bezier(.2,.8,.2,1); }
+#toast.on{ transform:translate(-50%,-50%) translateY(0) scale(1); }
+
+/* Éclat sur l'étiquette de rareté */
+#rarityTag{ transition:filter .3s ease; }
+#rarityTag:active{ filter:brightness(1.1) drop-shadow(0 0 4px var(--gem)); }
+
+/* Vignette réactive — réservée aux appareils à vrai pointeur, pour éviter
+   le survol qui reste collé après un tap sur mobile */
+@media (hover:hover){
+  .thumb{ transition:transform .2s ease; }
+  .row:hover .thumb{ transform:scale(1.05) rotate(2deg); }
+}
+
+/* Réduction de mouvement : on neutralise les animations sans toucher aux
+   transforms de centrage (un transform:none décalerait ombre et notification) */
+@media (prefers-reduced-motion:reduce){
+  #pet, #shadow, #tapHint, #petWrap.idle, #veil.on .modal{ animation:none; }
+  .iconBtn, .rBtn, .tab, .row, .thumb{ transition:none; }
+  #shadow{ transform:translateX(-50%); }
+  #toast{ transform:translate(-50%,-50%) scale(.9); }
+  #toast.on{ transform:translate(-50%,-50%) scale(1); }
+}
