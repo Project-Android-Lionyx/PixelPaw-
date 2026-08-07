@@ -3503,3 +3503,49 @@ save();
 
   refreshAura();
 })();
+
+/* ============================================================
+   APPARITION SPECTACULAIRE — Bloc 18/25
+   Écran de célébration lors de la première obtention d'un animal
+   de rareté élevée. Purement visuel : ne modifie ni l'économie ni
+   la logique de découverte, s'accroche simplement à discover().
+   ============================================================ */
+(function(){
+  const stageEl = document.getElementById("stage");
+  if(!stageEl || typeof discover !== "function") return;
+
+  const burst = document.createElement("div");
+  burst.id = "rareBurst";
+  burst.innerHTML = '<div class="rbRays"></div><div class="rbLabel"></div>';
+  stageEl.appendChild(burst);
+
+  function celebrate(id){
+    let p = null, r = null;
+    try {
+      p = (typeof petById === "function" && petById(id)) ||
+          (typeof PREMIUM !== "undefined" && PREMIUM.find(x=>x.id===id));
+      r = p && RARITIES[p.rar];
+    } catch(e){ return; }
+    if(!r) return;
+    const key = String(p.rar).toLowerCase();
+    const strong = ["rare","epique","legendaire","mythique","divin","cosmique","secret"];
+    if(!strong.some(s=>key.indexOf(s) >= 0)) return;
+
+    const lbl = burst.querySelector(".rbLabel");
+    lbl.textContent = r.name.toUpperCase();
+    lbl.style.color = r.col;
+    burst.style.setProperty("--rb-col", r.col);
+    burst.classList.remove("on"); void burst.offsetWidth; burst.classList.add("on");
+    setTimeout(()=>burst.classList.remove("on"), 2000);
+    if(typeof confetti === "function") confetti(34);
+  }
+
+  /* On enveloppe discover() sans le réécrire : le comportement d'origine
+     est appelé tel quel, on ajoute seulement la célébration par-dessus. */
+  const originalDiscover = discover;
+  window.discover = discover = function(id){
+    const first = originalDiscover(id);
+    if(first) celebrate(id);
+    return first;
+  };
+})();
