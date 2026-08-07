@@ -567,6 +567,7 @@ function globalMult(withBoost){
   m *= 1 + 0.02 * pLvl("g9");                                                          // Cœur généreux
   m *= 1 + 0.15 * (S.pawPoints||0) / 10;                                               // Pattes Célestes
   if(S.starter === "chat") m *= 1.05;
+  if(typeof weatherLuckMult === "function") m *= weatherLuckMult();          // Bloc 3/25 : bonus arc-en-ciel
   /* Biome Ferme : Chien de Berger boost les autres animaux de Ferme possédés */
   const dog = PREMIUM.find(p=>p.id === "chiendeberger");
   if(dog && S.premium.chiendeberger){
@@ -2793,3 +2794,216 @@ document.addEventListener("pointerdown", function once(){
   if(S.volBgm > 0) startBgm();
 });
 save();
+
+/* ============================================================
+   AMBIANCE — Bloc 3/25 : Habitats, décorations, météo, monde vivant
+   Module additif et autonome : ne touche à AUCUNE mécanique existante,
+   ne modifie aucune sauvegarde existante, tourne sur sa propre boucle
+   légère (ne se mélange pas à loop()). Peut être retiré sans casser
+   le reste du jeu.
+   ============================================================ */
+(function(){
+  const stageEl = document.getElementById("stage");
+  if(!stageEl) return;
+
+  /* --- Couches visuelles créées dynamiquement (aucune modif HTML) --- */
+  const sky = document.createElement("div");
+  sky.id = "skyTint";
+  stageEl.insertBefore(sky, stageEl.firstChild);
+
+  const wfx = document.createElement("div");
+  wfx.id = "weatherFx";
+  const wcv = document.createElement("canvas");
+  wfx.appendChild(wcv);
+  stageEl.appendChild(wfx);
+
+  const badge = document.createElement("div");
+  badge.className = "habitatBadge";
+  stageEl.appendChild(badge);
+
+  function resizeWCV(){
+    const r = stageEl.getBoundingClientRect();
+    wcv.width  = Math.max(1, Math.floor(r.width));
+    wcv.height = Math.max(1, Math.floor(r.height));
+  }
+  resizeWCV();
+  window.addEventListener("resize", resizeWCV);
+
+  /* --- Habitats (BLOC 3/25) --- */
+  const HABITATS = [
+    {id:"prairie",       name:"Prairie",        emoji:"🌾", unlockLvl:1,  colors:["#CFEFC6","#E9F7E0"]},
+    {id:"foret",         name:"Forêt",          emoji:"🌲", unlockLvl:2,  colors:["#B7DDB0","#DCEFD4"]},
+    {id:"montagne",      name:"Montagne",       emoji:"⛰️", unlockLvl:3,  colors:["#C9D6E3","#EAF1F7"]},
+    {id:"desert",        name:"Désert",         emoji:"🏜️", unlockLvl:4,  colors:["#F2DFA6","#FBEFCB"]},
+    {id:"banquise",      name:"Banquise",       emoji:"❄️", unlockLvl:5,  colors:["#D6EEF7","#F0FAFD"]},
+    {id:"jungle",        name:"Jungle",         emoji:"🌴", unlockLvl:6,  colors:["#A9D89B","#D4EFC7"]},
+    {id:"savane",        name:"Savane",         emoji:"🦁", unlockLvl:7,  colors:["#EAD79A","#F7ECC9"]},
+    {id:"marais",        name:"Marais",         emoji:"🐸", unlockLvl:8,  colors:["#B8CFA8","#DCE9CE"]},
+    {id:"volcan",        name:"Volcan",         emoji:"🌋", unlockLvl:9,  colors:["#E9B3A3","#F6D9CE"]},
+    {id:"iletropicale",  name:"Île tropicale",  emoji:"🏝️", unlockLvl:10, colors:["#A6E1DA","#D8F5F1"]},
+    {id:"mondeceleste",  name:"Monde céleste",  emoji:"☁️", unlockLvl:11, colors:["#D9CCF2","#EFE7FA"]},
+    {id:"mondecosmique", name:"Monde cosmique", emoji:"🌌", unlockLvl:12, colors:["#7C6CA8","#B9A8DB"]}
+  ];
+
+  /* Proxy de progression : utilise S.playerLvl si un jour le bloc 9 (niveau joueur)
+     est implémenté ; sinon se base sur le nombre d'animaux possédés, sans jamais
+     planter si ces champs n'existent pas encore. */
+  function playerLevel(){
+    if(typeof S === "undefined") return 1;
+    if(S.playerLvl) return S.playerLvl;
+    const owned = S.owned ? Object.keys(S.owned).filter(k=>S.owned[k]).length : 1;
+    return Math.max(1, owned);
+  }
+  function unlockedHabitats(){
+    const lvl = playerLevel();
+    const u = HABITATS.filter(h=>lvl >= h.unlockLvl);
+    return u.length ? u : [HABITATS[0]];
+  }
+  function currentHabitat(){
+    const u = unlockedHabitats();
+    if(typeof S !== "undefined" && S.habitat){
+      const h = u.find(x=>x.id === S.habitat);
+      if(h) return h;
+    }
+    return u[u.length-1];
+  }
+  window.setHabitat = function(id){
+    const u = unlockedHabitats();
+    const h = u.find(x=>x.id===id);
+    if(!h) return false;
+    if(typeof S !== "undefined"){ S.habitat = id; if(typeof save==="function") save(); }
+    applyHabitat();
+    return true;
+  };
+  window.getHabitats = function(){
+    const u = unlockedHabitats();
+    return HABITATS.map(h=>({...h, unlocked: u.includes(h)}));
+  };
+  function applyHabitat(){
+    const h = currentHabitat();
+    stageEl.style.setProperty("--habitat-c1", h.colors[0]);
+    stageEl.style.setProperty("--habitat-c2", h.colors[1]);
+    badge.textContent = h.emoji + " " + h.name;
+  }
+
+  /* --- Cycle jour / nuit (BLOC 3/25) : cycle accéléré de 6 min, 4 phases --- */
+  const DAY_CYCLE_MS = 6 * 60 * 1000;
+  const PHASES = [
+    {t:0.00, name:"Matin",   tint:"rgba(255,224,178,.28)"},
+    {t:0.28, name:"Midi",    tint:"rgba(255,255,255,.05)"},
+    {t:0.55, name:"Coucher", tint:"rgba(255,150,110,.32)"},
+    {t:0.72, name:"Nuit",    tint:"rgba(48,42,110,.50)"}
+  ];
+  function phaseAt(frac){
+    let cur = PHASES[0];
+    for(const p of PHASES){ if(frac >= p.t) cur = p; }
+    return cur;
+  }
+  function tickDayNight(){
+    const frac = (Date.now() % DAY_CYCLE_MS) / DAY_CYCLE_MS;
+    const p = phaseAt(frac);
+    sky.style.background = p.tint;
+    AMB.phase = p.name;
+  }
+
+  /* --- Météo dynamique (BLOC 3/25) --- */
+  const WEATHERS = ["soleil","pluie","neige","brouillard","orage","vent","arcenciel"];
+  const WEATHER_WEIGHTS = {soleil:34, pluie:16, neige:10, brouillard:10, orage:8, vent:16, arcenciel:6};
+  let particles = [];
+  const AMB = { weather:"soleil", phase:"Midi" };
+  window.AMB = AMB;
+
+  function pickWeather(){
+    let total = 0; for(const w in WEATHER_WEIGHTS) total += WEATHER_WEIGHTS[w];
+    let r = Math.random()*total;
+    for(const w of WEATHERS){ r -= WEATHER_WEIGHTS[w]; if(r<=0) return w; }
+    return "soleil";
+  }
+  function setWeather(w){
+    AMB.weather = w;
+    particles = [];
+    const W = wcv.width, H = wcv.height;
+    const count = (w==="pluie"||w==="orage") ? 70 : (w==="neige") ? 40 : (w==="vent") ? 18 : 0;
+    for(let i=0;i<count;i++){
+      particles.push({
+        x:Math.random()*W, y:Math.random()*H,
+        vy:(w==="pluie"||w==="orage") ? (6+Math.random()*4) : (w==="neige") ? (0.6+Math.random()*0.8) : 0,
+        vx:(w==="vent") ? (1.2+Math.random()*1.5) : (w==="neige") ? (Math.sin(i)*0.4) : 0,
+        len:(w==="pluie"||w==="orage") ? (8+Math.random()*8) : 0,
+        r:(w==="neige") ? (1+Math.random()*2) : 0
+      });
+    }
+  }
+  let lightningT = 0;
+  function drawWeather(){
+    if(!wcv.width || !wcv.height) return;
+    const ctx = wcv.getContext("2d");
+    ctx.clearRect(0,0,wcv.width,wcv.height);
+    const w = AMB.weather;
+    if(w==="soleil") return;
+    if(w==="brouillard"){
+      ctx.fillStyle = "rgba(255,255,255,.16)";
+      ctx.fillRect(0,0,wcv.width,wcv.height);
+      return;
+    }
+    if(w==="pluie" || w==="orage"){
+      ctx.strokeStyle = "rgba(180,210,255,.55)"; ctx.lineWidth = 1.4;
+      particles.forEach(p=>{
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x, p.y+p.len); ctx.stroke();
+        p.y += p.vy; if(p.y > wcv.height){ p.y = -10; p.x = Math.random()*wcv.width; }
+      });
+      if(w==="orage"){
+        lightningT -= 1;
+        if(lightningT <= 0 && Math.random() < 0.01){
+          lightningT = 6;
+          ctx.fillStyle = "rgba(255,255,255,.35)";
+          ctx.fillRect(0,0,wcv.width,wcv.height);
+        }
+      }
+      return;
+    }
+    if(w==="neige"){
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      particles.forEach(p=>{
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+        p.y += p.vy; p.x += p.vx;
+        if(p.y > wcv.height){ p.y = -5; p.x = Math.random()*wcv.width; }
+      });
+      return;
+    }
+    if(w==="vent"){
+      ctx.strokeStyle = "rgba(140,170,120,.4)"; ctx.lineWidth = 2;
+      particles.forEach(p=>{
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-10,p.y-3); ctx.stroke();
+        p.x += p.vx*2; if(p.x > wcv.width){ p.x = -10; p.y = Math.random()*wcv.height; }
+      });
+      return;
+    }
+    if(w==="arcenciel"){
+      const cx = wcv.width*0.5, cy = wcv.height*1.05, R = wcv.width*0.55;
+      const cols = ["#FF6B6B","#FFB86B","#FFE96B","#8FE38F","#7DC4F2","#B49CE8"];
+      cols.forEach((c,i)=>{
+        ctx.strokeStyle = c; ctx.lineWidth = 4; ctx.globalAlpha = .55;
+        ctx.beginPath(); ctx.arc(cx, cy, Math.max(1,R - i*5), Math.PI, 2*Math.PI); ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      return;
+    }
+  }
+  function rotateWeather(){ setWeather(pickWeather()); }
+
+  /* Petit bonus équilibré (conséquence météo demandée au bloc 3) :
+     arc-en-ciel = +5% sur la production, rien d'autre — branché dans globalMult(). */
+  window.weatherLuckMult = function(){
+    return AMB.weather === "arcenciel" ? 1.05 : 1;
+  };
+
+  /* --- Boucle légère dédiée, indépendante de loop() du jeu --- */
+  function ambianceTick(){ tickDayNight(); drawWeather(); }
+  setInterval(ambianceTick, 200);
+  setInterval(rotateWeather, 5*60*1000);
+
+  applyHabitat();
+  setWeather(pickWeather());
+  tickDayNight();
+})();
