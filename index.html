@@ -53,6 +53,9 @@ body{
 }
 button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+body[data-theme="dark"] canvas{filter:saturate(.8) brightness(.92) hue-rotate(-6deg)}
+body[data-theme="gameboy"] canvas{filter:grayscale(1) sepia(1) hue-rotate(48deg) saturate(2.4) brightness(.95) contrast(1.1)}
+body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1.08) brightness(1.03)}
 
 #app{
   position:relative;width:100%;max-width:460px;margin:0 auto;
@@ -722,7 +725,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.0.2";
+const VERSION = "4.1.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -935,25 +938,25 @@ panda:{size:24,pal:{W:"#F7F4EC",G:"#D9D4C4",K:"#2B2320",Y:"#FFFFFF"},px:[
 
 dragon:{size:24,pal:{P:"#7ACB9C",D:"#4E9E71",S:"#C7F0D6",K:"#2B2320",W:"#5EAE7E",Y:"#FFD24A",H:"#FFD24A"},px:[
 "........................",
-".......KK......KK.......",
-".......KK......KK.......",
+"......KKK......KKK......",
 ".......KK......KK.......",
 ".......KK......KK.......",
 ".......KK......KK.......",
 ".......KK......KK.......",
 "........................",
 "........................",
-"...........KK...........",
+"........................",
+"............K...........",
+"..........K...K.........",
 "......PPPPPPPPPPPP......",
-"......PKYKPPPPKYKP......",
-"......PKKKPPPPKKKP......",
-"S.....PKKKPPPPKKKP.....S",
+"......KKYYKPPKYYKK......",
+"S.....KKKKKPPKKKKK.....S",
 "SSS...PPPSSSSSSPPP...SSS",
 "SSS...PPPSSSSSSPPP...SSS",
-".SSS..PPPSSKKSSPPP..SSS.",
 ".SSS..PPPSSSSSSPPP..SSS.",
-"..WWW.DDDSSSSSSDDD.WWW..",
-"..WWW.DDDDDDDDDDDD.WWW..",
+".SSS..PPPPSSSSPPPP..SSS.",
+"..WWW.DDDDKSSKDDDD.WWW..",
+"..WWW.DDDDSSSSDDDD.WWW..",
 "......DDDDDDDDDDDD......",
 ".......HHHH..HHHH.......",
 ".......HHHH..HHHH.......",
@@ -2292,6 +2295,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.1.0", lines:["Les couleurs des animaux s'adaptent maintenant au thème actif (Dark/GameBoy/Cyberpunk), pas que l'interface","Dragon : museau allongé, yeux en amande dorés, cornes incurvées — nouvel essai"]},
   {v:"4.0.2", lines:["Dragon : ailes vraiment angulaires (ne ressemble plus à des oreilles d'éléphant)","Perruche : vraie houppe pointue façon calopsite, avec la joue orange caractéristique"]},
   {v:"4.0.1", lines:["Pattes/sabots dans une 3e couleur distincte sur 6 animaux (Hamster, Lapin, Chat, Corgi, Capybara, Dragon)","Même niveau de finition que le Cochon désormais — comparé côte à côte avant envoi"]},
   {v:"4.0.0", lines:["Les 9 animaux classiques redessinés en 24×24 (Hamster, Lapin, Perruche, Chat, Corgi, Capybara, Panda, Dragon)","Chaque rendu vérifié visuellement avant intégration — traits distinctifs par espèce, pas de simples recolorations"]},
