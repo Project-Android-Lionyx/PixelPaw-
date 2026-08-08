@@ -730,3 +730,26 @@ button.pressPop{animation:pressPop .2s ease-out}
   #toast{ transform:translate(-50%,-50%) scale(.9); }
   #toast.on{ transform:translate(-50%,-50%) scale(1); }
 }
+
+/* --- Écran des talents (Bloc 9) --- */
+.talentRow{
+  display:flex;align-items:center;gap:8px;margin-bottom:7px;
+  background:var(--card);border:3px solid var(--ink);border-radius:12px;
+  padding:8px 9px;box-shadow:var(--pop-sm);
+}
+.talentIco{font-size:17px;flex:0 0 auto}
+.talentTxt{flex:1 1 auto;min-width:0;text-align:left;display:flex;flex-direction:column;gap:2px}
+.talentTxt b{font-size:9px}
+.talentTxt span{font-size:7.5px;color:var(--ink-soft)}
+.talentLvl{
+  flex:0 0 auto;font-size:11px;min-width:22px;text-align:center;
+  background:var(--cream);border:2px solid var(--ink);border-radius:8px;padding:3px 5px;
+}
+.talentBtn{
+  flex:0 0 auto;width:32px;height:32px;font-size:15px;
+  border:3px solid var(--ink);border-radius:10px;background:var(--mint);
+  box-shadow:var(--pop-sm);color:#2B2333;
+}
+.talentBtn[disabled]{opacity:.4;box-shadow:none}
+#lvlLine{transition:transform .15s ease}
+#lvlLine:active{transform:scale(.95)}
