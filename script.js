@@ -3842,6 +3842,13 @@ save();
     S.inv = {}; S.seen = {}; S.dex = {cochon:1}; S.fc = 0;
     S.boostUntil = 0; S.boostMult = 1; S.boostName = "";
     S.totalEarned = 0; S.offCoinSteps = 0; S.expo = null;
+    /* Seuls les achats en gemmes survivent : races premium, cosmétiques,
+       pass sans pubs et extensions hors-ligne payées en gemmes.
+       Tout le reste — y compris niveau, talents et exploration — repart à zéro. */
+    S.playerLvl = 1; S.playerXP = 0; S.skillPts = 0;
+    S.skills = {prod:0, happy:0, explo:0, collect:0};
+    S.habXp = {}; S.habDone = {}; S.habitat = null;
+    S.starter = null;
     if(typeof ensureTierCache === "function") ensureTierCache();
 
     closeModal();
@@ -3868,9 +3875,11 @@ save();
       '<div class="tpArrow">▼</div>' +
       '<div class="tpNext">Monde <b>'+(w+1)+'</b> · production ×'+worldMult(w+1).toFixed(1)+'</div>' +
       '<div class="tpWarn">' +
-        '<b>Tout le cycle repart de zéro :</b><br>' +
-        'pièces, animaux, améliorations, évolutions,<br>renaissances et Pattes Célestes.<br><br>' +
-        '<b>Tu conserves :</b><br>gemmes, races premium, cosmétiques,<br>succès, niveau, talents et exploration.' +
+        '<b>Tout repart de zéro :</b><br>' +
+        'pièces, animaux, améliorations, évolutions,<br>' +
+        'renaissances, Pattes Célestes,<br>niveau, talents et exploration.<br><br>' +
+        '<b>Tu conserves uniquement tes achats en gemmes :</b><br>' +
+        'gemmes, races premium, cosmétiques et pass.' +
       '</div>' +
       '<div class="tpReq">' +
         (missReb ? '<div class="tpKo">✖ Encore '+missReb+' renaissance'+(missReb>1?'s':'')+' ('+(S.rebirths||0)+'/'+need+')</div>'
