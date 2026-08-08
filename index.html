@@ -722,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.7.0";
+const VERSION = "3.8.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -968,39 +968,39 @@ const RARITIES = {
    animal reste toujours "presque" à portée.
    ============================================================ */
 const ANIMALS = [
-  {id:"cochon",  name:"Cochon",        cost:0,      tap:1,      rar:"commun",     desc:"Le premier compagnon de la ferme."},
-  {id:"hamster", name:"Hamster",       cost:9e2,    tap:6,      rar:"commun",     desc:"Court dans sa roue, remplit ta bourse."},
-  {id:"lapin",   name:"Lapin",         cost:1.4e4,  tap:45,     rar:"peucommun",  desc:"Bondit d'une pièce à l'autre."},
-  {id:"perruche",name:"Perruche",      cost:2.2e5,  tap:320,    rar:"peucommun",  desc:"Ramène des pièces en piqué."},
-  {id:"chat",    name:"Chat Européen", cost:4e6,    tap:2400,   rar:"rare",       desc:"Rentable et parfaitement indifférent."},
-  {id:"corgi",   name:"Chien Corgi",   cost:7.2e7,  tap:18000,  rar:"rare",       desc:"Petites pattes, énormes revenus."},
-  {id:"capybara",name:"Capybara",      cost:1.26e9, tap:14e4,   rar:"epique",     desc:"Le calme absolu, la fortune totale."},
-  {id:"panda",   name:"Panda",         cost:2.7e10, tap:11e5,   rar:"legendaire", desc:"Mange, dort, encaisse."},
-  {id:"dragon",  name:"Dragon Pixel",  cost:5.5e11, tap:9e6,    rar:"mythique",   desc:"Son trésor déborde à chaque tape."}
+  {id:"cochon",  name:"Cochon",        cost:0,      tap:1,      rar:"commun",     trait:"Gourmand", desc:"Le premier compagnon de la ferme."},
+  {id:"hamster", name:"Hamster",       cost:9e2,    tap:6,      rar:"commun",     trait:"Joueur",   desc:"Court dans sa roue, remplit ta bourse."},
+  {id:"lapin",   name:"Lapin",         cost:1.4e4,  tap:45,     rar:"peucommun",  trait:"Curieux",  desc:"Bondit d'une pièce à l'autre."},
+  {id:"perruche",name:"Perruche",      cost:2.2e5,  tap:320,    rar:"peucommun",  trait:"Curieux",  desc:"Ramène des pièces en piqué."},
+  {id:"chat",    name:"Chat Européen", cost:4e6,    tap:2400,   rar:"rare",       trait:"Dormeur",  desc:"Rentable et parfaitement indifférent."},
+  {id:"corgi",   name:"Chien Corgi",   cost:7.2e7,  tap:18000,  rar:"rare",       trait:"Joueur",   desc:"Petites pattes, énormes revenus."},
+  {id:"capybara",name:"Capybara",      cost:1.26e9, tap:14e4,   rar:"epique",     trait:"Dormeur",  desc:"Le calme absolu, la fortune totale."},
+  {id:"panda",   name:"Panda",         cost:2.7e10, tap:11e5,   rar:"legendaire", trait:"Gourmand", desc:"Mange, dort, encaisse."},
+  {id:"dragon",  name:"Dragon Pixel",  cost:5.5e11, tap:9e6,    rar:"mythique",   trait:"Curieux",  desc:"Son trésor déborde à chaque tape."}
 ];
 
 const PREMIUM = [
-  {id:"siamois",   name:"Chat Siamois",     gems:120,  mult:3,  tap:5e5,  rar:"rare",       desc:"Élégant, bavard, ×3 sur tout."},
-  {id:"mainecoon", name:"Chat Maine Coon",  gems:260,  mult:5,  tap:4e6,  rar:"epique",     desc:"Le géant doux. ×5 sur tout."},
-  {id:"sphynx",    name:"Chat Sphynx",      gems:450,  mult:7,  tap:3e7,  rar:"epique",     desc:"Sans poil, sans pitié. ×7 sur tout."},
-  {id:"shiba",     name:"Chien Shiba Inu",  gems:700,  mult:10, tap:2e8,  rar:"legendaire", desc:"Le sourire qui rapporte. ×10 sur tout."},
-  {id:"bouledogue",name:"Bouledogue Français",gems:1100,mult:14,tap:15e8, rar:"legendaire", desc:"Ronfle en générant des fortunes. ×14."},
-  {id:"berger",    name:"Berger Allemand",  gems:1600, mult:20, tap:1e10, rar:"mythique",   desc:"Garde ton or et le multiplie. ×20."},
-  {id:"cochondore",name:"Cochon Doré",      gems:900,  mult:12, tap:5e9,  rar:"legendaire", desc:"La star dorée de la ferme. ×12 sur tout."},
-  {id:"lama",      name:"Lama",             gems:1400, mult:17, tap:3e10, rar:"mythique",   desc:"Crache le glamour. ×17 sur tout."},
-  {id:"singe",     name:"Singe",            gems:2200, mult:28, tap:2e11, rar:"mythique",   desc:"Le boss de la troupe. ×28 sur tout."},
+  {id:"siamois",   name:"Chat Siamois",     gems:120,  mult:3,  tap:5e5,  rar:"rare",       trait:"Dormeur",  desc:"Élégant, bavard, ×3 sur tout."},
+  {id:"mainecoon", name:"Chat Maine Coon",  gems:260,  mult:5,  tap:4e6,  rar:"epique",     trait:"Dormeur",  desc:"Le géant doux. ×5 sur tout."},
+  {id:"sphynx",    name:"Chat Sphynx",      gems:450,  mult:7,  tap:3e7,  rar:"epique",     trait:"Curieux",  desc:"Sans poil, sans pitié. ×7 sur tout."},
+  {id:"shiba",     name:"Chien Shiba Inu",  gems:700,  mult:10, tap:2e8,  rar:"legendaire", trait:"Joueur",   desc:"Le sourire qui rapporte. ×10 sur tout."},
+  {id:"bouledogue",name:"Bouledogue Français",gems:1100,mult:14,tap:15e8, rar:"legendaire", trait:"Dormeur", desc:"Ronfle en générant des fortunes. ×14."},
+  {id:"berger",    name:"Berger Allemand",  gems:1600, mult:20, tap:1e10, rar:"mythique",   trait:"Joueur",   desc:"Garde ton or et le multiplie. ×20."},
+  {id:"cochondore",name:"Cochon Doré",      gems:900,  mult:12, tap:5e9,  rar:"legendaire", trait:"Gourmand", desc:"La star dorée de la ferme. ×12 sur tout."},
+  {id:"lama",      name:"Lama",             gems:1400, mult:17, tap:3e10, rar:"mythique",   trait:"Curieux",  desc:"Crache le glamour. ×17 sur tout."},
+  {id:"singe",     name:"Singe",            gems:2200, mult:28, tap:2e11, rar:"mythique",   trait:"Joueur",   desc:"Le boss de la troupe. ×28 sur tout."},
 
   /* --- Biome Ferme (ajout, rien retiré) --- */
-  {id:"cochontirelire", name:"Cochon Tirelire", gems:60,  mult:1,   tap:8e2,  rar:"peucommun", desc:"+15 % sur tes gains de tape.", tapBonus:0.15, biome:"ferme"},
-  {id:"vachelait",       name:"Vache Laitière",  gems:70,  mult:1,   tap:0,    rar:"peucommun", desc:"+40 pièces/sec dédiées, tout le temps.", idleFlat:40, biome:"ferme"},
-  {id:"moutonor",        name:"Mouton à Laine d'Or", gems:90, mult:3, tap:1.5e3, rar:"rare",    desc:"×3 sur tout.", biome:"ferme"},
-  {id:"chevrepix",       name:"Chèvre Pixel",    gems:50,  mult:2,   tap:900,  rar:"peucommun", desc:"×2 sur tout.", biome:"ferme"},
-  {id:"chevaltrait",     name:"Cheval de Trait", gems:100, mult:4,   tap:2e3,  rar:"rare",      desc:"×4 sur tout.", biome:"ferme"},
-  {id:"anetetu",         name:"Âne Têtu",        gems:80,  mult:1,   tap:1e3,  rar:"rare",      desc:"+3 % de chance de critique.", critBonus:0.03, biome:"ferme"},
-  {id:"oiebavarde",      name:"Oie Bavarde",     gems:45,  mult:2,   tap:700,  rar:"commun",    desc:"×2 sur tout.", biome:"ferme"},
-  {id:"canardplastique", name:"Canard en Plastique", gems:40, mult:1.5, tap:500, rar:"commun",  desc:"×1,5 sur tout.", biome:"ferme"},
-  {id:"dindonfurieux",   name:"Dindon Furieux",  gems:65,  mult:2.5, tap:1.1e3, rar:"peucommun", desc:"×2,5 sur tout.", biome:"ferme"},
-  {id:"chiendeberger",   name:"Chien de Berger", gems:150, mult:1,   tap:2.5e3, rar:"legendaire", desc:"+8 % par animal de la Ferme possédé.", packBonus:0.08, biome:"ferme"}
+  {id:"cochontirelire", name:"Cochon Tirelire", gems:60,  mult:1,   tap:8e2,  rar:"peucommun", trait:"Gourmand", desc:"+15 % sur tes gains de tape.", tapBonus:0.15, biome:"ferme"},
+  {id:"vachelait",       name:"Vache Laitière",  gems:70,  mult:1,   tap:0,    rar:"peucommun", trait:"Gourmand", desc:"+40 pièces/sec dédiées, tout le temps.", idleFlat:40, biome:"ferme"},
+  {id:"moutonor",        name:"Mouton à Laine d'Or", gems:90, mult:3, tap:1.5e3, rar:"rare",    trait:"Dormeur", desc:"×3 sur tout.", biome:"ferme"},
+  {id:"chevrepix",       name:"Chèvre Pixel",    gems:50,  mult:2,   tap:900,  rar:"peucommun", trait:"Curieux", desc:"×2 sur tout.", biome:"ferme"},
+  {id:"chevaltrait",     name:"Cheval de Trait", gems:100, mult:4,   tap:2e3,  rar:"rare",      trait:"Joueur", desc:"×4 sur tout.", biome:"ferme"},
+  {id:"anetetu",         name:"Âne Têtu",        gems:80,  mult:1,   tap:1e3,  rar:"rare",      trait:"Dormeur", desc:"+3 % de chance de critique.", critBonus:0.03, biome:"ferme"},
+  {id:"oiebavarde",      name:"Oie Bavarde",     gems:45,  mult:2,   tap:700,  rar:"commun",    trait:"Joueur", desc:"×2 sur tout.", biome:"ferme"},
+  {id:"canardplastique", name:"Canard en Plastique", gems:40, mult:1.5, tap:500, rar:"commun",  trait:"Curieux", desc:"×1,5 sur tout.", biome:"ferme"},
+  {id:"dindonfurieux",   name:"Dindon Furieux",  gems:65,  mult:2.5, tap:1.1e3, rar:"peucommun", trait:"Joueur", desc:"×2,5 sur tout.", biome:"ferme"},
+  {id:"chiendeberger",   name:"Chien de Berger", gems:150, mult:1,   tap:2.5e3, rar:"legendaire", trait:"Joueur", desc:"+8 % par animal de la Ferme possédé.", packBonus:0.08, biome:"ferme"}
 ];
 
 const ALL_PETS = ANIMALS.concat(PREMIUM);
@@ -1795,7 +1795,7 @@ function refreshLists(){
   R.animals.forEach(({a,r})=>{
     const own = !!S.owned[a.id], act = S.animal === a.id, cost = animalCost(a);
     setCls(r,"locked",!own); setCls(r,"active",act);
-    setTxt(r._sub, own ? petSub(a)+" · "+a.desc : "Verrouillé · "+RARITIES[a.rar].name);
+    setTxt(r._sub, own ? petSub(a)+" · "+a.desc+" · 🐾 "+a.trait : "Verrouillé · "+RARITIES[a.rar].name);
     if(act){ setTxt(r._btn,"ACTIF"); r._btn.className="rBtn owned"; setDis(r._btn,true); }
     else if(own){ setTxt(r._btn,"CHOISIR"); r._btn.className="rBtn mintBtn"; setDis(r._btn,false); }
     else { setTxt(r._btn,"🔓<br>"+fmt(cost)); r._btn.className="rBtn"; setDis(r._btn, S.coins < cost); }
@@ -1820,7 +1820,7 @@ function refreshLists(){
   R.premium.forEach(({p,r})=>{
     const own = !!S.premium[p.id], act = S.animal === p.id;
     setCls(r,"active",act);
-    setTxt(r._sub, own ? petSub(p)+" · ×"+p.mult : p.desc);
+    setTxt(r._sub, own ? petSub(p)+" · ×"+p.mult+" · 🐾 "+p.trait : p.desc);
     if(act){ setTxt(r._btn,"ACTIF"); r._btn.className="rBtn owned"; setDis(r._btn,true); }
     else if(own){ setTxt(r._btn,"CHOISIR"); r._btn.className="rBtn mintBtn"; setDis(r._btn,false); }
     else { setTxt(r._btn,"💎<br>"+fmt(p.gems)); r._btn.className="rBtn gemBtn"; setDis(r._btn, S.gems < p.gems); }
@@ -2111,6 +2111,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.8.0", lines:["Chaque animal a un trait (Gourmand/Joueur/Dormeur/Curieux) qui influence son comportement","Le trait s'affiche sur les animaux possédés · outil de test caché (7 tapes sur le numéro de version)"]},
   {v:"3.7.0", lines:["Ouverture d'œuf mise en scène : l'œuf se fissure, flash, puis révélation de l'animal","Réutilise les sprites de l'accueil — plus de résultat instantané et plat"]},
   {v:"3.6.0", lines:["Monde vivant : herbe animée, insecte de passage occasionnel, l'animal regarde autour de lui / s'assoit","Améliorations et Boutique regroupées en vraies catégories (Clic manuel/Automatique, Gemmes/Premium)"]},
   {v:"3.5.0", lines:["Nouvelle séquence d'accueil : œuf à réchauffer en 5 tapes avant le choix du compagnon","Uniquement pour les tout nouveaux joueurs, ne touche pas les parties en cours"]},
@@ -3087,6 +3088,12 @@ function spawnZzz(){
   fx.appendChild(z); setTimeout(()=>z.remove(), 2400);
 }
 function celebrate(){ idleSince = Date.now(); setMood("dance", 900); }
+const TRAIT_BIAS = {
+  Dormeur: {yawn:2.2, sit:1.4, jump:.3,  look:.6},
+  Joueur:  {jump:2.0, look:1.2, yawn:.4, sit:.4},
+  Curieux: {look:2.2, jump:1.1, yawn:.5, sit:.6},
+  Gourmand:{sit:2.0,  yawn:1.1, jump:.6, look:.7}
+};
 function moodTick(){
   if(veil.classList.contains("on")) return;               // pas d'animation sous une modale
   const idleMs = Date.now() - idleSince;
@@ -3095,12 +3102,16 @@ function moodTick(){
     if(Math.random() < .3) spawnZzz();
     return;
   }
-  const r = Math.random();
-  if(r < .16) setMood("blink", 160);
-  else if(r < .25) setMood("jump", 520);
-  else if(r < .31) setMood("yawn", 1250);
-  else if(r < .38) setMood("look", 1400);
-  else if(r < .43) setMood("sit", 1800);
+  const bias = TRAIT_BIAS[currentPet().trait] || {};
+  const base = {none:57, blink:16, jump:9, yawn:6, look:7, sit:5};
+  let weights = {}, total = 0;
+  Object.keys(base).forEach(k=>{ weights[k] = base[k] * (bias[k]||1); total += weights[k]; });
+  const dur = {blink:160, jump:520, yawn:1250, look:1400, sit:1800};
+  let r = Math.random()*total, acc = 0;
+  for(const k in weights){
+    acc += weights[k];
+    if(r <= acc){ if(k !== "none") setMood(k, dur[k]); return; }
+  }
 }
 setInterval(moodTick, 2600);
 function buildDecor(){
@@ -3546,6 +3557,21 @@ function buildHomeBg(){
 function startHome(){
   buildHomeBg();
   document.getElementById("homeVersion").textContent = "v"+VERSION;
+  let _dbgTaps = 0, _dbgTimer = null;
+  document.getElementById("homeVersion").addEventListener("click", ()=>{
+    _dbgTaps++;
+    clearTimeout(_dbgTimer);
+    _dbgTimer = setTimeout(()=>{ _dbgTaps = 0; }, 1200);
+    if(_dbgTaps >= 7){
+      _dbgTaps = 0;
+      S.coins = Math.max(S.coins||0, 1e15);
+      S.gems = (S.gems||0) + 50000;
+      S.fc = (S.fc||0) + 5000;
+      save(); renderHUD(); refreshLists();
+      toast("Ressources rechargées");
+      vibrate(100);
+    }
+  });
   const bar = document.getElementById("homeBar"), txt = document.getElementById("homeBarTxt");
   let p = 0;
   const t = setInterval(()=>{
