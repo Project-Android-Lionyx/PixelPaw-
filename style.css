@@ -813,3 +813,59 @@ button.pressPop{animation:pressPop .2s ease-out}
 .expoChip.ready{background:var(--gold);animation:ecReady 1.4s ease-in-out infinite}
 @keyframes ecReady{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 @media (prefers-reduced-motion:reduce){ .expoChip.ready{animation:none} }
+
+/* --- Boss & défis (Bloc 19) --- */
+.bossChip{
+  position:absolute;top:34px;left:6px;z-index:7;display:flex;align-items:center;gap:5px;
+  background:#FFD9D9;border:2px solid var(--ink);border-radius:999px;
+  padding:3px 9px 3px 6px;box-shadow:var(--pop-sm);cursor:pointer;
+  font-size:8px;letter-spacing:.3px;color:#2B2333;
+  animation:bossAlert 1.3s ease-in-out infinite;
+}
+.bossChip .bcIco{font-size:13px;line-height:1}
+@keyframes bossAlert{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+
+.bossArena{
+  position:relative;height:120px;margin:6px 0 10px;
+  background:var(--card);border:3px solid var(--ink);border-radius:14px;
+  box-shadow:var(--pop-sm);display:flex;align-items:center;justify-content:center;
+  overflow:hidden;cursor:pointer;user-select:none;
+}
+.bossArena:active{background:var(--cream)}
+.bossSprite{font-size:56px;line-height:1;pointer-events:none}
+.bossSprite.bossHurt{animation:bossHurt .18s ease-out}
+@keyframes bossHurt{
+  0%{transform:scale(1) rotate(0);filter:none}
+  40%{transform:scale(.86) rotate(-7deg);filter:brightness(1.7)}
+  100%{transform:scale(1) rotate(0);filter:none}
+}
+.bossDmg{
+  position:absolute;top:38%;font-size:11px;font-style:normal;color:var(--ink);
+  pointer-events:none;animation:bossDmg .7s ease-out forwards;
+}
+.bossDmg.crit{font-size:15px;color:#E53935}
+@keyframes bossDmg{
+  0%{opacity:1;transform:translateY(0) scale(.8)}
+  100%{opacity:0;transform:translateY(-42px) scale(1.15)}
+}
+.bossHpWrap{
+  position:relative;height:16px;border:3px solid var(--ink);border-radius:999px;
+  background:rgba(0,0,0,.12);overflow:hidden;margin-bottom:7px;
+}
+.bossHpWrap i{display:block;height:100%;background:#E5555F;transition:width .12s linear}
+.bossHpWrap span{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:7.5px;color:var(--cream);text-shadow:1px 1px 0 rgba(0,0,0,.6);
+}
+.bossTimer{font-size:11px;margin-bottom:5px}
+.bossHint{font-size:7.5px;color:var(--ink-soft)}
+.bossWin{font-size:52px;margin:6px 0;animation:bossWin .7s cubic-bezier(.3,1.4,.4,1)}
+@keyframes bossWin{0%{transform:scale(.3) rotate(-18deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+.bossLoot{
+  background:var(--mint);border:3px solid var(--ink);border-radius:12px;
+  padding:9px;font-size:10px;line-height:1.7;margin:8px 0;box-shadow:var(--pop-sm);
+}
+.bossStat{font-size:8px;color:var(--ink-soft);margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){
+  .bossChip,.bossSprite.bossHurt,.bossWin{animation:none}
+}
