@@ -904,3 +904,83 @@ button.pressPop{animation:pressPop .2s ease-out}
 @media (prefers-reduced-motion:reduce){
   .bossCombo.pulse,.bossArena.shake{animation:none}
 }
+
+/* ============================================================
+   PASSE ESTHÉTIQUE 2 (propositions Gemini, adaptées)
+   Corrections : pas de font-weight sur une police pixel (bold
+   synthétique = police baveuse), rayon du panneau conservé en haut
+   uniquement, et .expoBar retirée des barres de progression.
+   ============================================================ */
+
+/* Transitions fluides sur tous les éléments cliquables */
+.iconBtn, .mBtn, .rBtn, .themeBtn, .tab{
+  transition:filter .2s ease, transform .2s cubic-bezier(.175,.885,.32,1.275);
+}
+.iconBtn:active, .mBtn:active, .rBtn:active, .themeBtn:active{
+  transform:scale(.92); filter:brightness(.9);
+}
+
+/* Relief lumineux sur les fenêtres et le bandeau
+   (le panneau garde ses coins arrondis en haut seulement : il est
+   collé au bas de l'écran, l'arrondir en bas creuserait deux encoches) */
+.modal, #banner{
+  box-shadow:0 10px 30px rgba(0,0,0,.15),
+             inset 0 4px 0 rgba(255,255,255,.4),
+             inset 0 -4px 0 rgba(0,0,0,.1);
+  border-radius:24px;
+}
+#panel{
+  box-shadow:0 -6px 24px rgba(0,0,0,.12), inset 0 4px 0 rgba(255,255,255,.35);
+}
+
+/* Aspect verre bombé sur les vraies barres de progression
+   (.expoBar en était exclue : c'est une ligne d'info, pas une jauge) */
+#xpBar, .mcBar, .bossHpWrap{
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),
+             inset 0 3px 0 rgba(255,255,255,.5),
+             0 2px 6px rgba(0,0,0,.1);
+}
+
+/* Badges et étiquettes en pastille légèrement bombée */
+#rarityTag, .habitatBadge, .expoChip, .bossChip, .talentLvl{
+  box-shadow:0 3px 0 rgba(0,0,0,.1), inset 0 2px 0 rgba(255,255,255,.4);
+  letter-spacing:.5px;
+}
+
+/* Ombre portée façon autocollant sur les vignettes et icônes
+   (.iconBtn exclu : son filtre au tap écraserait cette ombre) */
+.thumb, .mcIco, .talentIco{
+  filter:drop-shadow(0 4px 3px rgba(0,0,0,.12));
+}
+
+/* Contour crème sur les textes assez grands pour le supporter.
+   Volontairement PAS appliqué à .tab ni .mcName (6,5 px : le contour
+   les rendrait illisibles), et AUCUN font-weight — « Press Start 2P »
+   n'a qu'une graisse, un bold synthétique baverait tout le pixel art. */
+#petName, .rName, .sLabel{
+  text-shadow:1.5px 1.5px 0 var(--cream), -1.5px -1.5px 0 var(--cream),
+              1.5px -1.5px 0 var(--cream), -1.5px 1.5px 0 var(--cream),
+              0 4px 6px rgba(0,0,0,.15);
+}
+
+/* Notification plus épaisse et chaleureuse */
+#toast{
+  box-shadow:0 12px 32px rgba(0,0,0,.2),
+             inset 0 3px 0 rgba(255,255,255,.4),
+             inset 0 -3px 0 rgba(0,0,0,.1);
+}
+
+/* Lévitation de l'animal et ombre synchronisées sur le même tempo */
+@keyframes floatPet{ 0%{transform:translateY(0)} 100%{transform:translateY(-8px)} }
+@keyframes pulseShadow{
+  0%  { transform:translateX(-50%) scale(1);   opacity:.6  }
+  100%{ transform:translateX(-50%) scale(.85); opacity:.25 }
+}
+#pet{    animation:floatPet 2.5s ease-in-out infinite alternate; }
+#shadow{ animation:pulseShadow 2.5s ease-in-out infinite alternate; }
+#petWrap.idle{ animation-duration:2.5s; }        /* respiration alignée sur la lévitation */
+
+@media (prefers-reduced-motion:reduce){
+  #pet, #shadow{ animation:none; }
+  #shadow{ transform:translateX(-50%); }
+}
