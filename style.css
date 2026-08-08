@@ -984,3 +984,26 @@ button.pressPop{animation:pressPop .2s ease-out}
   #pet, #shadow{ animation:none; }
   #shadow{ transform:translateX(-50%); }
 }
+
+/* ============================================================
+   CORRECTIFS D'AJUSTEMENT
+   ============================================================ */
+
+/* CORRECTIF — La bulle de salutation reste dans le flux même invisible
+   (opacity:0, z-index:5) et se superpose à la bulle Bonus (z-index:4) :
+   elle interceptait les taps. Elle n'est jamais interactive, donc on la
+   rend transparente aux clics. */
+#greetBubble{ pointer-events:none; }
+
+/* CORRECTIF — La bulle Bonus passe au-dessus des couches décoratives */
+#bubble{ z-index:9; }
+
+/* CORRECTIF — La barre du panneau tranchait les lignes en plein milieu
+   au défilement. On lui donne de la hauteur et un fondu pour que le
+   contenu disparaisse proprement dessous. */
+#panelBar{ padding-top:6px; padding-bottom:9px; }
+#panelBar::after{
+  content:"";position:absolute;left:0;right:0;top:100%;height:10px;
+  pointer-events:none;
+  background:linear-gradient(180deg, var(--cream), transparent);
+}
