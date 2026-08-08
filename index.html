@@ -282,6 +282,21 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 
 /* starter / prestige : plein écran */
 #starter{position:absolute;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,var(--bg2),var(--bg4))}
+#eggIntro{
+  position:absolute;inset:0;z-index:65;display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;background:radial-gradient(circle,var(--bg3) 0%,var(--bg2) 100%);
+}
+#eggIntro.on{display:flex}
+#eggIntro h1{font-size:13px;text-align:center;line-height:1.9;margin-bottom:26px}
+#eggIntro .sub{font-size:9px;color:var(--gold);text-align:center;margin-top:6px}
+#eggWrap{width:180px;height:180px;cursor:pointer}
+#eggWrap canvas{width:100%;height:100%}
+#eggWrap.shake{animation:eggShake .35s ease-in-out}
+@keyframes eggShake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-5px,2px) rotate(-4deg)}75%{transform:translate(5px,2px) rotate(4deg)}}
+#eggCounter{
+  margin-top:24px;font-size:9px;background:var(--cream);border:3px solid var(--ink);border-radius:999px;
+  padding:7px 16px;box-shadow:var(--pop-sm);
+}
 #starter.on{display:flex}
 #starter h1{font-size:14px;text-align:center;margin-bottom:6px;letter-spacing:1px}
 #starter .sub{font-size:9px;color:var(--ink-soft);text-align:center;margin-bottom:22px;line-height:1.9}
@@ -644,6 +659,11 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
     </div>
   </div>
 
+  <div id="eggIntro">
+    <h1>Oh ! Un œuf mystérieux…<br><span class="sub">Touche-le pour le réchauffer</span></h1>
+    <div id="eggWrap"><canvas id="eggCv" width="128" height="128"></canvas></div>
+    <div id="eggCounter">5 touches restantes</div>
+  </div>
   <div id="starter">
     <h1>Choisis ton compagnon</h1>
     <p class="sub">Ce choix est définitif.<br>Il t'accompagne pour toujours.</p>
@@ -676,12 +696,28 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.4.1";
+const VERSION = "3.5.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
    ============================================================ */
 const SPRITES = {
+egg0:{pal:{C:"#FFF7E8",D:"#8B5A2B",G:"#9BDBA0"},px:[
+"................","......DDDD......",".....CCCCCC.....","....CCCCCCCC....",
+"...CCGCCCCGCC...","...CCCCCCCCCC...","..CCCCCCCCCCCC..","..CCCCCCCCCCCC..",
+"..CCGCCCCCCGCC..","..CCCCCCCCCCCC..","...CCCCCCCCCC...","....DDDDDDDD....",
+"................","................","................","................"]},
+egg1:{pal:{C:"#FFF7E8",D:"#8B5A2B",G:"#9BDBA0"},px:[
+"................","......DDDD......",".....CCCCCC.....","....CCCDCCCC....",
+"...CCGCDCCCGC...","...CCCDDCCCCC...","..CCCCDCCCCCCC..","..CCCCCCCCCCCC..",
+"..CCGCCCCCCGCC..","..CCCCCCCCCCCC..","...CCCCCCCCCC...","....DDDDDDDD....",
+"................","................","................","................"]},
+egg2:{pal:{C:"#FFF7E8",D:"#8B5A2B",G:"#9BDBA0"},px:[
+"................","......DDDD......",".....CCDCCC.....","....CCCDCCCC....",
+"...CCGCDDCCGC...","...CCCDDCCDCC...","..CCCCDCCCDCCC..","..CCCCCDDCCCC..",
+"..CCGCCCDCCGCC..","..CCCCCCDCCCC...","...CCCCCCCCCC...","....DDDDDDDD....",
+"................","................","................","................"]}
+,
 /* --- animaux classiques --- */
 poussin:{pal:{y:"#FFE27A",d:"#F2C94C",o:"#FF9F1C",k:"#3B2B20",w:"#FFF6D0"},px:[
 "................","................","......yyyy......",".....yyyyyy.....",
@@ -1132,7 +1168,7 @@ function freshState(){
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
-    frenzyGauge:0, frenzyTier:0, frenzyTapsLeft:0,
+    frenzyGauge:0, frenzyTier:0, frenzyTapsLeft:0, hatched:false,
     offCoinSteps:0, offGemPacks:{},
     totalEarned:0, lifetimeEarned:0,
     /* --- quotidien --- */
@@ -2049,6 +2085,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.5.0", lines:["Nouvelle séquence d'accueil : œuf à réchauffer en 5 tapes avant le choix du compagnon","Uniquement pour les tout nouveaux joueurs, ne touche pas les parties en cours"]},
   {v:"3.4.1", lines:["Habillage visuel : HUD vitré, boutons et cartes en relief, onglets avec effet enfoncé","Aucune fonctionnalité touchée — uniquement du style par-dessus l'existant"]},
   {v:"3.4.0", lines:["Frénésie : corrige le lag (animation coûteuse retirée), passe de 25s à 500 tapes","Hors-ligne : détection renforcée pour le passage en arrière-plan dans l'app (WebView)"]},
   {v:"3.3.2", lines:["Correctif : l'animal s'affiche bien dès l'ouverture (plus besoin de changer d'animal)","Œufs payables en Pièces de Fusion OU en gemmes, 4e palier (Mythique), récompense du mini-jeu augmentée"]},
@@ -2277,6 +2314,32 @@ window.addEventListener("pagehide", save);
 /* ============================================================
    34. ÉCRAN DE CHOIX DU STARTER
    ============================================================ */
+let _eggTaps = 5;
+function showEggIntro(){
+  _eggTaps = 5;
+  const cv = document.getElementById("eggCv");
+  paint(cv, "egg0");
+  document.getElementById("eggIntro").classList.add("on");
+  const wrap = document.getElementById("eggWrap");
+  wrap.onclick = ()=>{
+    _eggTaps--;
+    wrap.classList.remove("shake"); void wrap.offsetWidth; wrap.classList.add("shake");
+    sfx("click"); vibrate(30);
+    paint(cv, _eggTaps <= 1 ? "egg2" : _eggTaps <= 3 ? "egg1" : "egg0");
+    const txt = document.getElementById("eggCounter");
+    if(_eggTaps > 0){
+      setTxt(txt, _eggTaps+" touche"+(_eggTaps>1?"s":"")+" restante"+(_eggTaps>1?"s":""));
+    }else{
+      setTxt(txt, "Il bouge !");
+      vibrate(70);
+      setTimeout(()=>{
+        S.hatched = true; save();
+        document.getElementById("eggIntro").classList.remove("on");
+        showStarter();
+      }, 700);
+    }
+  };
+}
 function showStarter(){
   const row = $("#starterRow"); row.innerHTML = "";
   STARTERS.forEach(s=>{
@@ -3473,7 +3536,7 @@ tickBanner();
    ouverture d'app à l'autre : un testeur ne doit jamais tomber sur un menu
    caché sans savoir pourquoi. */
 resume();
-if(!S.starter) showStarter();
+if(!S.starter){ if(!S.hatched) showEggIntro(); else showStarter(); }
 if(S.notifs) scheduleNotifs();
 /* l'audio ne peut démarrer qu'après un geste : on attend la première tape */
 document.addEventListener("pointerdown", function once(){
