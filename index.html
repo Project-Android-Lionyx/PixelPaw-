@@ -722,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.0.1";
+const VERSION = "4.0.2";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -803,23 +803,23 @@ lapin:{size:24,pal:{P:"#F2EFEA",D:"#D7D2C8",S:"#FFD9E3",K:"#3B2B20",W:"#FFFFFF",
 ".....HHHH......HHHH.....",
 ".....HHHH......HHHH....."]},
 
-perruche:{size:24,pal:{P:"#8FD98A",D:"#5EAE5A",S:"#B8F0A8",K:"#3B2B20",W:"#FFFFFF",O:"#FF9F1C",A:"#C4700F"},px:[
+perruche:{size:24,pal:{P:"#B9B4C2",D:"#8E889A",S:"#E8E4EE",K:"#3B2B20",W:"#FFFFFF",O:"#FFC94A",A:"#C4700F",C:"#FF9F4A"},px:[
 "........................",
-"........................",
-"........................",
-"........................",
-"....SSSSSSSSSSSSSSSS....",
-"....SSSSSSSSSSSSSSSS....",
-"....SSSSSSSSSSSSSSSS....",
-"....SSSSSSSSSSSSSSSS....",
-"....SSSSSSSSSSSSSSSS....",
-"....SSSSSSSSSSSSSSSS....",
-"....SSSSSSSSSSSSSSSS....",
-".....PPKWKPPPPKWKPP.....",
-"...DDDDKKKPPPPKKKDDDD...",
-"...DDDDKKKOOOOKKKDDDD...",
-"...DDDDPPPOOOOPPPDDDD...",
-"...DDDDPPPOOOOPPPDDDD...",
+"............O...........",
+"...........OOOO.........",
+"...........OOOOOO.......",
+".............OOOOO......",
+"...............OOO......",
+".....SSSSSSSSSSSSSS.....",
+".....SSSSSSSSSSSSSS.....",
+".....SSSSSSSSSSSSSS.....",
+".....SSSSSSSSSSSSSS.....",
+".....SSSSSSSSSSSSSS.....",
+".....SSKWKSSSSKWKSS.....",
+"...DDDCCCKPPPPKKKDDDD...",
+"...DDDCCCKOOOOKKKDDDD...",
+"...DDDCCCPOOOOPPPDDDD...",
+"...DDDCCCPOOOOPPPDDDD...",
 "...DDDDPPPOAAOPPPDDDD...",
 "...DDDDPPPOOOOPPPDDDD...",
 ".....DDDDDDDDDDDDDD.....",
@@ -934,30 +934,30 @@ panda:{size:24,pal:{W:"#F7F4EC",G:"#D9D4C4",K:"#2B2320",Y:"#FFFFFF"},px:[
 "........................"]},
 
 dragon:{size:24,pal:{P:"#7ACB9C",D:"#4E9E71",S:"#C7F0D6",K:"#2B2320",W:"#5EAE7E",Y:"#FFD24A",H:"#FFD24A"},px:[
-".......K........K.......",
-"......KKK......KKK......",
-"......KKK......KKK......",
-"......KKK......KKK......",
-"......KKK......KKK......",
-"......KKK......KKK......",
-"......KKK......KKK......",
+"........................",
+".......KK......KK.......",
+".......KK......KK.......",
+".......KK......KK.......",
+".......KK......KK.......",
+".......KK......KK.......",
+".......KK......KK.......",
 "........................",
 "........................",
-"WWWWWW.....KK.....WWWWWW",
-"WWWWWPPPPPPPPPPPPPPWWWWW",
-"WSSSSPPKYKPPPPKYKPPSSSSW",
-"WSSSSPPKKKPPPPKKKPPSSSSW",
-"WSSSSPPKKKPPPPKKKPPSSSSW",
-"WSSSSPPPPSSSSSSPPPPSSSSW",
-"WSSSSPPPPSSSSSSPPPPSSSSW",
-"WWWWWPPPPSSKKSSPPPPWWWWW",
-"WWWWWPPPPSSSSSSPPPPWWWWW",
-".....DDDDSSSSSSDDDD.....",
-".....DDDDDDDDDDDDDD.....",
-".....DDDDDDDDDDDDDD.....",
-"......HHHH....HHHH......",
-"......HHHH....HHHH......",
-"......HHHH....HHHH......"]},
+"...........KK...........",
+"......PPPPPPPPPPPP......",
+"......PKYKPPPPKYKP......",
+"......PKKKPPPPKKKP......",
+"S.....PKKKPPPPKKKP.....S",
+"SSS...PPPSSSSSSPPP...SSS",
+"SSS...PPPSSSSSSPPP...SSS",
+".SSS..PPPSSKKSSPPP..SSS.",
+".SSS..PPPSSSSSSPPP..SSS.",
+"..WWW.DDDSSSSSSDDD.WWW..",
+"..WWW.DDDDDDDDDDDD.WWW..",
+"......DDDDDDDDDDDD......",
+".......HHHH..HHHH.......",
+".......HHHH..HHHH.......",
+".......HHHH..HHHH......."]},
 
 /* --- races premium --- */
 siamois:{pal:{c:"#F2E5D0",d:"#6B5340",k:"#3B2B20",b:"#5EC8F2",p:"#FF9FB2"},px:[
@@ -2292,6 +2292,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.0.2", lines:["Dragon : ailes vraiment angulaires (ne ressemble plus à des oreilles d'éléphant)","Perruche : vraie houppe pointue façon calopsite, avec la joue orange caractéristique"]},
   {v:"4.0.1", lines:["Pattes/sabots dans une 3e couleur distincte sur 6 animaux (Hamster, Lapin, Chat, Corgi, Capybara, Dragon)","Même niveau de finition que le Cochon désormais — comparé côte à côte avant envoi"]},
   {v:"4.0.0", lines:["Les 9 animaux classiques redessinés en 24×24 (Hamster, Lapin, Perruche, Chat, Corgi, Capybara, Panda, Dragon)","Chaque rendu vérifié visuellement avant intégration — traits distinctifs par espèce, pas de simples recolorations"]},
   {v:"3.9.1", lines:["Cochon redessiné en 24×24 (au lieu de 16×16) : oreilles détaillées, reflet dans les yeux, ombres de volume","Le moteur gère maintenant des sprites de taille variable — les 199 autres restent identiques"]},
