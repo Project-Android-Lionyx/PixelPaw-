@@ -2747,7 +2747,8 @@ function buildHomeBg(){
   }
 }
 function startHome(){
-  buildHomeBg();
+  /* buildHomeBg() (sprites dispersés) n'est plus appelée : remplacée par
+     la vidéo #homeVideo. Fonction conservée intacte plus bas si besoin. */
   document.getElementById("homeVersion").textContent = "v"+VERSION;
   const bar = document.getElementById("homeBar"), txt = document.getElementById("homeBarTxt");
   let p = 0;
