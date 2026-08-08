@@ -457,6 +457,7 @@ function freshState(){
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
     playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute",
+    expo:null, habXp:{}, habDone:{},
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -3623,5 +3624,172 @@ save();
         });
       }catch(e){}
     };
+  }
+})();
+
+/* ============================================================
+   CARTE DU MONDE & EXPÉDITIONS — Bloc 16/25
+   Donne un but aux 12 habitats : on y voyage, on y envoie son animal
+   en expédition, et chaque habitat se découvre progressivement.
+   Les expéditions se poursuivent hors-ligne (horodatage), sans jamais
+   toucher au système de gains hors-ligne existant.
+   ============================================================ */
+(function(){
+  const DURATIONS = [
+    {id:"court",  name:"Balade",     ms:5*60*1000,     mult:1.0},
+    {id:"moyen",  name:"Randonnée",  ms:30*60*1000,    mult:6.5},
+    {id:"long",   name:"Expédition", ms:2*60*60*1000,  mult:28}
+  ];
+
+  function habList(){ return (typeof getHabitats === "function") ? getHabitats() : []; }
+  function habById(id){ return habList().find(h=>h.id === id); }
+
+  /* Récompenses : adossées à la production réelle du joueur pour rester
+     équilibrées à tous les stades, et plafonnées pour ne pas court-circuiter
+     la progression normale. */
+  function expoReward(habId, dur){
+    const hs = habList(), idx = Math.max(0, hs.findIndex(h=>h.id===habId));
+    const base = (typeof perSec === "function" ? perSec(false) : 0) || 10;
+    const coins = Math.floor(base * (dur.ms/1000) * 0.45 * (1 + idx*0.08));
+    const gemChance = Math.min(0.55, 0.12 + idx*0.03 + (dur.mult/60));
+    const gems = Math.random() < gemChance ? (1 + Math.floor(Math.random()*(1+idx/3))) : 0;
+    const fc = Math.random() < 0.35 ? 1 + Math.floor(dur.mult/10) : 0;
+    const xp = Math.floor(8 * dur.mult);
+    return {coins, gems, fc, xp};
+  }
+
+  function expoLeft(){
+    if(!S.expo) return 0;
+    return Math.max(0, S.expo.until - Date.now());
+  }
+
+  function startExpo(habId, durId){
+    if(S.expo) return false;
+    const dur = DURATIONS.find(d=>d.id===durId);
+    const h = habById(habId);
+    if(!dur || !h || !h.unlocked) return false;
+    S.expo = {hab:habId, until:Date.now()+dur.ms, dur:durId};
+    save(); if(typeof sfx==="function") sfx("buy");
+    toast(h.name+" · "+dur.name+" en cours");
+    openWorldMap();
+    return true;
+  }
+
+  function collectExpo(){
+    if(!S.expo || expoLeft() > 0) return false;
+    const dur = DURATIONS.find(d=>d.id===S.expo.dur) || DURATIONS[0];
+    const h = habById(S.expo.hab);
+    const r = expoReward(S.expo.hab, dur);
+
+    S.coins += r.coins; S.totalEarned += r.coins; S.lifetimeEarned += r.coins;
+    if(r.gems) S.gems += r.gems;
+    if(r.fc) S.fc = (S.fc||0) + r.fc;
+
+    /* Progression d'exploration de l'habitat */
+    S.habXp = S.habXp || {};
+    S.habXp[S.expo.hab] = (S.habXp[S.expo.hab]||0) + Math.round(dur.mult);
+    if(S.habXp[S.expo.hab] >= 100 && !(S.habDone||{})[S.expo.hab]){
+      S.habDone = S.habDone || {}; S.habDone[S.expo.hab] = true;
+      S.gems += 25;
+      toast((h?h.name:"Habitat")+" entièrement exploré ! +25 💎");
+      if(typeof confetti === "function") confetti(30);
+    }
+
+    S.expo = null;
+    if(typeof gainPlayerXP === "function") gainPlayerXP(r.xp);
+    if(typeof sfx==="function") sfx("good");
+    vibrate(35);
+    let msg = "+"+fmt(r.coins)+" pièces";
+    if(r.gems) msg += " · +"+r.gems+" 💎";
+    if(r.fc)   msg += " · +"+r.fc+" 🔩";
+    toast(msg);
+    save(); renderHUD(); openWorldMap();
+    return true;
+  }
+
+  function fmtLeft(ms){
+    const s = Math.ceil(ms/1000);
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), q = s%60;
+    return h ? h+"h "+String(m).padStart(2,"0")+"m" : m ? m+"m "+String(q).padStart(2,"0")+"s" : q+"s";
+  }
+
+  window.openWorldMap = function(){
+    if(typeof openModal !== "function") return;
+    const hs = habList();
+    const cur = (typeof AMB !== "undefined" && AMB.habitat) ? AMB.habitat : (hs[0]&&hs[0].id);
+    let html = '<h2>Carte du monde</h2>';
+
+    /* Bandeau d'expédition en cours */
+    if(S.expo){
+      const h = habById(S.expo.hab), left = expoLeft();
+      html += '<div class="expoBar">' +
+        '<span class="expoIco">'+(h?h.emoji:"🧭")+'</span>' +
+        '<span class="expoTxt">'+(h?h.name:"?")+'<br><b id="expoLeft">'+(left>0?fmtLeft(left):"Terminée !")+'</b></span>' +
+        (left>0 ? '<span class="expoWait">⏳</span>'
+                : '<button class="talentBtn" id="expoGet" style="width:auto;padding:0 12px">Récolter</button>') +
+      '</div>';
+    }
+
+    html += '<div class="mapGrid">';
+    hs.forEach(h=>{
+      const done = (S.habDone||{})[h.id];
+      const prog = Math.min(100, (S.habXp||{})[h.id] || 0);
+      const isCur = h.id === cur;
+      html += '<button class="mapCell'+(h.unlocked?"":" lock")+(isCur?" cur":"")+'" data-hab="'+h.id+'"'+(h.unlocked?"":" disabled")+'>' +
+        '<span class="mcIco">'+(h.unlocked ? h.emoji : "🔒")+'</span>' +
+        '<span class="mcName">'+(h.unlocked ? h.name : "Niv. "+h.unlockLvl)+'</span>' +
+        (h.unlocked ? '<span class="mcBar"><i style="width:'+prog+'%"></i></span>' : '') +
+        (done ? '<span class="mcDone">★</span>' : '') +
+      '</button>';
+    });
+    html += '</div>';
+
+    if(!S.expo){
+      html += '<div class="sLabel" style="margin:10px 0 6px"><span>Envoyer en expédition</span><span></span></div>' +
+        '<div style="font-size:7.5px;color:var(--ink-soft);margin-bottom:6px">Choisis d\'abord un habitat ci-dessus</div>' +
+        '<div class="themeGrid" style="grid-template-columns:repeat(3,1fr)">' +
+        DURATIONS.map(d=>'<button class="themeBtn" data-dur="'+d.id+'">'+d.name+'<br><span style="font-size:7px;opacity:.7">'+fmtLeft(d.ms)+'</span></button>').join("") +
+        '</div>';
+    }
+
+    html += '<button class="mBtn" id="wmClose">Fermer</button>';
+    openModal(html);
+
+    let picked = cur;
+    document.querySelectorAll("[data-hab]").forEach(b=>{
+      b.onclick = ()=>{
+        if(b.disabled) return;
+        picked = b.dataset.hab;
+        document.querySelectorAll("[data-hab]").forEach(x=>x.classList.remove("sel"));
+        b.classList.add("sel");
+        if(typeof setHabitat === "function") setHabitat(picked);
+        if(typeof sfx==="function") sfx("tab");
+      };
+    });
+    document.querySelectorAll("[data-dur]").forEach(b=>{
+      b.onclick = ()=>startExpo(picked, b.dataset.dur);
+    });
+    const g = document.getElementById("expoGet"); if(g) g.onclick = collectExpo;
+    const c = document.getElementById("wmClose"); if(c) c.onclick = closeModal;
+  };
+
+  /* Compte à rebours vivant dans la fenêtre, et pastille sur le badge */
+  setInterval(()=>{
+    const el = document.getElementById("expoLeft");
+    if(el && S.expo){
+      const left = expoLeft();
+      el.textContent = left > 0 ? fmtLeft(left) : "Terminée !";
+      if(left <= 0 && !document.getElementById("expoGet")) openWorldMap();
+    }
+    const badge = document.querySelector(".habitatBadge");
+    if(badge) badge.classList.toggle("hasExpo", !!S.expo && expoLeft() <= 0);
+  }, 1000);
+
+  /* La carte s'ouvre en touchant le badge d'habitat */
+  const badge = document.querySelector(".habitatBadge");
+  if(badge){
+    badge.style.pointerEvents = "auto";
+    badge.style.cursor = "pointer";
+    badge.addEventListener("click", ()=>{ if(typeof sfx==="function") sfx("tab"); openWorldMap(); });
   }
 })();
