@@ -457,7 +457,7 @@ function freshState(){
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
     playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute",
-    expo:null, habXp:{}, habDone:{}, world:1,
+    expo:null, habXp:{}, habDone:{}, world:1, bossNext:0, bossWins:0, bossBest:0,
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -3939,4 +3939,167 @@ save();
     chip.innerHTML = '<span class="ecIco">'+emoji+'</span><span class="ecTxt">' +
       (done ? "Récolter !" : fmtShort(ms)) + '</span>';
   }, 1000);
+})();
+
+/* ============================================================
+   BOSS & DÉFIS — Bloc 19/25
+   Un intrus apparaît régulièrement sur la scène. Le joueur a un temps
+   limité pour le repousser en tapant. Les points de vie sont calés sur
+   la puissance de frappe réelle, donc le défi reste tenu à tous les
+   stades sans jamais devenir infaisable. Purement additif : n'altère
+   ni la boucle de jeu, ni l'économie existante.
+   ============================================================ */
+(function(){
+  const stageEl = document.getElementById("stage");
+  if(!stageEl) return;
+
+  const BOSSES = [
+    {id:"corbeau",  name:"Corbeau Voleur",   emoji:"🐦‍⬛", hp:34, time:25},
+    {id:"renard",   name:"Renard Rusé",      emoji:"🦊",   hp:42, time:25},
+    {id:"blaireau", name:"Blaireau Grognon", emoji:"🦡",   hp:52, time:28},
+    {id:"sanglier", name:"Sanglier Furieux", emoji:"🐗",   hp:64, time:30},
+    {id:"ours",     name:"Ours Colossal",    emoji:"🐻",   hp:80, time:32}
+  ];
+
+  const COOLDOWN = 8*60*1000;                  // un boss toutes les 8 minutes
+  let fight = null;
+
+  function pickBoss(){
+    const lvl = (S.playerLvl||1) + (S.world||1)*2;
+    const max = Math.min(BOSSES.length, 1 + Math.floor(lvl/3));
+    return BOSSES[Math.floor(Math.random()*max)];
+  }
+
+  function bossReady(){ return Date.now() >= (S.bossNext||0); }
+
+  /* --- Pastille d'alerte sur la scène --- */
+  const chip = document.createElement("div");
+  chip.className = "bossChip";
+  chip.style.display = "none";
+  chip.addEventListener("click", ()=>{ if(bossReady()) startFight(); });
+  stageEl.appendChild(chip);
+
+  let pending = null;
+  setInterval(()=>{
+    if(typeof S === "undefined") return;
+    if(fight){ chip.style.display = "none"; return; }
+    if(bossReady()){
+      if(!pending) pending = pickBoss();
+      chip.style.display = "flex";
+      chip.innerHTML = '<span class="bcIco">'+pending.emoji+'</span><span class="bcTxt">Intrus !</span>';
+    } else {
+      chip.style.display = "none";
+    }
+  }, 1000);
+
+  /* --- Combat --- */
+  function startFight(){
+    if(fight || typeof openModal !== "function") return;
+    const b = pending || pickBoss();
+    const tap = (typeof perTap === "function" ? perTap() : 1) || 1;
+    const maxHp = Math.max(1, Math.round(tap * b.hp));
+    fight = {b, hp:maxHp, maxHp, until:Date.now() + b.time*1000, hits:0};
+
+    openModal(
+      '<h2>'+b.name+'</h2>' +
+      '<div class="bossArena" id="bossHit">' +
+        '<div class="bossSprite" id="bossSprite">'+b.emoji+'</div>' +
+      '</div>' +
+      '<div class="bossHpWrap"><i id="bossHp" style="width:100%"></i><span id="bossHpTxt"></span></div>' +
+      '<div class="bossTimer">⏱ <b id="bossTime">'+b.time+'</b> s</div>' +
+      '<div class="bossHint">Tape l\'intrus pour le repousser !</div>'
+    );
+
+    const arena = document.getElementById("bossHit");
+    if(arena){
+      arena.addEventListener("pointerdown", hit, {passive:true});
+    }
+    tickFight();
+  }
+
+  function hit(){
+    if(!fight) return;
+    const tap = (typeof perTap === "function" ? perTap() : 1) || 1;
+    let dmg = tap;
+    let crit = false;
+    if(typeof critChance === "function" && Math.random() < critChance()){ dmg *= 3; crit = true; }
+    fight.hp = Math.max(0, fight.hp - dmg);
+    fight.hits++;
+    if(typeof sfx === "function") sfx("click");
+    vibrate(crit ? 22 : 8);
+
+    const sp = document.getElementById("bossSprite");
+    if(sp){ sp.classList.remove("bossHurt"); void sp.offsetWidth; sp.classList.add("bossHurt"); }
+    popDmg(dmg, crit);
+    if(fight.hp <= 0) endFight(true);
+  }
+
+  function popDmg(v, crit){
+    const arena = document.getElementById("bossHit");
+    if(!arena) return;
+    const d = document.createElement("i");
+    d.className = "bossDmg" + (crit ? " crit" : "");
+    d.textContent = (typeof fmt === "function" ? fmt(v) : v);
+    d.style.left = (30 + Math.random()*40) + "%";
+    arena.appendChild(d);
+    setTimeout(()=>d.remove(), 700);
+  }
+
+  function tickFight(){
+    if(!fight) return;
+    const left = Math.max(0, Math.ceil((fight.until - Date.now())/1000));
+    const bar = document.getElementById("bossHp");
+    const txt = document.getElementById("bossHpTxt");
+    const tm  = document.getElementById("bossTime");
+    if(bar) bar.style.width = ((fight.hp/fight.maxHp)*100).toFixed(1)+"%";
+    if(txt && typeof fmt === "function") txt.textContent = fmt(fight.hp)+" / "+fmt(fight.maxHp);
+    if(tm) tm.textContent = left;
+    if(left <= 0){ endFight(false); return; }
+    if(fight) setTimeout(tickFight, 200);
+  }
+
+  function endFight(won){
+    if(!fight) return;
+    const b = fight.b, hits = fight.hits;
+    fight = null; pending = null;
+    S.bossNext = Date.now() + COOLDOWN;
+
+    if(won){
+      const base = (typeof perSec === "function" ? perSec(false) : 0) || 10;
+      const coins = Math.floor(base * 150 * (1 + (S.world||1)*0.15));
+      const gems  = 2 + Math.floor(Math.random()*4);
+      const fc    = Math.random() < 0.5 ? 1 : 0;
+      S.coins += coins; S.totalEarned += coins; S.lifetimeEarned += coins;
+      S.gems += gems;
+      if(fc) S.fc = (S.fc||0) + fc;
+      S.bossWins = (S.bossWins||0) + 1;
+      S.bossBest = Math.max(S.bossBest||0, hits);
+      if(typeof gainPlayerXP === "function") gainPlayerXP(60);
+      if(typeof confetti === "function") confetti(34);
+      if(typeof sfx === "function") sfx("big");
+      vibrate(90);
+      openModal(
+        '<h2>Victoire !</h2>' +
+        '<div class="bossWin">'+b.emoji+'</div>' +
+        '<p>'+b.name+' repoussé en '+hits+' coups.</p>' +
+        '<div class="bossLoot">+'+fmt(coins)+' pièces<br>+'+gems+' 💎'+(fc?'<br>+'+fc+' 🔩':'')+'</div>' +
+        '<div class="bossStat">Victoires : '+S.bossWins+'</div>' +
+        '<button class="mBtn" id="bkOk">Super !</button>'
+      );
+    } else {
+      if(typeof sfx === "function") sfx("tab");
+      openModal(
+        '<h2>Il s\'est enfui…</h2>' +
+        '<p>'+b.name+' était trop coriace cette fois.</p>' +
+        '<div class="bossStat">Un nouvel intrus arrivera dans 8 minutes.</div>' +
+        '<button class="mBtn" id="bkOk">Fermer</button>'
+      );
+    }
+    const ok = document.getElementById("bkOk");
+    if(ok) ok.onclick = closeModal;
+    save(); renderHUD();
+  }
+
+  /* Le premier boss arrive peu après la première partie, pas immédiatement */
+  if(!S.bossNext) { S.bossNext = Date.now() + 90*1000; }
 })();
