@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=24">
+<link rel="stylesheet" href="style.css?v=25">
 </head>
 <body data-theme="pastel">
 <div id="app">
@@ -164,6 +164,23 @@
 
   <div id="flash"></div>
 </div>
-<script src="script.js?v=22" defer></script>
+<!-- Moteur de jeu principal -->
+<script src="core.js?v=1" defer></script>
+<!-- Habitats, météo, cycle jour/nuit, décor vivant (Bloc 3) -->
+<script src="ambiance.js?v=1" defer></script>
+<!-- Niveau joueur, XP, arbre de talents, frénésie (Bloc 9) -->
+<script src="progression.js?v=1" defer></script>
+<!-- Quêtes hebdomadaires (Bloc 4) -->
+<script src="quests.js?v=1" defer></script>
+<!-- Aura de rareté, confettis, apparitions spectaculaires (Bloc 6/8/18) -->
+<script src="effects.js?v=1" defer></script>
+<!-- Carte du monde, expéditions, plateformes de téléportation (Bloc 16) -->
+<script src="worldmap.js?v=1" defer></script>
+<!-- Points de Téléportation entre mondes, identité visuelle par monde -->
+<script src="worlds.js?v=1" defer></script>
+<!-- Boss, combos, atelier de combat (Bloc 19) -->
+<script src="boss.js?v=1" defer></script>
+<!-- Correctifs d'interface : défilement des menus, échelle d'écran -->
+<script src="ui-fixes.js?v=1" defer></script>
 </body>
 </html>
