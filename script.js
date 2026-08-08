@@ -456,7 +456,7 @@ function freshState(){
     boostMult:1, boostUntil:0, boostName:"",
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
-    playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute",
+    playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute", uiScale:1,
     expo:null, habXp:{}, habDone:{}, world:1, bossNext:0, bossWins:0, bossBest:0, cup:{}, frenzyLvl:0,
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
@@ -2848,8 +2848,19 @@ save();
 
   function resizeWCV(){
     const r = stageEl.getBoundingClientRect();
-    wcv.width  = Math.max(1, Math.floor(r.width));
-    wcv.height = Math.max(1, Math.floor(r.height));
+    /* CORRECTIF : le canvas allouait son buffer à la taille CSS, sans tenir
+       compte du devicePixelRatio de l'écran. Sur un téléphone à écran dense
+       (2,5-3x, la norme sur Android), le navigateur devait alors étirer
+       chaque pixel du canvas — les traits de pluie fins devenaient des
+       bandes floues/pixelisées. On alloue maintenant à la vraie résolution
+       physique, et on redimensionne le contexte pour dessiner en unités CSS
+       comme avant (aucune autre ligne du module n'a besoin de changer). */
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    wcv.width  = Math.max(1, Math.floor(r.width  * dpr));
+    wcv.height = Math.max(1, Math.floor(r.height * dpr));
+    const ctx0 = wcv.getContext("2d");
+    ctx0.setTransform(dpr, 0, 0, dpr, 0, 0);
+    wcv._cssW = r.width; wcv._cssH = r.height;
   }
   resizeWCV();
   window.addEventListener("resize", resizeWCV);
@@ -2953,7 +2964,7 @@ save();
   function setWeather(w){
     AMB.weather = w;
     particles = [];
-    const W = wcv.width, H = wcv.height;
+    const W = wcv._cssW || wcv.width, H = wcv._cssH || wcv.height;
     const count = (w==="pluie"||w==="orage") ? 70 : (w==="neige") ? 40 : (w==="vent") ? 18 : 0;
     for(let i=0;i<count;i++){
       particles.push({
@@ -2968,27 +2979,28 @@ save();
   let lightningT = 0;
   function drawWeather(){
     if(!wcv.width || !wcv.height) return;
+    const W = wcv._cssW || wcv.width, H = wcv._cssH || wcv.height;
     const ctx = wcv.getContext("2d");
-    ctx.clearRect(0,0,wcv.width,wcv.height);
+    ctx.clearRect(0,0,W,H);
     const w = AMB.weather;
     if(w==="soleil") return;
     if(w==="brouillard"){
       ctx.fillStyle = "rgba(255,255,255,.16)";
-      ctx.fillRect(0,0,wcv.width,wcv.height);
+      ctx.fillRect(0,0,W,H);
       return;
     }
     if(w==="pluie" || w==="orage"){
       ctx.strokeStyle = "rgba(180,210,255,.55)"; ctx.lineWidth = 1.4;
       particles.forEach(p=>{
         ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x, p.y+p.len); ctx.stroke();
-        p.y += p.vy; if(p.y > wcv.height){ p.y = -10; p.x = Math.random()*wcv.width; }
+        p.y += p.vy; if(p.y > H){ p.y = -10; p.x = Math.random()*W; }
       });
       if(w==="orage"){
         lightningT -= 1;
         if(lightningT <= 0 && Math.random() < 0.01){
           lightningT = 6;
           ctx.fillStyle = "rgba(255,255,255,.35)";
-          ctx.fillRect(0,0,wcv.width,wcv.height);
+          ctx.fillRect(0,0,W,H);
         }
       }
       return;
@@ -2998,7 +3010,7 @@ save();
       particles.forEach(p=>{
         ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
         p.y += p.vy; p.x += p.vx;
-        if(p.y > wcv.height){ p.y = -5; p.x = Math.random()*wcv.width; }
+        if(p.y > H){ p.y = -5; p.x = Math.random()*W; }
       });
       return;
     }
@@ -3006,12 +3018,12 @@ save();
       ctx.strokeStyle = "rgba(140,170,120,.4)"; ctx.lineWidth = 2;
       particles.forEach(p=>{
         ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-10,p.y-3); ctx.stroke();
-        p.x += p.vx*2; if(p.x > wcv.width){ p.x = -10; p.y = Math.random()*wcv.height; }
+        p.x += p.vx*2; if(p.x > W){ p.x = -10; p.y = Math.random()*H; }
       });
       return;
     }
     if(w==="arcenciel"){
-      const cx = wcv.width*0.5, cy = wcv.height*1.05, R = wcv.width*0.55;
+      const cx = W*0.5, cy = H*1.05, R = W*0.55;
       const cols = ["#FF6B6B","#FFB86B","#FFE96B","#8FE38F","#7DC4F2","#B49CE8"];
       cols.forEach((c,i)=>{
         ctx.strokeStyle = c; ctx.lineWidth = 4; ctx.globalAlpha = .55;
@@ -3445,7 +3457,7 @@ save();
   }
 
   window.addEventListener("resize", ()=>{ resize(); });
-  window.addEventListener("habitatchange", ()=>{ scenery = null; });
+  window.addEventListener("habitatchange", ()=>{ scenery = null; seedAmbient(); });
   resize(); seedAmbient(); requestAnimationFrame(frame);
 })();
 
@@ -4495,4 +4507,57 @@ save();
     const w = (typeof S !== "undefined" ? (S.world||1) : 1);
     return w <= 1 ? "" : " " + (ROMAN[w] || w);
   };
+})();
+
+/* ============================================================
+   ÉCHELLE D'INTERFACE
+   Applique un facteur de zoom sur <body> (et non #app) : les unités
+   de viewport (100dvh/100vh) utilisées par #app sont calculées sur le
+   vrai écran quel que soit le zoom du body, donc l'interface reste
+   toujours parfaitement ajustée à l'écran, juste plus grande ou petite.
+   ============================================================ */
+(function(){
+  const MIN = 0.85, MAX = 1.30, STEP = 0.05;
+
+  function clamp(v){ return Math.min(MAX, Math.max(MIN, Math.round(v/STEP)*STEP)); }
+
+  window.applyUiScale = function(){
+    if(typeof S === "undefined") return;
+    const v = clamp(S.uiScale || 1);
+    document.body.style.zoom = v;
+  };
+
+  window.setUiScale = function(v){
+    if(typeof S === "undefined") return;
+    S.uiScale = clamp(v);
+    applyUiScale();
+    save();
+    const label = document.getElementById("uiScaleVal");
+    if(label) label.textContent = Math.round(S.uiScale*100) + "%";
+  };
+
+  applyUiScale();
+
+  /* Greffé dans les Options, juste après le réglage de qualité graphique */
+  if(typeof openSettings === "function"){
+    const prev = openSettings;
+    window.openSettings = openSettings = function(){
+      prev.apply(this, arguments);
+      try{
+        const anchor = document.getElementById("mNotif");
+        if(!anchor || document.getElementById("uiScaleRow")) return;
+        const row = document.createElement("div");
+        row.id = "uiScaleRow";
+        row.className = "uiScaleRow";
+        row.innerHTML =
+          '<span>Taille de l\'interface</span>' +
+          '<button class="uiScaleBtn" id="uiScaleDown">−</button>' +
+          '<span id="uiScaleVal">'+Math.round((S.uiScale||1)*100)+'%</span>' +
+          '<button class="uiScaleBtn" id="uiScaleUp">+</button>';
+        anchor.parentNode.insertBefore(row, anchor);
+        document.getElementById("uiScaleDown").onclick = ()=>{ if(typeof sfx==="function") sfx("tab"); setUiScale((S.uiScale||1) - STEP); };
+        document.getElementById("uiScaleUp").onclick   = ()=>{ if(typeof sfx==="function") sfx("tab"); setUiScale((S.uiScale||1) + STEP); };
+      }catch(e){}
+    };
+  }
 })();
