@@ -456,7 +456,7 @@ function freshState(){
     boostMult:1, boostUntil:0, boostName:"",
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
-    playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0},
+    playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute",
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -3548,4 +3548,80 @@ save();
     if(first) celebrate(id);
     return first;
   };
+})();
+
+/* ============================================================
+   TALENTS & QUALITÉ — Bloc 9/25 (dépense des points) + Bloc 11/25
+   L'arbre de compétences avait des points gagnables mais aucun écran
+   pour les dépenser : c'est ce que ce module ajoute. Il n'écrase pas
+   openSettings(), il l'enveloppe pour y greffer le réglage de qualité.
+   ============================================================ */
+(function(){
+  /* --- Écran des talents, ouvert en touchant la ligne de niveau --- */
+  function openTalents(){
+    if(typeof openModal !== "function" || typeof S === "undefined") return;
+    const pts = S.skillPts || 0;
+    S.skills = S.skills || {prod:0,happy:0,explo:0,collect:0};
+    const ICONS = {prod:"🌾", happy:"💖", explo:"🧭", collect:"🎁"};
+
+    let html = '<h2>Talents</h2>' +
+      '<div style="font-size:9px;color:var(--ink-soft);margin-bottom:10px">' +
+      (pts > 0 ? pts+" point"+(pts>1?"s":"")+" à dépenser" : "Aucun point disponible — monte de niveau pour en gagner") +
+      '</div>';
+
+    Object.keys(SKILL_INFO).forEach(k=>{
+      const info = SKILL_INFO[k], lvl = S.skills[k] || 0;
+      html += '<div class="talentRow">' +
+        '<div class="talentIco">'+ICONS[k]+'</div>' +
+        '<div class="talentTxt"><b>'+info.name+'</b><span>'+info.desc+'</span></div>' +
+        '<div class="talentLvl">'+lvl+'</div>' +
+        '<button class="talentBtn" data-sk="'+k+'"'+(pts<=0?' disabled':'')+'>+</button>' +
+      '</div>';
+    });
+
+    html += '<button class="mBtn" id="tClose">Fermer</button>';
+    openModal(html);
+    document.querySelectorAll("[data-sk]").forEach(b=>{
+      b.onclick = ()=>{ if(spendSkillPoint(b.dataset.sk)) openTalents(); };
+    });
+    const cl = document.getElementById("tClose");
+    if(cl) cl.onclick = closeModal;
+  }
+  window.openTalents = openTalents;
+
+  const line = document.getElementById("lvlLine");
+  if(line){
+    line.style.cursor = "pointer";
+    line.addEventListener("click", ()=>{ if(typeof sfx==="function") sfx("tab"); openTalents(); });
+  }
+
+  /* --- Réglage de la qualité graphique, greffé dans les Options --- */
+  if(typeof openSettings === "function"){
+    const originalSettings = openSettings;
+    window.openSettings = openSettings = function(){
+      originalSettings.apply(this, arguments);           // comportement d'origine intact
+      try{
+        const anchor = document.getElementById("mNotif");
+        if(!anchor || document.getElementById("gfxGrid")) return;
+        const cur = S.gfxQ || "haute";
+        const wrap = document.createElement("div");
+        wrap.innerHTML =
+          '<div class="sLabel" style="margin-bottom:6px"><span>Qualité graphique</span><span></span></div>' +
+          '<div class="themeGrid" id="gfxGrid" style="grid-template-columns:repeat(3,1fr)">' +
+            ['faible','moyenne','haute'].map(q=>
+              '<button class="themeBtn'+(cur===q?" on":"")+'" data-gfx="'+q+'">'+q.charAt(0).toUpperCase()+q.slice(1)+'</button>'
+            ).join("") +
+          '</div>';
+        while(wrap.firstChild) anchor.parentNode.insertBefore(wrap.firstChild, anchor);
+        document.querySelectorAll("[data-gfx]").forEach(b=>{
+          b.onclick = ()=>{
+            S.gfxQ = b.dataset.gfx; save();
+            window.dispatchEvent(new Event("habitatchange"));   // relance le décor
+            if(typeof sfx==="function") sfx("click");
+            openSettings();
+          };
+        });
+      }catch(e){}
+    };
+  }
 })();
