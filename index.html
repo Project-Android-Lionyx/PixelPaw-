@@ -13,12 +13,12 @@
    THÈMES — chaque thème redéfinit les mêmes variables.
    ============================================================ */
 :root{
-  --ink:#3B2B45; --ink-soft:#6B5A78; --cream:#FFF7E8; --card:#FFFFFF;
+  --ink:#3D2817; --ink-soft:#8B6F4E; --cream:#FFF3D6; --card:#FFFBF2;
   --gold:#FFC94A; --gold-d:#E0A61E; --gem:#7AA7FF; --gem-d:#4C79D6;
-  --pink:#FF8FB1; --pink-d:#E2678D; --mint:#7DD3C0; --mint-d:#4FB09B;
-  --paw:#C9A0FF; --lock:#CFC6D8;
-  --bg1:#FFE3F2; --bg2:#F7C9E0; --bg3:#CFE6FF; --bg4:#D8F5E4;
-  --r:14px; --pop:0 4px 0 rgba(59,43,69,.35); --pop-sm:0 3px 0 rgba(59,43,69,.3);
+  --pink:#FF7A5C; --pink-d:#C85A3E; --mint:#8FBC5A; --mint-d:#5C7A3A;
+  --paw:#C17A4F; --lock:#D6CBB8;
+  --bg1:#FFE0B5; --bg2:#F5B87A; --bg3:#E8C088; --bg4:#C9D68A;
+  --r:14px; --pop:0 4px 0 rgba(61,40,23,.35); --pop-sm:0 3px 0 rgba(61,40,23,.3);
   --font:"Press Start 2P", ui-monospace, "SF Mono", "Segoe UI Mono", "Courier New", monospace;
 }
 body[data-theme="dark"]{
@@ -722,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.8.1";
+const VERSION = "3.9.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2111,6 +2111,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.9.0", lines:["Palette réchauffée façon Stardew Valley / Egg Inc. : tons bois, terre, coucher de soleil","Uniquement le thème Pastel par défaut — Dark, GameBoy et Cyberpunk restent inchangés"]},
   {v:"3.8.1", lines:["Correctif : l'herbe se fondait dans le fond (contraste trop faible selon le thème), maintenant contourée","Correctif : le fond animé de l'accueil pouvait bloquer le tap sur le numéro de version","Insecte plus fréquent et jamais deux fois le même type de suite"]},
   {v:"3.8.0", lines:["Chaque animal a un trait (Gourmand/Joueur/Dormeur/Curieux) qui influence son comportement","Le trait s'affiche sur les animaux possédés · outil de test caché (7 tapes sur le numéro de version)"]},
   {v:"3.7.0", lines:["Ouverture d'œuf mise en scène : l'œuf se fissure, flash, puis révélation de l'animal","Réutilise les sprites de l'accueil — plus de résultat instantané et plat"]},
