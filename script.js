@@ -4511,20 +4511,26 @@ save();
 
 /* ============================================================
    ÉCHELLE D'INTERFACE
-   Applique un facteur de zoom sur <body> (et non #app) : les unités
-   de viewport (100dvh/100vh) utilisées par #app sont calculées sur le
-   vrai écran quel que soit le zoom du body, donc l'interface reste
-   toujours parfaitement ajustée à l'écran, juste plus grande ou petite.
+   CORRECTIF : la première version utilisait "zoom" sur <body>, qui
+   cohabite mal avec les unités dvh utilisées par #app (menus mal
+   calés, contenu qui peut déborder hors d'atteinte). Remplacé par la
+   technique standard : #app est recalculé plus grand ou plus petit
+   que l'écran, puis ramené exactement à sa taille par transform:scale.
+   Le résultat occupe TOUJOURS 100% de l'écran, quelle que soit
+   l'échelle — aucun contenu ne peut sortir de portée.
    ============================================================ */
 (function(){
   const MIN = 0.85, MAX = 1.30, STEP = 0.05;
-
   function clamp(v){ return Math.min(MAX, Math.max(MIN, Math.round(v/STEP)*STEP)); }
 
   window.applyUiScale = function(){
     if(typeof S === "undefined") return;
     const v = clamp(S.uiScale || 1);
-    document.body.style.zoom = v;
+    document.documentElement.style.setProperty("--ui-scale", v);
+    /* Les canvas (météo, décor) écoutent "resize" pour recalculer leur
+       taille : un changement d'échelle ne déclenche pas cet événement
+       nativement, donc on le simule après le prochain rendu. */
+    requestAnimationFrame(()=> window.dispatchEvent(new Event("resize")));
   };
 
   window.setUiScale = function(v){
