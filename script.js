@@ -2906,9 +2906,11 @@ save();
   };
   function applyHabitat(){
     const h = currentHabitat();
-    stageEl.style.setProperty("--habitat-c1", h.colors[0]);
-    stageEl.style.setProperty("--habitat-c2", h.colors[1]);
-    badge.textContent = h.emoji + " " + h.name;
+    const tint = (typeof worldTint === "function") ? worldTint : (c=>c);
+    const suf  = (typeof worldSuffix === "function") ? worldSuffix() : "";
+    stageEl.style.setProperty("--habitat-c1", tint(h.colors[0]));
+    stageEl.style.setProperty("--habitat-c2", tint(h.colors[1]));
+    badge.textContent = h.emoji + " " + h.name + suf;
     AMB.habitat = h.id;
     window.dispatchEvent(new Event("habitatchange"));
   }
@@ -3244,7 +3246,17 @@ save();
   /* --- Pré-rendu des couches fixes (une fois par habitat / redimensionnement) --- */
   function buildScenery(){
     const id = (typeof AMB !== "undefined" && AMB.habitat) ? AMB.habitat : "prairie";
-    const p = PAL[id] || PAL.prairie;
+    const raw = PAL[id] || PAL.prairie;
+    /* Le décor est repeint aux couleurs du monde en cours */
+    const t = (typeof worldTint === "function") ? worldTint : (c=>c);
+    const p = {
+      hill:  raw.hill.map(t),
+      tree:  t(raw.tree),
+      trunk: t(raw.trunk),
+      ground:t(raw.ground),
+      deco:  raw.deco.map(t),
+      kind:  raw.kind
+    };
     const off = document.createElement("canvas");
     off.width = W; off.height = H;
     const c = off.getContext("2d");
@@ -3379,7 +3391,9 @@ save();
     ctx.drawImage(scenery, 0, 0);
 
     /* Herbe qui ondule au premier plan */
-    const p = PAL[(typeof AMB!=="undefined" && AMB.habitat) || "prairie"] || PAL.prairie;
+    const raw = PAL[(typeof AMB!=="undefined" && AMB.habitat) || "prairie"] || PAL.prairie;
+    const tf = (typeof worldTint === "function") ? worldTint : (c=>c);
+    const p = {tree: tf(raw.tree), deco: raw.deco.map(tf)};
     const windy = (typeof AMB !== "undefined" && (AMB.weather === "vent" || AMB.weather === "orage"));
     ctx.fillStyle = p.tree;
     const sway = Math.sin(t*0.05) * (windy ? 2 : 0.8);
@@ -3754,8 +3768,9 @@ save();
     }
 
     html += '<button class="mBtn ghost" id="wmTp">🌀 Monde ' + (S.world||1) +
+            (typeof worldSkinName === "function" ? ' · ' + worldSkinName() : '') +
             ' · ×' + (typeof worldMult==="function" ? worldMult().toFixed(1) : "1") +
-            ' — Point de Téléportation</button>' +
+            '<br><span style="font-size:7px;opacity:.75">Point de Téléportation</span></button>' +
             '<button class="mBtn" id="wmClose">Fermer</button>';
     openModal(html);
     const tp = document.getElementById("wmTp");
@@ -3862,6 +3877,10 @@ save();
     return true;
   };
 
+  function skinAt(n){
+    const names = ["Naturel","Éthéré","Astral","Crépusculaire","Infernal","Abyssal","Prismatique","Spectral"];
+    return names[(n-1) % names.length];
+  }
   window.openTeleport = function(){
     if(typeof openModal !== "function") return;
     const w = S.world||1, cost = teleportCost(), need = teleportReqRebirths();
@@ -3871,9 +3890,9 @@ save();
 
     openModal(
       '<h2>Point de Téléportation</h2>' +
-      '<div class="tpNow">Monde actuel <b>'+w+'</b> · production ×'+worldMult(w).toFixed(1)+'</div>' +
+      '<div class="tpNow">Monde <b>'+w+'</b> · '+skinAt(w)+'<br>production ×'+worldMult(w).toFixed(1)+'</div>' +
       '<div class="tpArrow">▼</div>' +
-      '<div class="tpNext">Monde <b>'+(w+1)+'</b> · production ×'+worldMult(w+1).toFixed(1)+'</div>' +
+      '<div class="tpNext">Monde <b>'+(w+1)+'</b> · '+skinAt(w+1)+'<br>production ×'+worldMult(w+1).toFixed(1)+'</div>' +
       '<div class="tpWarn">' +
         '<b>Tout repart de zéro :</b><br>' +
         'pièces, animaux, améliorations, évolutions,<br>' +
@@ -4390,5 +4409,90 @@ save();
       drawMap(cv, habs, cur);
       grid.classList.add("mapGridCompact");
     }catch(e){}
+  };
+})();
+
+/* ============================================================
+   IDENTITÉ VISUELLE PAR MONDE
+   Chaque téléportation ne remet pas seulement les compteurs à zéro :
+   elle repeint le monde entier. Les 12 habitats gardent leur structure
+   mais changent d'ambiance chromatique, et prennent le chiffre romain
+   du monde (Forêt, Forêt II, Forêt III…) — un suffixe neutre qui évite
+   tout problème d'accord en français.
+   ============================================================ */
+(function(){
+  /* Chaque monde applique une rotation de teinte, une saturation et une
+     luminosité propres, plus une couleur de ciel dominante. */
+  /* Rotations calibrées depuis la teinte verte de base (~100°) pour que
+     le nom du monde corresponde vraiment à la couleur obtenue. */
+  const SKINS = [
+    {name:"Naturel",      hue:0,    sat:1.00, lum:0,     sky:null},
+    {name:"Éthéré",       hue:+75,  sat:0.80, lum:+0.08, sky:"rgba(150,235,225,.20)"},
+    {name:"Astral",       hue:+160, sat:1.00, lum:-0.02, sky:"rgba(130,110,225,.24)"},
+    {name:"Crépusculaire",hue:-55,  sat:1.05, lum:-0.02, sky:"rgba(255,190,110,.22)"},
+    {name:"Infernal",     hue:-85,  sat:1.20, lum:-0.05, sky:"rgba(255,110,60,.24)"},
+    {name:"Abyssal",      hue:+120, sat:0.95, lum:-0.14, sky:"rgba(30,70,120,.32)"},
+    {name:"Prismatique",  hue:+220, sat:1.25, lum:+0.02, sky:"rgba(255,150,230,.20)"},
+    {name:"Spectral",     hue:+40,  sat:0.70, lum:+0.05, sky:"rgba(200,255,240,.18)"}
+  ];
+
+  function skin(){
+    const w = (typeof S !== "undefined" ? (S.world||1) : 1);
+    return SKINS[(w-1) % SKINS.length];
+  }
+  window.worldSkinName = function(){ return skin().name; };
+  window.worldSkySkin  = function(){ return skin().sky; };
+
+  /* --- Conversion couleur : hex -> HSL -> hex, avec la transformation du monde --- */
+  function hex2rgb(h){
+    h = h.replace("#","");
+    if(h.length === 3) h = h.split("").map(c=>c+c).join("");
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+  }
+  function rgb2hsl(r,g,b){
+    r/=255; g/=255; b/=255;
+    const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+    let h = 0, s = 0; const l = (mx+mn)/2;
+    if(mx !== mn){
+      const d = mx-mn;
+      s = l > .5 ? d/(2-mx-mn) : d/(mx+mn);
+      if(mx === r) h = (g-b)/d + (g < b ? 6 : 0);
+      else if(mx === g) h = (b-r)/d + 2;
+      else h = (r-g)/d + 4;
+      h *= 60;
+    }
+    return [h, s, l];
+  }
+  function hsl2hex(h,s,l){
+    h = ((h % 360) + 360) % 360; s = Math.min(1, Math.max(0, s)); l = Math.min(1, Math.max(0, l));
+    const c = (1 - Math.abs(2*l-1)) * s;
+    const x = c * (1 - Math.abs(((h/60) % 2) - 1));
+    const m = l - c/2;
+    let r=0,g=0,b=0;
+    if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;}
+    else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;}
+    const to = v => Math.round((v+m)*255).toString(16).padStart(2,"0");
+    return "#"+to(r)+to(g)+to(b);
+  }
+
+  const cache = {};
+  window.worldTint = function(hex){
+    const k = (typeof S !== "undefined" ? (S.world||1) : 1) + "|" + hex;
+    if(cache[k]) return cache[k];
+    const sk = skin();
+    if(sk.hue === 0 && sk.sat === 1 && sk.lum === 0){ cache[k] = hex; return hex; }
+    try{
+      const [r,g,b] = hex2rgb(hex);
+      const [h,s,l] = rgb2hsl(r,g,b);
+      const out = hsl2hex(h + sk.hue, s * sk.sat, l + sk.lum);
+      cache[k] = out; return out;
+    }catch(e){ return hex; }
+  };
+
+  /* Suffixe romain : neutre, sans accord de genre */
+  const ROMAN = ["","","II","III","IV","V","VI","VII","VIII","IX","X"];
+  window.worldSuffix = function(){
+    const w = (typeof S !== "undefined" ? (S.world||1) : 1);
+    return w <= 1 ? "" : " " + (ROMAN[w] || w);
   };
 })();
