@@ -1,10 +1,12 @@
 /* ============================================================
    VIDÉO D'ACCUEIL
-   Lance la vidéo en boucle dès que possible. Certains WebView bloquent
-   l'autoplay même en muet dans de rares cas : si ça échoue, on relance
-   au premier toucher de l'écran, sans jamais bloquer l'affichage du
-   reste de l'écran d'accueil (bouton Jouer, titre, etc. déjà en place
-   par-dessus, indépendants de la vidéo).
+   CORRECTIF : la tentative de lecture était différée jusqu'à
+   l'événement "load" complet de la page (attend TOUS les scripts,
+   images, etc.) — d'où le démarrage perçu comme tardif. On tente
+   maintenant immédiatement, dès que ce script s'exécute.
+   Certains WebView bloquent malgré tout l'autoplay muet dans de
+   rares cas : si ça échoue, on relance au premier toucher, sans
+   jamais bloquer l'affichage du reste de l'écran d'accueil.
    ============================================================ */
 (function(){
   const v = document.getElementById("homeVideo");
@@ -20,8 +22,10 @@
       });
     }
   }
-  if(document.readyState === "complete") tryPlay();
-  else window.addEventListener("load", tryPlay);
+  tryPlay();                                   // tentative immédiate
+  if(document.readyState !== "complete"){
+    window.addEventListener("load", tryPlay);  // filet de sécurité, ne bloque rien
+  }
 
   /* Coupe la vidéo une fois en jeu : plus besoin de la décoder en tâche
      de fond, ça libère de la ressource pour le jeu lui-même. */
