@@ -286,7 +286,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   0%{transform:scale(1)}35%{transform:scale(1.25) rotate(-4deg)}
   60%{transform:scale(1.1) rotate(3deg)}100%{transform:scale(1)}
 }
-#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:70}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:96}
 #flash.go{animation:flashOut .8s ease-out}
 @keyframes flashOut{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
 
