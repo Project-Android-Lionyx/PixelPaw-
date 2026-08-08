@@ -786,3 +786,30 @@ button.pressPop{animation:pressPop .2s ease-out}
   border-radius:50%;background:var(--gold);border:2px solid var(--ink);
 }
 @media (prefers-reduced-motion:reduce){ .expoWait{animation:none} }
+
+/* --- Téléportation entre mondes --- */
+.tpNow,.tpNext{
+  background:var(--card);border:3px solid var(--ink);border-radius:12px;
+  padding:9px;font-size:9px;box-shadow:var(--pop-sm);
+}
+.tpNext{background:var(--mint)}
+.tpArrow{font-size:13px;margin:5px 0;color:var(--ink-soft)}
+.tpWarn{
+  font-size:7.5px;line-height:1.7;text-align:left;margin:10px 0;
+  background:var(--cream);border:3px dashed var(--ink);border-radius:12px;padding:9px;
+}
+.tpReq{margin-bottom:8px;font-size:8px;line-height:1.9}
+.tpOk{color:#2E7D32}
+.tpKo{color:#C62828}
+
+/* --- Pastille d'expédition sur la scène --- */
+.expoChip{
+  position:absolute;top:6px;right:6px;z-index:7;display:flex;align-items:center;gap:5px;
+  background:var(--cream);border:2px solid var(--ink);border-radius:999px;
+  padding:3px 9px 3px 6px;box-shadow:var(--pop-sm);cursor:pointer;
+  font-size:8px;letter-spacing:.3px;
+}
+.expoChip .ecIco{font-size:12px;line-height:1}
+.expoChip.ready{background:var(--gold);animation:ecReady 1.4s ease-in-out infinite}
+@keyframes ecReady{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@media (prefers-reduced-motion:reduce){ .expoChip.ready{animation:none} }
