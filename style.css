@@ -41,7 +41,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg4)}
 body{
   font-family:var(--font); color:var(--ink); touch-action:manipulation;
   -webkit-user-select:none;user-select:none; font-size:13px;line-height:1.5;
-  background:var(--bg3);
+  background:var(--bg3); overflow:hidden;
 }
 button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
@@ -52,14 +52,11 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   background:
     radial-gradient(120% 60% at 50% 0%, var(--bg1) 0%, transparent 60%),
     linear-gradient(180deg, var(--bg2) 0%, var(--bg3) 45%, var(--bg4) 100%);
-  /* Échelle d'interface : #app est recalculé plus grand/petit que l'écran
-     (division par --ui-scale) puis ramené exactement à sa taille réelle
-     par transform:scale. Le résultat occupe toujours 100% de l'écran,
-     à n'importe quelle échelle — rien ne peut devenir inaccessible. */
-  width:calc(100% / var(--ui-scale, 1));
-  max-width:calc(460px / var(--ui-scale, 1));
-  height:calc(100dvh / var(--ui-scale, 1));
-  height:calc(100vh / var(--ui-scale, 1));
+  /* Échelle d'interface : la largeur/hauteur exactes sont fixées en JS,
+     en pixels entiers (voir applyUiScale dans ui-fixes.js). calc(%/var)
+     pouvait produire un reste fractionnaire arrondi de façon asymétrique
+     par le navigateur — d'où le trait vertical persistant sur un bord. */
+  width:100%; max-width:460px; height:100dvh; height:100vh;
   transform:scale(var(--ui-scale, 1));
   transform-origin:top center;
 }
@@ -1246,3 +1243,12 @@ body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
   content:"";position:absolute;inset:0;pointer-events:none;opacity:.04;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+
+/* --- Grille de l'aperçu style plat (15 animaux) --- */
+.flatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.flatCell{
+  background:var(--card);border:3px solid var(--ink);border-radius:14px;
+  box-shadow:var(--pop-sm);padding:4px;display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.flatCv{width:100%;height:auto;display:block;border-radius:10px;background:linear-gradient(180deg,#EAF3FF,#F3EFE3)}
+.flatCell span{font-size:5.8px;text-align:center;line-height:1.3}
