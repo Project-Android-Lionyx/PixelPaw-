@@ -457,7 +457,7 @@ function freshState(){
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
     playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute",
-    expo:null, habXp:{}, habDone:{}, world:1, bossNext:0, bossWins:0, bossBest:0,
+    expo:null, habXp:{}, habDone:{}, world:1, bossNext:0, bossWins:0, bossBest:0, cup:{},
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -3964,8 +3964,25 @@ save();
   const COOLDOWN = 8*60*1000;                  // un boss toutes les 8 minutes
   let fight = null;
 
+  /* --- Améliorations de combat : la contrepartie de la montée en difficulté --- */
+  const CUP = {
+    griffes: {name:"Griffes Aiguisées", ico:"🗡️", desc:"+20% dégâts par niveau",      max:25, cost:l=>Math.floor(2500*Math.pow(1.65,l))},
+    fureur:  {name:"Fureur",            ico:"🔥", desc:"Combo +1% dégâts par niveau", max:20, cost:l=>Math.floor(4000*Math.pow(1.7,l))},
+    precis:  {name:"Œil Précis",        ico:"🎯", desc:"+3% critique en combat",      max:15, cost:l=>Math.floor(6000*Math.pow(1.75,l))},
+    chrono:  {name:"Souffle Long",      ico:"⏱️", desc:"+2 s de combat par niveau",   max:10, cost:l=>Math.floor(9000*Math.pow(1.9,l))}
+  };
+  function cLvl(k){ return (S.cup && S.cup[k]) || 0; }
+  function dmgMult(){ return 1 + 0.20*cLvl("griffes"); }
+  function comboStep(){ return 0.02 + 0.01*cLvl("fureur"); }
+  function bossCrit(){ return Math.min(0.85, (typeof critChance==="function"?critChance():0) + 0.03*cLvl("precis")); }
+  function bonusTime(){ return 2*cLvl("chrono"); }
+
+  /* La difficulté monte à chaque victoire, mais reste bornée pour que
+     les améliorations puissent toujours suivre. */
+  function difficulty(){ return 1 + Math.min(40, S.bossWins||0) * 0.09; }
+
   function pickBoss(){
-    const lvl = (S.playerLvl||1) + (S.world||1)*2;
+    const lvl = (S.playerLvl||1) + (S.world||1)*2 + Math.floor((S.bossWins||0)/3);
     const max = Math.min(BOSSES.length, 1 + Math.floor(lvl/3));
     return BOSSES[Math.floor(Math.random()*max)];
   }
@@ -3976,38 +3993,91 @@ save();
   const chip = document.createElement("div");
   chip.className = "bossChip";
   chip.style.display = "none";
-  chip.addEventListener("click", ()=>{ if(bossReady()) startFight(); });
+  chip.addEventListener("click", ()=>{
+    if(typeof sfx === "function") sfx("tab");
+    if(bossReady()) startFight(); else openCombat();
+  });
   stageEl.appendChild(chip);
 
   let pending = null;
   setInterval(()=>{
     if(typeof S === "undefined") return;
     if(fight){ chip.style.display = "none"; return; }
+    chip.style.display = "flex";
     if(bossReady()){
       if(!pending) pending = pickBoss();
-      chip.style.display = "flex";
+      chip.classList.add("alert");
       chip.innerHTML = '<span class="bcIco">'+pending.emoji+'</span><span class="bcTxt">Intrus !</span>';
     } else {
-      chip.style.display = "none";
+      chip.classList.remove("alert");
+      const s = Math.ceil((S.bossNext - Date.now())/1000);
+      const m = Math.floor(s/60);
+      chip.innerHTML = '<span class="bcIco">⚔️</span><span class="bcTxt">'+(m>0 ? m+"m" : s+"s")+'</span>';
     }
   }, 1000);
+
+  /* --- Atelier de combat : dépenser ses pièces pour frapper plus fort --- */
+  function openCombat(){
+    if(typeof openModal !== "function") return;
+    S.cup = S.cup || {};
+    let html = '<h2>Atelier de Combat</h2>' +
+      '<div class="bossStat">Victoires : '+(S.bossWins||0)+
+      ' · Difficulté actuelle ×'+difficulty().toFixed(2)+'</div>' +
+      '<div class="cupSum">Dégâts ×'+dmgMult().toFixed(2)+
+      ' · Combo +'+(comboStep()*100).toFixed(0)+'%/coup'+
+      ' · Crit '+Math.round(bossCrit()*100)+'%'+
+      ' · +'+bonusTime()+' s</div>';
+
+    Object.keys(CUP).forEach(k=>{
+      const u = CUP[k], lvl = cLvl(k), maxed = lvl >= u.max;
+      const cost = u.cost(lvl);
+      const can = !maxed && S.coins >= cost;
+      html += '<div class="talentRow">' +
+        '<div class="talentIco">'+u.ico+'</div>' +
+        '<div class="talentTxt"><b>'+u.name+'</b><span>'+u.desc+'</span></div>' +
+        '<div class="talentLvl">'+lvl+'</div>' +
+        '<button class="talentBtn cupBtn" data-cup="'+k+'"'+(can?'':' disabled')+'>' +
+          (maxed ? "MAX" : '<span class="cupCost">'+fmt(cost)+'</span>') +
+        '</button>' +
+      '</div>';
+    });
+
+    html += '<button class="mBtn" id="cupClose">Fermer</button>';
+    openModal(html);
+    document.querySelectorAll("[data-cup]").forEach(b=>{
+      b.onclick = ()=>{
+        const k = b.dataset.cup, u = CUP[k], lvl = cLvl(k);
+        if(lvl >= u.max) return;
+        const cost = u.cost(lvl);
+        if(S.coins < cost) return;
+        S.coins -= cost; S.cup[k] = lvl + 1;
+        if(typeof sfx === "function") sfx("buy"); vibrate(10);
+        save(); renderHUD(); openCombat();
+      };
+    });
+    const c = document.getElementById("cupClose"); if(c) c.onclick = closeModal;
+  }
+  window.openCombat = openCombat;
 
   /* --- Combat --- */
   function startFight(){
     if(fight || typeof openModal !== "function") return;
     const b = pending || pickBoss();
     const tap = (typeof perTap === "function" ? perTap() : 1) || 1;
-    const maxHp = Math.max(1, Math.round(tap * b.hp));
-    fight = {b, hp:maxHp, maxHp, until:Date.now() + b.time*1000, hits:0};
+    const maxHp = Math.max(1, Math.round(tap * b.hp * difficulty()));
+    const secs = b.time + bonusTime();
+    fight = {b, hp:maxHp, maxHp, until:Date.now() + secs*1000, hits:0, combo:0, lastHit:0};
 
     openModal(
       '<h2>'+b.name+'</h2>' +
+      '<div class="bossRank">Palier '+((S.bossWins||0)+1)+' · ×'+difficulty().toFixed(2)+' vie</div>' +
       '<div class="bossArena" id="bossHit">' +
+        '<div class="bossCombo" id="bossCombo"></div>' +
         '<div class="bossSprite" id="bossSprite">'+b.emoji+'</div>' +
       '</div>' +
       '<div class="bossHpWrap"><i id="bossHp" style="width:100%"></i><span id="bossHpTxt"></span></div>' +
-      '<div class="bossTimer">⏱ <b id="bossTime">'+b.time+'</b> s</div>' +
-      '<div class="bossHint">Tape l\'intrus pour le repousser !</div>'
+      '<div class="bossTimer">⏱ <b id="bossTime">'+secs+'</b> s</div>' +
+      '<div class="bossHint">Enchaîne les coups pour monter le combo !</div>'
     );
 
     const arena = document.getElementById("bossHit");
@@ -4019,10 +4089,18 @@ save();
 
   function hit(){
     if(!fight) return;
+    const now = Date.now();
+    /* Combo : monte tant qu'on enchaîne, retombe si on marque une pause */
+    fight.combo = (now - fight.lastHit < 900) ? fight.combo + 1 : 0;
+    fight.lastHit = now;
+
     const tap = (typeof perTap === "function" ? perTap() : 1) || 1;
-    let dmg = tap;
+    const comboMult = 1 + fight.combo * comboStep();
+    let dmg = tap * dmgMult() * comboMult;
     let crit = false;
-    if(typeof critChance === "function" && Math.random() < critChance()){ dmg *= 3; crit = true; }
+    if(Math.random() < bossCrit()){ dmg *= 3; crit = true; }
+    dmg = Math.round(dmg);
+
     fight.hp = Math.max(0, fight.hp - dmg);
     fight.hits++;
     if(typeof sfx === "function") sfx("click");
@@ -4030,6 +4108,19 @@ save();
 
     const sp = document.getElementById("bossSprite");
     if(sp){ sp.classList.remove("bossHurt"); void sp.offsetWidth; sp.classList.add("bossHurt"); }
+
+    const cb = document.getElementById("bossCombo");
+    if(cb){
+      if(fight.combo >= 3){
+        cb.textContent = "×"+fight.combo+"  ("+comboMult.toFixed(2)+"×)";
+        cb.classList.add("on");
+        cb.classList.toggle("hot", fight.combo >= 15);
+        cb.classList.remove("pulse"); void cb.offsetWidth; cb.classList.add("pulse");
+      } else { cb.classList.remove("on","hot"); }
+    }
+    const arena = document.getElementById("bossHit");
+    if(arena && crit){ arena.classList.remove("shake"); void arena.offsetWidth; arena.classList.add("shake"); }
+
     popDmg(dmg, crit);
     if(fight.hp <= 0) endFight(true);
   }
@@ -4083,7 +4174,8 @@ save();
         '<div class="bossWin">'+b.emoji+'</div>' +
         '<p>'+b.name+' repoussé en '+hits+' coups.</p>' +
         '<div class="bossLoot">+'+fmt(coins)+' pièces<br>+'+gems+' 💎'+(fc?'<br>+'+fc+' 🔩':'')+'</div>' +
-        '<div class="bossStat">Victoires : '+S.bossWins+'</div>' +
+        '<div class="bossStat">Victoires : '+S.bossWins+' · Prochain palier ×'+difficulty().toFixed(2)+'</div>' +
+        '<button class="mBtn ghost" id="bkUp">⚔️ Atelier de Combat</button>' +
         '<button class="mBtn" id="bkOk">Super !</button>'
       );
     } else {
@@ -4092,9 +4184,12 @@ save();
         '<h2>Il s\'est enfui…</h2>' +
         '<p>'+b.name+' était trop coriace cette fois.</p>' +
         '<div class="bossStat">Un nouvel intrus arrivera dans 8 minutes.</div>' +
+        '<button class="mBtn ghost" id="bkUp">⚔️ Renforce-toi d\'ici là</button>' +
         '<button class="mBtn" id="bkOk">Fermer</button>'
       );
     }
+    const up = document.getElementById("bkUp");
+    if(up) up.onclick = openCombat;
     const ok = document.getElementById("bkOk");
     if(ok) ok.onclick = closeModal;
     save(); renderHUD();
