@@ -869,3 +869,38 @@ button.pressPop{animation:pressPop .2s ease-out}
 @media (prefers-reduced-motion:reduce){
   .bossChip,.bossSprite.bossHurt,.bossWin{animation:none}
 }
+
+/* --- Combo, secousse et atelier de combat (Bloc 19, v2) --- */
+.bossChip{background:var(--cream);animation:none}
+.bossChip.alert{background:#FFD9D9;animation:bossAlert 1.3s ease-in-out infinite}
+
+.bossRank{font-size:8px;color:var(--ink-soft);margin-bottom:5px}
+
+.bossCombo{
+  position:absolute;top:7px;left:0;right:0;text-align:center;
+  font-size:13px;color:var(--ink);opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.bossCombo.on{opacity:1}
+.bossCombo.hot{color:#E53935;font-size:16px}
+.bossCombo.pulse{animation:comboPulse .22s ease-out}
+@keyframes comboPulse{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+
+.bossArena.shake{animation:arenaShake .22s ease-out}
+@keyframes arenaShake{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)}
+}
+
+.cupSum{
+  font-size:7.5px;line-height:1.7;color:var(--ink-soft);
+  background:var(--cream);border:2px dashed var(--ink);border-radius:10px;
+  padding:7px;margin-bottom:9px;
+}
+.cupBtn{width:auto;min-width:54px;padding:0 7px;font-size:8px}
+.cupCost{font-size:8px}
+
+@media (prefers-reduced-motion:reduce){
+  .bossCombo.pulse,.bossArena.shake{animation:none}
+}
