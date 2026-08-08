@@ -52,9 +52,21 @@
     if(typeof S === "undefined") return;
     const v = clamp(S.uiScale || 1);
     document.documentElement.style.setProperty("--ui-scale", v);
-    /* Les canvas (météo, décor) écoutent "resize" pour recalculer leur
-       taille : un changement d'échelle ne déclenche pas cet événement
-       nativement, donc on le simule après le prochain rendu. */
+
+    /* CORRECTIF : fixe la taille de #app en pixels entiers, arrondis
+       au-dessus (Math.ceil). Le calc(%/var) précédent pouvait laisser un
+       reste fractionnaire que le navigateur arrondissait de façon
+       asymétrique (0 à gauche, 1px à droite ou l'inverse) — visible en
+       trait vertical sur un bord. Surdimensionner très légèrement et
+       laisser body:overflow:hidden absorber l'éventuel débordement
+       élimine le trou dans tous les cas, à n'importe quelle échelle. */
+    const app = document.getElementById("app");
+    if(app){
+      const vw = window.innerWidth, vh = window.innerHeight;
+      app.style.width  = Math.ceil(Math.min(vw, 460*v) / v) + "px";
+      app.style.height = Math.ceil(vh / v) + "px";
+    }
+
     requestAnimationFrame(()=> window.dispatchEvent(new Event("resize")));
   };
 
@@ -68,6 +80,8 @@
   };
 
   applyUiScale();
+  window.addEventListener("resize", applyUiScale);
+  window.addEventListener("orientationchange", applyUiScale);
 
   /* Greffé dans les Options, juste après le réglage de qualité graphique */
   if(typeof openSettings === "function"){
