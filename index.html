@@ -92,6 +92,14 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   flex:1 1 auto;position:relative;display:flex;flex-direction:column;
   align-items:center;justify-content:center;overflow:hidden;min-height:0;
 }
+#decor{position:absolute;bottom:6%;left:0;right:0;height:34px;pointer-events:none;z-index:1;overflow:hidden}
+.grassTuft{position:absolute;bottom:0;width:13px;height:20px;background:var(--mint);border-radius:8px 8px 0 0;transform-origin:bottom center;animation:swayGrass 3s ease-in-out infinite;opacity:.75}
+.grassTuft:nth-child(3n){background:var(--mint-d);opacity:.55}
+.grassTuft:nth-child(4n){animation-duration:2.4s}
+@keyframes swayGrass{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+#bug{position:absolute;top:28%;left:-30px;font-size:14px;opacity:0;pointer-events:none;z-index:2}
+#bug.fly{animation:bugFly 6s linear forwards}
+@keyframes bugFly{0%{opacity:0;left:-8%;transform:translateY(0)}8%{opacity:1}50%{transform:translateY(-14px)}92%{opacity:1}100%{opacity:0;left:104%;transform:translateY(0)}}
 #petName{
   font-size:10px;letter-spacing:1px;text-transform:uppercase;background:var(--cream);
   border:3px solid var(--ink);border-radius:999px;padding:5px 14px;box-shadow:var(--pop-sm);
@@ -194,6 +202,12 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 #reopen:active{transform:translateX(-50%) translateY(3px);box-shadow:none}
 
 .panelTitle{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-soft);margin:6px 0 8px;display:flex;align-items:center;gap:6px}
+.catHeader{
+  font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink);
+  background:var(--cream);border:3px solid var(--ink);border-radius:12px;
+  padding:8px 12px;margin:14px 0 10px;box-shadow:var(--pop-sm);
+}
+.catHeader:first-child{margin-top:2px}
 .panelTitle::after{content:"";flex:1;height:3px;background:var(--ink);opacity:.12;border-radius:2px}
 .tabView{display:none}
 .tabView.on{display:block}
@@ -359,6 +373,10 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 /* ---------- v2.3 : clin d'œil + roue de la chance ---------- */
 #petWrap.blink{animation:petBlink .16s ease-in-out}
 @keyframes petBlink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.86)}}
+#petWrap.look{animation:petLook 1.4s ease-in-out}
+@keyframes petLook{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}70%{transform:rotate(6deg)}}
+#petWrap.sit{animation:petSit 1.8s ease-in-out}
+@keyframes petSit{0%,100%{transform:translateY(0) scale(1,1)}45%{transform:translateY(6px) scale(1.04,.9)}}
 #wheelWrap{display:flex;flex-direction:column;align-items:center;margin-bottom:12px}
 #wheelOuter{position:relative;width:150px;height:150px;margin-bottom:10px}
 #wheelInfo{
@@ -549,6 +567,8 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   </header>
 
   <main id="stage">
+    <div id="decor"></div>
+    <div id="bug"></div>
     <div id="petName"><span id="petLabel">Poussin</span><span id="rarityTag">Commun</span></div>
     <div id="petWrap" class="idle">
       <canvas id="pet" width="16" height="16"></canvas>
@@ -578,21 +598,27 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
     </div>
 
     <div class="tabView" id="view-upgrades">
+      <div class="catHeader">🖱️ Clic manuel</div>
       <div class="panelTitle">Par tape</div><div id="listTap"></div>
+      <div class="panelTitle">Paliers de Renaissance</div><div id="listRebirthTap"></div>
+
+      <div class="catHeader">⚙️ Automatique</div>
       <div class="panelTitle">Revenu passif</div><div id="listIdle"></div>
       <div class="panelTitle">Limite hors-ligne</div><div id="listOffline"></div>
       <div class="panelTitle">Par animal</div><div id="listAnimalUp"></div>
-      <div class="panelTitle">Paliers de Renaissance</div>
-      <div id="listRebirthTap"></div><div id="listRebirthIdle"></div>
+      <div class="panelTitle">Paliers de Renaissance</div><div id="listRebirthIdle"></div>
     </div>
 
     <div class="tabView" id="view-shop">
+      <div class="catHeader">💎 Gemmes</div>
       <div class="panelTitle">Races premium</div><div id="listPremium"></div>
       <div class="panelTitle">Avance rapide</div><div id="listWarp"></div>
       <div class="panelTitle">Boosts</div><div id="listBoosts"></div>
-      <div class="panelTitle">Gemmes &amp; pass</div><div id="listPacks"></div>
       <div class="panelTitle">Cosmétiques (sans avantage de jeu)</div>
       <div id="cosmGrid" class="cosmGrid"></div>
+
+      <div class="catHeader">⭐ Premium</div>
+      <div class="panelTitle">Gemmes &amp; pass</div><div id="listPacks"></div>
     </div>
 
     <div class="tabView" id="view-labo">
@@ -696,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.5.0";
+const VERSION = "3.6.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2085,6 +2111,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.6.0", lines:["Monde vivant : herbe animée, insecte de passage occasionnel, l'animal regarde autour de lui / s'assoit","Améliorations et Boutique regroupées en vraies catégories (Clic manuel/Automatique, Gemmes/Premium)"]},
   {v:"3.5.0", lines:["Nouvelle séquence d'accueil : œuf à réchauffer en 5 tapes avant le choix du compagnon","Uniquement pour les tout nouveaux joueurs, ne touche pas les parties en cours"]},
   {v:"3.4.1", lines:["Habillage visuel : HUD vitré, boutons et cartes en relief, onglets avec effet enfoncé","Aucune fonctionnalité touchée — uniquement du style par-dessus l'existant"]},
   {v:"3.4.0", lines:["Frénésie : corrige le lag (animation coûteuse retirée), passe de 25s à 500 tapes","Hors-ligne : détection renforcée pour le passage en arrière-plan dans l'app (WebView)"]},
@@ -3026,7 +3053,7 @@ function initLab(){
    ============================================================ */
 let idleSince = Date.now(), lastMood = "";
 function setMood(cls, ms){
-  petWrap.classList.remove("jump","sleep","dance","yawn","blink");
+  petWrap.classList.remove("jump","sleep","dance","yawn","blink","look","sit");
   if(cls) petWrap.classList.add(cls);
   lastMood = cls||"";
   if(cls && ms) setTimeout(()=>{ if(petWrap.classList.contains(cls)) petWrap.classList.remove(cls); }, ms);
@@ -3046,11 +3073,33 @@ function moodTick(){
     return;
   }
   const r = Math.random();
-  if(r < .18) setMood("blink", 160);
-  else if(r < .28) setMood("jump", 520);
-  else if(r < .34) setMood("yawn", 1250);
+  if(r < .16) setMood("blink", 160);
+  else if(r < .25) setMood("jump", 520);
+  else if(r < .31) setMood("yawn", 1250);
+  else if(r < .38) setMood("look", 1400);
+  else if(r < .43) setMood("sit", 1800);
 }
 setInterval(moodTick, 2600);
+function buildDecor(){
+  const d = document.getElementById("decor"); if(!d) return;
+  d.innerHTML = "";
+  for(let i=0;i<9;i++){
+    const g = document.createElement("div");
+    g.className = "grassTuft";
+    g.style.left = (4 + i*10 + rnd(5))+"%";
+    g.style.animationDelay = (Math.random()*2.5)+"s";
+    d.appendChild(g);
+  }
+}
+function maybeSpawnBug(){
+  if(veil.classList.contains("on") || document.hidden) return;
+  if(Math.random() > 0.45) return;
+  const b = document.getElementById("bug"); if(!b) return;
+  b.textContent = Math.random() < .5 ? "🐞" : "🦋";
+  b.style.top = (18 + Math.random()*32)+"%";
+  b.classList.remove("fly"); void b.offsetWidth; b.classList.add("fly");
+}
+setInterval(maybeSpawnBug, 26000);
 
 /* ============================================================
    v2.3 — COSMÉTIQUES (purement visuels, aucun bonus de jeu)
@@ -3526,6 +3575,7 @@ buildCosmGrid();
 buildAchvList();
 buildWheelGradient();
 renderPet();
+buildDecor();
 popRarity();
 renderHUD();
 if(S.questDate !== today()) rollQuests();
