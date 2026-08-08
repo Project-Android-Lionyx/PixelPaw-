@@ -1007,3 +1007,53 @@ button.pressPop{animation:pressPop .2s ease-out}
   pointer-events:none;
   background:linear-gradient(180deg, var(--cream), transparent);
 }
+
+/* --- Carte illustrée avec plateformes de téléportation --- */
+.mapCanvasWrap{
+  position:relative;width:100%;aspect-ratio:220/260;margin-bottom:10px;
+  border:3px solid var(--ink);border-radius:14px;overflow:hidden;
+  box-shadow:var(--pop-sm);
+}
+.mapCanvas{
+  width:100%;height:100%;display:block;
+  image-rendering:pixelated;image-rendering:crisp-edges;
+}
+.mapPin{
+  position:absolute;transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  background:none;border:none;padding:0;color:var(--ink);
+  transition:transform .15s ease;
+}
+.mapPin:active{transform:translate(-50%,-50%) scale(.88)}
+.mapPin .mpIco{
+  font-size:15px;line-height:1;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));
+}
+.mapPin .mpName{
+  font-size:5.5px;letter-spacing:.2px;white-space:nowrap;
+  background:var(--cream);border:1px solid var(--ink);border-radius:5px;
+  padding:1px 3px;
+}
+.mapPin.lock{opacity:.55}
+.mapPin.lock .mpName{background:rgba(255,255,255,.7)}
+.mapPin.cur .mpName{background:var(--gold)}
+.mapPin.cur{animation:pinBounce 1.8s ease-in-out infinite}
+@keyframes pinBounce{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,-58%)}}
+
+/* Effet de saut lors d'une téléportation */
+.mapCanvasWrap.warp{animation:warpFlash .26s ease-out}
+@keyframes warpFlash{
+  0%{filter:brightness(1)}
+  40%{filter:brightness(2.2) saturate(.4)}
+  100%{filter:brightness(1)}
+}
+
+/* La grille reste sous la carte, en accès rapide compact */
+.mapGridCompact .mapCell{padding:5px 2px 4px}
+.mapGridCompact .mcIco{font-size:15px}
+.mapGridCompact .mcName{font-size:5.5px}
+
+@media (prefers-reduced-motion:reduce){
+  .mapPin.cur{animation:none}
+  .mapCanvasWrap.warp{animation:none}
+}
