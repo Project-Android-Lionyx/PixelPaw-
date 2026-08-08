@@ -1057,3 +1057,146 @@ button.pressPop{animation:pressPop .2s ease-out}
   .mapPin.cur{animation:none}
   .mapCanvasWrap.warp{animation:none}
 }
+
+/* ============================================================
+   REFONTE VISUELLE GEMINI — Bloc 1/3 (structure & profondeur)
+   Corrections : le dégradé radial de #stage est retiré (aurait effacé
+   la teinte par monde/habitat --habitat-c1/c2) ; #panel garde ses coins
+   arrondis en haut uniquement (il est collé au bas de l'écran) ; l'ombre
+   3D des boutons utilise un ton fixe plutôt que var(--ink), qui devient
+   clair dans les thèmes sombres et transformerait l'ombre en lueur.
+   ============================================================ */
+
+/* Fenêtres et panneau : relief façon carte de collection premium */
+.modal{
+  background-image:linear-gradient(145deg, var(--card), var(--cream));
+  border:3px solid var(--ink); border-radius:24px;
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.6), inset 0 -4px 0 rgba(0,0,0,.05), 0 12px 24px rgba(0,0,0,.15);
+}
+#panel{
+  background-image:linear-gradient(145deg, var(--card), var(--cream));
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.6), 0 -6px 16px rgba(0,0,0,.1);
+}
+
+/* Boutons d'action : aspect tactile 3D, ombre en ton fixe (stable sur les 4 thèmes) */
+.iconBtn, .mBtn, .rBtn, .talentBtn, .themeBtn{
+  background-image:linear-gradient(180deg, rgba(255,255,255,.2) 0%, transparent 100%);
+  border:2px solid var(--ink); border-radius:16px;
+  box-shadow:0 4px 0 rgba(59,43,69,.55), 0 8px 12px rgba(0,0,0,.1);
+  transition:transform .1s cubic-bezier(.4,0,.2,1), box-shadow .1s cubic-bezier(.4,0,.2,1), filter .1s;
+}
+.iconBtn:active, .mBtn:active, .rBtn:active, .talentBtn:active, .themeBtn:active{
+  transform:translateY(4px);
+  box-shadow:0 0 0 rgba(59,43,69,.55), 0 2px 4px rgba(0,0,0,.1);
+  filter:brightness(.9);
+}
+
+/* Lignes de listes, talents et cases de carte : bulles indépendantes et réactives */
+.row, .talentRow, .mapCell{
+  background-color:var(--card); border:2px solid var(--ink-soft);
+  border-radius:18px; box-shadow:0 4px 0 var(--ink-soft);
+  transition:filter .1s ease, transform .1s ease;
+}
+.row:active, .talentRow:active, .mapCell:active{ filter:brightness(.95); transform:scale(.98); }
+
+.tab{ border-radius:16px 16px 0 0; transition:background-color .2s ease, opacity .2s ease, filter .2s ease; }
+
+/* Barres de progression : effet pilule creusée */
+#xpBar, .mcBar, .expoBar{
+  border-radius:20px; border:2px solid var(--ink-soft);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.25), 0 2px 0 rgba(255,255,255,.4);
+}
+
+/* HUD détaché du fond avec dégradé translucide */
+.stat, #cpsLine, #lvlLine{
+  background-image:linear-gradient(180deg, rgba(255,255,255,.25) 0%, transparent 100%);
+  border-radius:16px; box-shadow:0 4px 8px rgba(0,0,0,.05), inset 0 2px 0 rgba(255,255,255,.3);
+}
+
+/* Étiquettes façon autocollant brillant */
+#rarityTag, .habitatBadge, .expoChip{
+  border:2px solid var(--ink); border-radius:24px;
+  box-shadow:0 4px 0 var(--ink), inset 0 2px 0 rgba(255,255,255,.5);
+}
+
+/* Vignettes et icônes : bords doux et ombre portée */
+.thumb, .mcIco, .talentIco{
+  border-radius:14px; border:2px solid var(--ink-soft); box-shadow:0 3px 0 var(--ink-soft);
+  background-image:linear-gradient(135deg, var(--cream), var(--card));
+}
+
+/* Animal : contour sticker franc + flottement (remplace les versions précédentes) */
+#pet{ filter:drop-shadow(0 4px 0 var(--ink-soft)); animation:premiumFloat 3s ease-in-out infinite; transform-origin:bottom center; }
+@keyframes premiumFloat{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+/* Ombre au sol synchronisée, centrage translateX(-50%) strictement conservé */
+#shadow{ animation:shadowPulse3 3s ease-in-out infinite; }
+@keyframes shadowPulse3{
+  0%,100%{ transform:translateX(-50%) scale(1);   opacity:.5 }
+  50%    { transform:translateX(-50%) scale(.85); opacity:.2 }
+}
+
+@keyframes tapGlow{ 0%,100%{opacity:.6;transform:scale(.95)} 50%{opacity:1;transform:scale(1.05)} }
+#tapHint{ animation:tapGlow 2s ease-in-out infinite; }
+
+/* Toast : apparition organique, UNIQUEMENT quand la classe .on est active
+   (sans cette restriction, le fill-mode "forwards" fixerait l'opacité à 1
+   en permanence après 0,4 s, peu importe le vrai état d'affichage).
+   Centrage translate(-50%,-50%) strictement conservé. */
+@keyframes toastPop{
+  0%  { transform:translate(-50%,-30%); opacity:0 }
+  100%{ transform:translate(-50%,-50%); opacity:1 }
+}
+#toast.on{ animation:toastPop .4s cubic-bezier(.175,.885,.32,1.275) forwards; }
+
+#veil{ transition:opacity .3s ease-in-out; }
+
+@media (prefers-reduced-motion:reduce){
+  #pet, #shadow, #tapHint{ animation:none; }
+  #shadow{ transform:translateX(-50%); }
+  #toast{ animation-duration:.001s; }
+  .iconBtn, .mBtn, .rBtn, .talentBtn, .themeBtn, .row, .talentRow, .mapCell{ transition:none; }
+}
+
+/* ============================================================
+   REFONTE VISUELLE GEMINI — Bloc 2/3 (typographie, passe 1)
+   ============================================================ */
+body{ letter-spacing:.5px; line-height:1.5; }
+.rSub, .talentLvl, .tpWarn, #greetBubble{
+  font-family:'Courier New', Consolas, Monaco, monospace; letter-spacing:0px;
+}
+.rName, .talentTxt, .mcName, .sLabel, .tab{ text-shadow:0 2px 0 var(--ink-soft); }
+.rSub, .talentLvl{ text-shadow:0 1px 0 rgba(255,255,255,.6); }
+#petName{
+  text-shadow:2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 0 6px 8px rgba(0,0,0,.5);
+  letter-spacing:1px;
+}
+
+/* ============================================================
+   REFONTE VISUELLE GEMINI — Bloc 3/3 (typographie, passe finale)
+   CORRECTIF : #bubble retiré du groupe pointer-events:none.
+   C'est le bouton de récompense publicitaire — le rendre transparent
+   aux clics l'aurait rendu inutilisable, exactement le bug corrigé
+   il y a deux échanges (bulle de salutation qui bloquait les taps).
+   ============================================================ */
+body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+.stat, #cpsLine, #lvlLine, .habitatBadge, .bossChip, .expoChip{
+  text-shadow:1px 1px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink), 0 3px 0 rgba(0,0,0,.2);
+}
+#tapHint, #bubble, #greetBubble, #fx, .bossDmg, .crit, .cupSum{
+  text-shadow:0 2px 4px var(--ink-soft), 1px 1px 0 var(--ink);
+}
+#petName, #rarityTag, .bossCombo, .tpWarn{
+  text-shadow:2px 2px 0 var(--ink), 0 4px 6px rgba(0,0,0,.3);
+}
+.rName, .rSub, .talentTxt, .talentLvl, .mcName, .mpName, .tab, #reopen{
+  text-shadow:0 1px 0 rgba(255,255,255,.5);
+}
+/* #bubble exclu ici : il doit rester cliquable */
+#fx, .bossDmg, .crit, .cupSum, #greetBubble{ pointer-events:none; }
+
+@media (prefers-reduced-motion:reduce){
+  .stat, #cpsLine, #lvlLine, .habitatBadge, .bossChip, .expoChip, #petName, #rarityTag, .bossCombo, .tpWarn{
+    text-shadow:1px 1px 0 var(--ink);
+  }
+}
