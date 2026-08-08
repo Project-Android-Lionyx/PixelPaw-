@@ -457,7 +457,7 @@ function freshState(){
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
     playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute",
-    expo:null, habXp:{}, habDone:{},
+    expo:null, habXp:{}, habDone:{}, world:1,
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -574,6 +574,7 @@ function globalMult(withBoost){
   if(typeof weatherLuckMult === "function") m *= weatherLuckMult();          // Bloc 3/25 : bonus arc-en-ciel
   if(typeof skillProdMult === "function") m *= skillProdMult();              // Bloc 9/25 : talent Production
   if(typeof skillLuckMult === "function") m *= skillLuckMult();              // Bloc 9/25 : talent Collection
+  if(typeof worldMult === "function") m *= worldMult();                      // Multiplicateur permanent de monde
   /* Biome Ferme : Chien de Berger boost les autres animaux de Ferme possédés */
   const dog = PREMIUM.find(p=>p.id === "chiendeberger");
   if(dog && S.premium.chiendeberger){
@@ -3752,8 +3753,13 @@ save();
         '</div>';
     }
 
-    html += '<button class="mBtn" id="wmClose">Fermer</button>';
+    html += '<button class="mBtn ghost" id="wmTp">🌀 Monde ' + (S.world||1) +
+            ' · ×' + (typeof worldMult==="function" ? worldMult().toFixed(1) : "1") +
+            ' — Point de Téléportation</button>' +
+            '<button class="mBtn" id="wmClose">Fermer</button>';
     openModal(html);
+    const tp = document.getElementById("wmTp");
+    if(tp) tp.onclick = ()=>{ if(typeof openTeleport === "function") openTeleport(); };
 
     let picked = cur;
     document.querySelectorAll("[data-hab]").forEach(b=>{
@@ -3792,4 +3798,136 @@ save();
     badge.style.cursor = "pointer";
     badge.addEventListener("click", ()=>{ if(typeof sfx==="function") sfx("tab"); openWorldMap(); });
   }
+})();
+
+/* ============================================================
+   TÉLÉPORTATION & MONDES — méta-progression au-dessus de la Renaissance
+   Acheter un Point de Téléportation fait basculer dans le monde suivant :
+   tout le cycle de jeu repart de zéro (y compris renaissances et Pattes
+   Célestes), mais un multiplicateur permanent s'applique à jamais.
+   Ce qui a été payé en gemmes est conservé — comme le fait déjà la
+   Renaissance (correctif v2.5), par respect des achats du joueur.
+   ============================================================ */
+(function(){
+  /* Monde 1 = x1 · Monde 2 = x1,5 · puis doublement à chaque monde */
+  window.worldMult = function(w){
+    const n = w || (typeof S !== "undefined" ? (S.world||1) : 1);
+    return n <= 1 ? 1 : 1.5 * Math.pow(2, n-2);
+  };
+  window.teleportCost = function(){
+    const w = (typeof S !== "undefined" ? (S.world||1) : 1);
+    return 120 * w;                                  // 120 gemmes, +120 par monde
+  };
+  window.teleportReqRebirths = function(){
+    const w = (typeof S !== "undefined" ? (S.world||1) : 1);
+    return 3 * w;                                    // il faut avoir vraiment joué le monde
+  };
+  window.canTeleport = function(){
+    if(typeof S === "undefined") return false;
+    return (S.rebirths||0) >= teleportReqRebirths() && S.gems >= teleportCost();
+  };
+
+  window.doTeleport = function(){
+    if(!canTeleport()) return false;
+    S.gems -= teleportCost();
+    S.world = (S.world||1) + 1;
+
+    /* Remise à zéro du cycle de jeu — même périmètre que la Renaissance,
+       plus les renaissances et les Pattes Célestes elles-mêmes. */
+    S.coins = 0;
+    S.owned = {cochon:true};
+    if(!S.owned[S.animal] && !S.premium[S.animal]) S.animal = "cochon";
+    S.up = {}; S.aup = {}; S.rup = {}; S.evo = {};
+    S.prest = {}; S.pawPoints = 0; S.rebirths = 0;
+    S.inv = {}; S.seen = {}; S.dex = {cochon:1}; S.fc = 0;
+    S.boostUntil = 0; S.boostMult = 1; S.boostName = "";
+    S.totalEarned = 0; S.offCoinSteps = 0; S.expo = null;
+    if(typeof ensureTierCache === "function") ensureTierCache();
+
+    closeModal();
+    if(typeof sfx === "function") sfx("big");
+    vibrate(150);
+    if(typeof flash !== "undefined" && flash){ flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go"); }
+    if(typeof confetti === "function") confetti(40);
+    renderPet(); save(); renderHUD(); refreshLists();
+    if(typeof applyHabitat === "function") applyHabitat();
+    toast("Monde "+S.world+" ! Production ×"+worldMult().toFixed(1)+" pour toujours");
+    return true;
+  };
+
+  window.openTeleport = function(){
+    if(typeof openModal !== "function") return;
+    const w = S.world||1, cost = teleportCost(), need = teleportReqRebirths();
+    const ok = canTeleport();
+    const missReb = Math.max(0, need - (S.rebirths||0));
+    const missGem = Math.max(0, cost - S.gems);
+
+    openModal(
+      '<h2>Point de Téléportation</h2>' +
+      '<div class="tpNow">Monde actuel <b>'+w+'</b> · production ×'+worldMult(w).toFixed(1)+'</div>' +
+      '<div class="tpArrow">▼</div>' +
+      '<div class="tpNext">Monde <b>'+(w+1)+'</b> · production ×'+worldMult(w+1).toFixed(1)+'</div>' +
+      '<div class="tpWarn">' +
+        '<b>Tout le cycle repart de zéro :</b><br>' +
+        'pièces, animaux, améliorations, évolutions,<br>renaissances et Pattes Célestes.<br><br>' +
+        '<b>Tu conserves :</b><br>gemmes, races premium, cosmétiques,<br>succès, niveau, talents et exploration.' +
+      '</div>' +
+      '<div class="tpReq">' +
+        (missReb ? '<div class="tpKo">✖ Encore '+missReb+' renaissance'+(missReb>1?'s':'')+' ('+(S.rebirths||0)+'/'+need+')</div>'
+                 : '<div class="tpOk">✔ Renaissances '+(S.rebirths||0)+'/'+need+'</div>') +
+        (missGem ? '<div class="tpKo">✖ Il manque '+fmt(missGem)+' 💎 ('+fmt(S.gems)+'/'+fmt(cost)+')</div>'
+                 : '<div class="tpOk">✔ '+fmt(cost)+' 💎 disponibles</div>') +
+      '</div>' +
+      '<button class="mBtn" id="tpGo"'+(ok?'':' disabled style="opacity:.45"')+'>Se téléporter</button>' +
+      '<button class="mBtn ghost" id="tpNo">Annuler</button>'
+    );
+    const no = document.getElementById("tpNo"); if(no) no.onclick = openWorldMap;
+    const go = document.getElementById("tpGo");
+    if(go && ok) go.onclick = ()=>{
+      openModal('<h2>Confirmer</h2><p>Tu quittes le Monde '+w+' définitivement.<br>Cette action est irréversible.</p>' +
+        '<button class="mBtn" id="tpY">Oui, téléporter</button><button class="mBtn ghost" id="tpN">Annuler</button>');
+      document.getElementById("tpN").onclick = openTeleport;
+      document.getElementById("tpY").onclick = doTeleport;
+    };
+  };
+})();
+
+/* ============================================================
+   INDICATEUR D'EXPÉDITION — visible en permanence sur la scène
+   L'expédition n'était visible que dans la carte : cette pastille
+   affiche l'habitat en cours et le temps restant, et ouvre la carte.
+   ============================================================ */
+(function(){
+  const stageEl = document.getElementById("stage");
+  if(!stageEl) return;
+
+  const chip = document.createElement("div");
+  chip.className = "expoChip";
+  chip.style.display = "none";
+  chip.addEventListener("click", ()=>{
+    if(typeof sfx === "function") sfx("tab");
+    if(typeof openWorldMap === "function") openWorldMap();
+  });
+  stageEl.appendChild(chip);
+
+  function left(){ return (S && S.expo) ? Math.max(0, S.expo.until - Date.now()) : 0; }
+  function fmtShort(ms){
+    const s = Math.ceil(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+    return h ? h+"h"+String(m).padStart(2,"0") : m ? m+"m"+String(s%60).padStart(2,"0") : s+"s";
+  }
+
+  setInterval(()=>{
+    if(typeof S === "undefined") return;
+    if(!S.expo){ chip.style.display = "none"; return; }
+    const ms = left(), done = ms <= 0;
+    let emoji = "🧭";
+    try {
+      const h = (typeof getHabitats === "function") && getHabitats().find(x=>x.id === S.expo.hab);
+      if(h) emoji = h.emoji;
+    } catch(e){}
+    chip.style.display = "flex";
+    chip.classList.toggle("ready", done);
+    chip.innerHTML = '<span class="ecIco">'+emoji+'</span><span class="ecTxt">' +
+      (done ? "Récolter !" : fmtShort(ms)) + '</span>';
+  }, 1000);
 })();
