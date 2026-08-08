@@ -2866,8 +2866,8 @@ save();
     {id:"marais",        name:"Marais",         emoji:"🐸", unlockLvl:8,  colors:["#B8CFA8","#DCE9CE"]},
     {id:"volcan",        name:"Volcan",         emoji:"🌋", unlockLvl:9,  colors:["#E9B3A3","#F6D9CE"]},
     {id:"iletropicale",  name:"Île tropicale",  emoji:"🏝️", unlockLvl:10, colors:["#A6E1DA","#D8F5F1"]},
-    {id:"mondeceleste",  name:"Monde céleste",  emoji:"☁️", unlockLvl:11, colors:["#D9CCF2","#EFE7FA"]},
-    {id:"mondecosmique", name:"Monde cosmique", emoji:"🌌", unlockLvl:12, colors:["#7C6CA8","#B9A8DB"]}
+    {id:"mondeceleste",  name:"Cité Céleste",   emoji:"☁️", unlockLvl:11, colors:["#D9CCF2","#EFE7FA"]},
+    {id:"mondecosmique", name:"Voie Cosmique",  emoji:"🌌", unlockLvl:12, colors:["#7C6CA8","#B9A8DB"]}
   ];
 
   /* Proxy de progression : utilise S.playerLvl si un jour le bloc 9 (niveau joueur)
