@@ -722,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.0.0";
+const VERSION = "4.0.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -751,7 +751,7 @@ poussin:{pal:{y:"#FFE27A",d:"#F2C94C",o:"#FF9F1C",k:"#3B2B20",w:"#FFF6D0"},px:[
 "..yyyyyyyyyyyy..","..yywyyyyyyyyy..","..yywwyyyyyyyy..","...yyyyyyyyyy...",
 "....dddddddd....",".....o....o.....","....oo....oo....","................"]},
 
-hamster:{size:24,pal:{P:"#F2C48A",D:"#D9A25E",S:"#FFEBC7",K:"#3B2B20",W:"#FFFFFF"},px:[
+hamster:{size:24,pal:{P:"#F2C48A",D:"#D9A25E",S:"#FFEBC7",K:"#3B2B20",W:"#FFFFFF",H:"#FFB4A8"},px:[
 "........................",
 "........................",
 "........................",
@@ -772,12 +772,12 @@ hamster:{size:24,pal:{P:"#F2C48A",D:"#D9A25E",S:"#FFEBC7",K:"#3B2B20",W:"#FFFFFF
 "...DDDDDSSSSSSSSDDDDD...",
 "...DDDDDSSSSSSSSDDDDD...",
 "...DDDDDDDDDDDDDDDDDD...",
-".....DDDD......DDDD.....",
-".....DDDD......DDDD.....",
-".....DDDD......DDDD.....",
+".....HHHH......HHHH.....",
+".....HHHH......HHHH.....",
+".....HHHH......HHHH.....",
 "........................"]},
 
-lapin:{size:24,pal:{P:"#F2EFEA",D:"#D7D2C8",S:"#FFD9E3",K:"#3B2B20",W:"#FFFFFF"},px:[
+lapin:{size:24,pal:{P:"#F2EFEA",D:"#D7D2C8",S:"#FFD9E3",K:"#3B2B20",W:"#FFFFFF",H:"#FFB4C4"},px:[
 "........................",
 "......DDDD....DDDD......",
 "......DSSD....DSSD......",
@@ -799,9 +799,9 @@ lapin:{size:24,pal:{P:"#F2EFEA",D:"#D7D2C8",S:"#FFD9E3",K:"#3B2B20",W:"#FFFFFF"}
 "....DDDDDSSSSSSDDDDD....",
 "....DDDDDSWWWWSDDDDD....",
 "....DDDDDDWWWWDDDDDD....",
-".....DDDD.WWWW.DDDD.....",
-".....DDDD......DDDD.....",
-".....DDDD......DDDD....."]},
+".....HHHH.WWWW.HHHH.....",
+".....HHHH......HHHH.....",
+".....HHHH......HHHH....."]},
 
 perruche:{size:24,pal:{P:"#8FD98A",D:"#5EAE5A",S:"#B8F0A8",K:"#3B2B20",W:"#FFFFFF",O:"#FF9F1C",A:"#C4700F"},px:[
 "........................",
@@ -829,7 +829,7 @@ perruche:{size:24,pal:{P:"#8FD98A",D:"#5EAE5A",S:"#B8F0A8",K:"#3B2B20",W:"#FFFFF
 ".........OOO.OOO........",
 ".........OOO.OOO........"]},
 
-chat:{size:24,pal:{P:"#C9C4D6",D:"#A39CB8",S:"#EDEAF2",K:"#3B2B20",W:"#FFFFFF",N:"#FF9FB2"},px:[
+chat:{size:24,pal:{P:"#C9C4D6",D:"#A39CB8",S:"#EDEAF2",K:"#3B2B20",W:"#FFFFFF",N:"#FF9FB2",H:"#6B5A78"},px:[
 "........................",
 "........................",
 "...DDDDDD......DDDDDD...",
@@ -851,11 +851,11 @@ chat:{size:24,pal:{P:"#C9C4D6",D:"#A39CB8",S:"#EDEAF2",K:"#3B2B20",W:"#FFFFFF",N
 "...DDDDDDDDDDDDDDDDDD...",
 "...DDDDDDDDDDDDDDDDDD...",
 "...DDDDDDDDDDDDDDDDDD...",
-".....DDDD......DDDD.....",
-".....DDDD......DDDD.....",
-".....DDDD......DDDD....."]},
+".....HHHH......HHHH.....",
+".....HHHH......HHHH.....",
+".....HHHH......HHHH....."]},
 
-corgi:{size:24,pal:{P:"#E8A25A",D:"#C77F3A",S:"#FFF3E0",K:"#3B2B20",W:"#FFFFFF"},px:[
+corgi:{size:24,pal:{P:"#E8A25A",D:"#C77F3A",S:"#FFF3E0",K:"#3B2B20",W:"#FFFFFF",H:"#FFF3E0"},px:[
 "........................",
 "........................",
 "........................",
@@ -876,12 +876,12 @@ corgi:{size:24,pal:{P:"#E8A25A",D:"#C77F3A",S:"#FFF3E0",K:"#3B2B20",W:"#FFFFFF"}
 "..DDDDDDDSSSSSSDDDDDDD..",
 "..DDDDDDDDDDDDDDDDDDDD..",
 "..DDDDDDDDDDDDDDDDDDDD..",
-"...DDDD...DDDD...DDDD...",
-"...DDDD...DDDD...DDDD...",
-"...DDDD...DDDD...DDDD...",
+"...HHHH...HHHH...HHHH...",
+"...HHHH...HHHH...HHHH...",
+"...HHHH...HHHH...HHHH...",
 "........................"]},
 
-capybara:{size:24,pal:{P:"#B08B5E",D:"#8D6B42",S:"#D9BE96",K:"#3B2B20"},px:[
+capybara:{size:24,pal:{P:"#B08B5E",D:"#8D6B42",S:"#D9BE96",K:"#3B2B20",H:"#5E4630"},px:[
 "........................",
 "........................",
 "........................",
@@ -902,9 +902,9 @@ capybara:{size:24,pal:{P:"#B08B5E",D:"#8D6B42",S:"#D9BE96",K:"#3B2B20"},px:[
 "..PPPPPSSSSSSSSSSPPPPP..",
 "..DDDDDSSSSSSSSSSDDDDD..",
 "..DDDDDDDDDDDDDDDDDDDD..",
-"..DDDDDDDDDDDDDDDDDDDD..",
-"....DDDD........DDDD....",
-"....DDDD........DDDD....",
+"..DDHHHHDDDDDDDDHHHHDD..",
+"....HHHH........HHHH....",
+"....HHHH........HHHH....",
 "........................"]},
 
 panda:{size:24,pal:{W:"#F7F4EC",G:"#D9D4C4",K:"#2B2320",Y:"#FFFFFF"},px:[
@@ -933,7 +933,7 @@ panda:{size:24,pal:{W:"#F7F4EC",G:"#D9D4C4",K:"#2B2320",Y:"#FFFFFF"},px:[
 "....KKKK........KKKK....",
 "........................"]},
 
-dragon:{size:24,pal:{P:"#7ACB9C",D:"#4E9E71",S:"#C7F0D6",K:"#2B2320",W:"#5EAE7E",Y:"#FFD24A"},px:[
+dragon:{size:24,pal:{P:"#7ACB9C",D:"#4E9E71",S:"#C7F0D6",K:"#2B2320",W:"#5EAE7E",Y:"#FFD24A",H:"#FFD24A"},px:[
 ".......K........K.......",
 "......KKK......KKK......",
 "......KKK......KKK......",
@@ -955,9 +955,9 @@ dragon:{size:24,pal:{P:"#7ACB9C",D:"#4E9E71",S:"#C7F0D6",K:"#2B2320",W:"#5EAE7E"
 ".....DDDDSSSSSSDDDD.....",
 ".....DDDDDDDDDDDDDD.....",
 ".....DDDDDDDDDDDDDD.....",
-"......DDDD....DDDD......",
-"......DDDD....DDDD......",
-"......DDDD....DDDD......"]},
+"......HHHH....HHHH......",
+"......HHHH....HHHH......",
+"......HHHH....HHHH......"]},
 
 /* --- races premium --- */
 siamois:{pal:{c:"#F2E5D0",d:"#6B5340",k:"#3B2B20",b:"#5EC8F2",p:"#FF9FB2"},px:[
@@ -2292,6 +2292,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.0.1", lines:["Pattes/sabots dans une 3e couleur distincte sur 6 animaux (Hamster, Lapin, Chat, Corgi, Capybara, Dragon)","Même niveau de finition que le Cochon désormais — comparé côte à côte avant envoi"]},
   {v:"4.0.0", lines:["Les 9 animaux classiques redessinés en 24×24 (Hamster, Lapin, Perruche, Chat, Corgi, Capybara, Panda, Dragon)","Chaque rendu vérifié visuellement avant intégration — traits distinctifs par espèce, pas de simples recolorations"]},
   {v:"3.9.1", lines:["Cochon redessiné en 24×24 (au lieu de 16×16) : oreilles détaillées, reflet dans les yeux, ombres de volume","Le moteur gère maintenant des sprites de taille variable — les 199 autres restent identiques"]},
   {v:"3.9.0", lines:["Palette réchauffée façon Stardew Valley / Egg Inc. : tons bois, terre, coucher de soleil","Uniquement le thème Pastel par défaut — Dark, GameBoy et Cyberpunk restent inchangés"]},
