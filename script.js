@@ -4198,3 +4198,39 @@ save();
   /* Le premier boss arrive peu après la première partie, pas immédiatement */
   if(!S.bossNext) { S.bossNext = Date.now() + 90*1000; }
 })();
+
+/* ============================================================
+   CORRECTIF — Conservation de la position de défilement
+   Les écrans Talents / Atelier / Carte se reconstruisent après chaque
+   achat pour rafraîchir les coûts : la fenêtre remontait alors tout en
+   haut. Comme ces écrans s'appellent en interne, on intercepte au seul
+   point de passage commun — openModal — et on compare le titre : même
+   écran, on restaure le défilement ; écran différent, on repart en haut.
+   ============================================================ */
+(function(){
+  if(typeof openModal !== "function") return;
+  const originalOpen = openModal;
+
+  function titleOf(el){
+    const h = el && el.querySelector("h2");
+    return h ? h.textContent.trim() : "";
+  }
+
+  /* Réassignation de la liaison elle-même (et non d'une propriété de
+     window) : c'est le seul moyen d'intercepter aussi les appels
+     internes des autres modules. */
+  window.openModal = openModal = function(){
+    const el = document.getElementById("modal");
+    const veilEl = document.getElementById("veil");
+    const wasOpen = veilEl && veilEl.classList.contains("on");
+    const prevTitle = wasOpen ? titleOf(el) : null;
+    const prevScroll = wasOpen && el ? el.scrollTop : 0;
+
+    const r = originalOpen.apply(this, arguments);
+
+    if(el && prevScroll > 0 && prevTitle && titleOf(el) === prevTitle){
+      el.scrollTop = prevScroll;
+    }
+    return r;
+  };
+})();
