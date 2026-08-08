@@ -2765,7 +2765,12 @@ function startHome(){
   document.getElementById("homePlay").addEventListener("click", ()=>{
     sfx("good");
     const h = document.getElementById("home");
+    const fl = document.getElementById("flash");
     h.classList.add("leaving");
+    if(fl){ fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go"); }
+    /* Le basculement se fait au pic du flash blanc (~160 ms) : il est
+       donc masqué par le flash plutôt que visible en transition — effet
+       "boum" plutôt qu'un fondu progressif. */
     setTimeout(()=>{
       h.style.display = "none";
       if(S.volBgm > 0) startBgm();
@@ -2773,7 +2778,7 @@ function startHome(){
       const gb = document.getElementById("greetBubble");
       gb.textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
       gb.classList.remove("on"); void gb.offsetWidth; gb.classList.add("on");
-    }, 420);
+    }, 160);
   });
   document.getElementById("homeNews").addEventListener("click", ()=>{
     let html = '<h2>Nouveautés</h2>';
