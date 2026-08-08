@@ -1200,3 +1200,17 @@ body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
     text-shadow:1px 1px 0 var(--ink);
   }
 }
+
+/* --- Échelle d'interface --- */
+.uiScaleRow{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--card);border:2px solid var(--ink-soft);border-radius:12px;
+  padding:8px 10px;margin-bottom:8px;font-size:9px;
+}
+.uiScaleRow span:first-child{flex:1 1 auto;text-align:left}
+#uiScaleVal{min-width:34px;text-align:center;font-size:10px}
+.uiScaleBtn{
+  width:28px;height:28px;font-size:15px;border:2px solid var(--ink);
+  border-radius:8px;background:var(--mint);box-shadow:var(--pop-sm);color:#2B2333;
+}
+.uiScaleBtn:active{transform:translateY(2px);box-shadow:none}
