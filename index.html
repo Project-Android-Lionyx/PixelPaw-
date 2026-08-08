@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=25">
+<link rel="stylesheet" href="style.css?v=26">
 </head>
 <body data-theme="pastel">
 <div id="app">
@@ -125,7 +125,11 @@
   <div id="veil"><div class="modal" id="modal"></div></div>
 
   <div id="home">
-    <div id="homeBg"></div>
+    <div id="homeBg">
+      <video id="homeVideo" autoplay muted loop playsinline preload="auto" poster="">
+        <source src="home-bg.mp4" type="video/mp4">
+      </video>
+    </div>
     <div id="homeTop">
       <div id="homeTitle">PIXEL PAW<br>IDLE</div>
       <div id="homeVersion">v?</div>
@@ -165,7 +169,9 @@
   <div id="flash"></div>
 </div>
 <!-- Moteur de jeu principal -->
-<script src="core.js?v=1" defer></script>
+<script src="core.js?v=2" defer></script>
+<!-- Vidéo d'accueil (lecture, repli si autoplay bloqué) -->
+<script src="home-video.js?v=1" defer></script>
 <!-- Habitats, météo, cycle jour/nuit, décor vivant (Bloc 3) -->
 <script src="ambiance.js?v=1" defer></script>
 <!-- Niveau joueur, XP, arbre de talents, frénésie (Bloc 9) -->
