@@ -457,7 +457,7 @@ function freshState(){
     /* --- conservé pour toujours --- */
     gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
     playerLvl:1, playerXP:0, skillPts:0, skills:{prod:0,happy:0,explo:0,collect:0}, gfxQ:"haute",
-    expo:null, habXp:{}, habDone:{}, world:1, bossNext:0, bossWins:0, bossBest:0, cup:{},
+    expo:null, habXp:{}, habDone:{}, world:1, bossNext:0, bossWins:0, bossBest:0, cup:{}, frenzyLvl:0,
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -4232,5 +4232,163 @@ save();
       el.scrollTop = prevScroll;
     }
     return r;
+  };
+})();
+
+/* ============================================================
+   FRÉNÉSIE PROGRESSIVE
+   Auparavant : jauge remplie à 2,6 % par tape, soit ~39 tapes fixes.
+   Désormais : 100 tapes pour la première, puis +50 tapes à chaque
+   déclenchement. La jauge reste exprimée en pourcentage pour que la
+   barre existante continue de fonctionner sans être modifiée.
+   ============================================================ */
+(function(){
+  if(typeof tickFrenzyGauge !== "function") return;
+
+  window.frenzyTapsNeeded = function(){
+    return 100 + 50 * ((typeof S !== "undefined" && S.frenzyLvl) || 0);
+  };
+
+  window.tickFrenzyGauge = tickFrenzyGauge = function(){
+    if(frenzyActive()) return;                       // fenêtre active : la jauge est figée
+    const need = frenzyTapsNeeded();
+    S.frenzyGauge = (S.frenzyGauge||0) + (100 / need);
+    if(S.frenzyGauge >= 100){
+      S.frenzyGauge = 0;
+      S.frenzyLvl = (S.frenzyLvl||0) + 1;            // la suivante demandera 50 tapes de plus
+      S.boostMult = frenzyMultBase();
+      S.boostUntil = Date.now() + FRENZY_DURATION;
+      S.boostName = "Frénésie";
+      setCls(app, "frenzyOn", true);
+      sfx("big"); vibrate(80);
+      if(typeof confetti === "function") confetti(24);
+      toast("Frénésie ×"+frenzyMultBase()+" · niveau "+S.frenzyLvl+" ! Prochaine à "+frenzyTapsNeeded()+" tapes");
+    }
+  };
+})();
+
+/* ============================================================
+   TÉLÉPORTEURS — carte illustrée façon "pad de téléportation"
+   Remplace la grille de cases par une vraie carte dessinée : chemin
+   reliant les habitats, plateformes de téléportation lumineuses,
+   brouillard sur les zones verrouillées.
+   Les pads sont dessinés en pixel art original (anneaux concentriques
+   + faisceau + particules), pas une reprise d'un visuel existant.
+   ============================================================ */
+(function(){
+  if(typeof openWorldMap !== "function") return;
+  const originalMap = openWorldMap;
+
+  /* Positions des habitats sur la carte, en pourcentage (chemin sinueux) */
+  const NODES = [
+    [16,88],[38,80],[60,86],[80,74],
+    [72,60],[48,62],[24,56],[14,42],
+    [34,36],[56,38],[76,28],[50,14]
+  ];
+
+  function drawMap(cv, habs, selId){
+    const ctx = cv.getContext("2d");
+    const W = cv.width, H = cv.height;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0,0,W,H);
+
+    /* Fond : parchemin dégradé */
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#CFE3F5"); g.addColorStop(.45,"#DCEFD4"); g.addColorStop(1,"#C7E0B8");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+    /* Relief de fond : collines pixelisées */
+    ctx.fillStyle = "rgba(255,255,255,.22)";
+    for(let x=0;x<W;x++){
+      const y = Math.round(H*0.55 - 8*Math.sin(x*0.05) - 5*Math.sin(x*0.11));
+      ctx.fillRect(x, y, 1, H-y);
+    }
+    ctx.fillStyle = "rgba(120,170,110,.18)";
+    for(let x=0;x<W;x++){
+      const y = Math.round(H*0.72 - 6*Math.sin(x*0.07+2));
+      ctx.fillRect(x, y, 1, H-y);
+    }
+
+    const pt = i => [NODES[i][0]/100*W, NODES[i][1]/100*H];
+
+    /* Chemin pointillé entre les étapes */
+    for(let i=0;i<habs.length-1;i++){
+      const [x1,y1] = pt(i), [x2,y2] = pt(i+1);
+      const steps = Math.round(Math.hypot(x2-x1, y2-y1) / 5);
+      const unlocked = habs[i].unlocked && habs[i+1].unlocked;
+      ctx.fillStyle = unlocked ? "rgba(120,95,70,.75)" : "rgba(120,120,120,.3)";
+      for(let s=0;s<=steps;s++){
+        if(s % 2) continue;
+        ctx.fillRect(Math.round(x1+(x2-x1)*s/steps)-1, Math.round(y1+(y2-y1)*s/steps)-1, 3, 3);
+      }
+    }
+
+    /* Plateformes de téléportation */
+    habs.forEach((h,i)=>{
+      const [x,y] = pt(i);
+      const sel = h.id === selId;
+      if(h.unlocked){
+        /* Anneaux concentriques + halo */
+        const col = sel ? "#FFD24A" : "#7DD3C0";
+        for(let r=13; r>=5; r-=4){
+          ctx.strokeStyle = col; ctx.lineWidth = 2;
+          ctx.globalAlpha = sel ? .95 : .65;
+          ctx.beginPath(); ctx.ellipse(x, y+7, r, r*0.42, 0, 0, Math.PI*2); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        /* Faisceau vertical */
+        const bg = ctx.createLinearGradient(0, y-16, 0, y+8);
+        bg.addColorStop(0, "rgba(255,255,255,0)");
+        bg.addColorStop(1, sel ? "rgba(255,210,74,.5)" : "rgba(125,211,192,.4)");
+        ctx.fillStyle = bg; ctx.fillRect(x-5, y-16, 10, 24);
+      } else {
+        /* Zone verrouillée : brouillard */
+        ctx.fillStyle = "rgba(90,90,110,.42)";
+        ctx.beginPath(); ctx.ellipse(x, y+4, 16, 12, 0, 0, Math.PI*2); ctx.fill();
+      }
+    });
+  }
+
+  window.openWorldMap = openWorldMap = function(){
+    originalMap.apply(this, arguments);
+    try{
+      const grid = document.querySelector(".mapGrid");
+      if(!grid) return;
+      const habs = (typeof getHabitats === "function") ? getHabitats() : [];
+      if(habs.length !== NODES.length) return;
+      const cur = (typeof AMB !== "undefined" && AMB.habitat) || (habs[0] && habs[0].id);
+
+      /* Carte dessinée, insérée AVANT la grille (qui reste la zone
+         tactile : elle garantit des cibles assez grandes au doigt) */
+      const holder = document.createElement("div");
+      holder.className = "mapCanvasWrap";
+      const cv = document.createElement("canvas");
+      cv.className = "mapCanvas"; cv.width = 220; cv.height = 260;
+      holder.appendChild(cv);
+
+      /* Marqueurs positionnés par-dessus la carte */
+      habs.forEach((h,i)=>{
+        const m = document.createElement("button");
+        m.className = "mapPin" + (h.unlocked ? "" : " lock") + (h.id === cur ? " cur" : "");
+        m.style.left = NODES[i][0] + "%";
+        m.style.top  = NODES[i][1] + "%";
+        m.innerHTML = '<span class="mpIco">'+(h.unlocked ? h.emoji : "🔒")+'</span>' +
+                      '<span class="mpName">'+(h.unlocked ? h.name : "Niv."+h.unlockLvl)+'</span>';
+        if(h.unlocked){
+          m.onclick = ()=>{
+            if(typeof setHabitat === "function") setHabitat(h.id);
+            if(typeof sfx === "function") sfx("big");
+            vibrate(30);
+            holder.classList.remove("warp"); void holder.offsetWidth; holder.classList.add("warp");
+            setTimeout(()=>openWorldMap(), 260);
+          };
+        } else { m.disabled = true; }
+        holder.appendChild(m);
+      });
+
+      grid.parentNode.insertBefore(holder, grid);
+      drawMap(cv, habs, cur);
+      grid.classList.add("mapGridCompact");
+    }catch(e){}
   };
 })();
