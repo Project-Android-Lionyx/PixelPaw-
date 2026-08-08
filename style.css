@@ -41,6 +41,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg4)}
 body{
   font-family:var(--font); color:var(--ink); touch-action:manipulation;
   -webkit-user-select:none;user-select:none; font-size:13px;line-height:1.5;
+  background:var(--bg3);
 }
 button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
@@ -1225,3 +1226,12 @@ body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
   border-radius:8px;background:var(--mint);box-shadow:var(--pop-sm);color:#2B2333;
 }
 .uiScaleBtn:active{transform:translateY(2px);box-shadow:none}
+
+/* --- Grain léger anti-banding sur l'écran d'accueil ---
+   Les larges dégradés doux (#home) peuvent créer des bandes visibles
+   sur certains écrans/GPU Android (banding), même sans bug de code.
+   Un grain à très faible opacité casse cet effet, technique standard. */
+#home::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.04;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
