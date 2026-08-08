@@ -722,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.6.0";
+const VERSION = "3.7.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2111,6 +2111,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.7.0", lines:["Ouverture d'œuf mise en scène : l'œuf se fissure, flash, puis révélation de l'animal","Réutilise les sprites de l'accueil — plus de résultat instantané et plat"]},
   {v:"3.6.0", lines:["Monde vivant : herbe animée, insecte de passage occasionnel, l'animal regarde autour de lui / s'assoit","Améliorations et Boutique regroupées en vraies catégories (Clic manuel/Automatique, Gemmes/Premium)"]},
   {v:"3.5.0", lines:["Nouvelle séquence d'accueil : œuf à réchauffer en 5 tapes avant le choix du compagnon","Uniquement pour les tout nouveaux joueurs, ne touche pas les parties en cours"]},
   {v:"3.4.1", lines:["Habillage visuel : HUD vitré, boutons et cartes en relief, onglets avec effet enfoncé","Aucune fonctionnalité touchée — uniquement du style par-dessus l'existant"]},
@@ -2845,23 +2846,45 @@ function playFusion(inKey, outKey, first){
 /* ============================================================
    41. ŒUFS
    ============================================================ */
+function playEggReveal(key, first){
+  const inf = petInfo(key);
+  openModal(
+    '<h2 id="revTitle">Un œuf s\'agite…</h2>' +
+    '<canvas id="revCv" style="width:110px;height:110px;margin:0 auto 12px;display:block"></canvas>' +
+    '<div id="revBody" style="opacity:0;transition:opacity .3s">' +
+      '<div class="big" id="revName"></div><p id="revRar"></p></div>' +
+    '<button class="mBtn" id="mOk" style="opacity:0;pointer-events:none;transition:opacity .3s">Génial</button>'
+  );
+  const cv = document.getElementById("revCv");
+  paint(cv, "egg0");
+  const beats = [
+    ()=>{ paint(cv,"egg1"); vibrate(20); },
+    ()=>{ paint(cv,"egg2"); vibrate(20); },
+    ()=>{
+      flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go");
+      sfx("big"); vibrate(70);
+      paintCreature(cv, key);
+      setTxt(document.getElementById("revTitle"), first ? "Nouvelle espèce !" : "Encore un œuf…");
+      setTxt(document.getElementById("revName"), inf.name);
+      const rar = document.getElementById("revRar");
+      setTxt(rar, RARITIES[inf.rar].name + (first ? " · première fois !" : " · utile pour fusionner"));
+      rar.style.color = RARITIES[inf.rar].col;
+      document.getElementById("revBody").style.opacity = 1;
+      const btn = document.getElementById("mOk");
+      btn.style.opacity = 1; btn.style.pointerEvents = "auto";
+      sfx(first ? "evo" : "good");
+    }
+  ];
+  let i = 0;
+  const t = setInterval(()=>{ if(i < beats.length){ beats[i](); i++; } else clearInterval(t); }, 550);
+  document.getElementById("mOk").onclick = ()=>{ closeModal(); buildLab(); };
+}
 function buyEgg(e, useGems){
   if(useGems){ if((S.gems||0) < e.gems) return; S.gems -= e.gems; }
   else{ if((S.fc||0) < e.fc) return; S.fc -= e.fc; }
   const key = rollPet(e.min);
   const first = invAdd(key, 1);
-  const inf = petInfo(key);
-  sfx(first ? "evo" : "good"); vibrate(first ? 60 : 20);
-  openModal(
-    '<h2>'+e.name+'</h2>' +
-    '<canvas id="eggBig" style="width:96px;height:96px;margin:0 auto 10px"></canvas>' +
-    '<div class="big">'+inf.name+'</div>' +
-    '<p style="color:'+RARITIES[inf.rar].col+'">'+RARITIES[inf.rar].name+
-      (first ? " · nouvelle espèce !" : " · doublon utile pour fusionner")+'</p>' +
-    '<button class="mBtn" id="mOk">Génial</button>'
-  );
-  paintCreature(document.getElementById("eggBig"), key);
-  document.getElementById("mOk").onclick = ()=>{ closeModal(); buildLab(); };
+  playEggReveal(key, first);
   save(); renderHUD(); refreshLists();
 }
 
