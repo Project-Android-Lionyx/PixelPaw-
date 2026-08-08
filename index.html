@@ -93,8 +93,8 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   align-items:center;justify-content:center;overflow:hidden;min-height:0;
 }
 #decor{position:absolute;bottom:6%;left:0;right:0;height:34px;pointer-events:none;z-index:1;overflow:hidden}
-.grassTuft{position:absolute;bottom:0;width:13px;height:20px;background:var(--mint);border-radius:8px 8px 0 0;transform-origin:bottom center;animation:swayGrass 3s ease-in-out infinite;opacity:.75}
-.grassTuft:nth-child(3n){background:var(--mint-d);opacity:.55}
+.grassTuft{position:absolute;bottom:0;width:13px;height:22px;background:var(--mint-d);border:2px solid var(--ink);border-radius:8px 8px 0 0;transform-origin:bottom center;animation:swayGrass 3s ease-in-out infinite;opacity:.95}
+.grassTuft:nth-child(3n){background:var(--pink-d);opacity:.85}
 .grassTuft:nth-child(4n){animation-duration:2.4s}
 @keyframes swayGrass{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
 #bug{position:absolute;top:28%;left:-30px;font-size:14px;opacity:0;pointer-events:none;z-index:2}
@@ -397,7 +397,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
   transition:opacity .45s ease, transform .45s ease;
 }
 #home.leaving{opacity:0;transform:scale(1.06)}
-#homeBg{position:absolute;inset:0;overflow:hidden;opacity:.5}
+#homeBg{position:absolute;inset:0;overflow:hidden;opacity:.5;pointer-events:none}
 #homeBg canvas{position:absolute;width:34px;height:34px;image-rendering:pixelated;filter:saturate(.7)}
 #homeTop{position:relative;text-align:center;margin-top:6vh}
 #homeTitle{
@@ -722,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.8.0";
+const VERSION = "3.8.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2111,6 +2111,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.8.1", lines:["Correctif : l'herbe se fondait dans le fond (contraste trop faible selon le thème), maintenant contourée","Correctif : le fond animé de l'accueil pouvait bloquer le tap sur le numéro de version","Insecte plus fréquent et jamais deux fois le même type de suite"]},
   {v:"3.8.0", lines:["Chaque animal a un trait (Gourmand/Joueur/Dormeur/Curieux) qui influence son comportement","Le trait s'affiche sur les animaux possédés · outil de test caché (7 tapes sur le numéro de version)"]},
   {v:"3.7.0", lines:["Ouverture d'œuf mise en scène : l'œuf se fissure, flash, puis révélation de l'animal","Réutilise les sprites de l'accueil — plus de résultat instantané et plat"]},
   {v:"3.6.0", lines:["Monde vivant : herbe animée, insecte de passage occasionnel, l'animal regarde autour de lui / s'assoit","Améliorations et Boutique regroupées en vraies catégories (Clic manuel/Automatique, Gemmes/Premium)"]},
@@ -3125,15 +3126,18 @@ function buildDecor(){
     d.appendChild(g);
   }
 }
+let _lastBug = "";
 function maybeSpawnBug(){
   if(veil.classList.contains("on") || document.hidden) return;
-  if(Math.random() > 0.45) return;
+  if(Math.random() > 0.55) return;
   const b = document.getElementById("bug"); if(!b) return;
-  b.textContent = Math.random() < .5 ? "🐞" : "🦋";
+  const opts = ["🐞","🦋"].filter(x=>x !== _lastBug);
+  _lastBug = opts[rnd(opts.length)] || "🐞";
+  b.textContent = _lastBug;
   b.style.top = (18 + Math.random()*32)+"%";
   b.classList.remove("fly"); void b.offsetWidth; b.classList.add("fly");
 }
-setInterval(maybeSpawnBug, 26000);
+setInterval(maybeSpawnBug, 18000);
 
 /* ============================================================
    v2.3 — COSMÉTIQUES (purement visuels, aucun bonus de jeu)
@@ -3558,7 +3562,7 @@ function startHome(){
   buildHomeBg();
   document.getElementById("homeVersion").textContent = "v"+VERSION;
   let _dbgTaps = 0, _dbgTimer = null;
-  document.getElementById("homeVersion").addEventListener("click", ()=>{
+  document.getElementById("homeVersion").addEventListener("pointerdown", ()=>{
     _dbgTaps++;
     clearTimeout(_dbgTimer);
     _dbgTimer = setTimeout(()=>{ _dbgTaps = 0; }, 1200);
