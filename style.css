@@ -753,3 +753,36 @@ button.pressPop{animation:pressPop .2s ease-out}
 .talentBtn[disabled]{opacity:.4;box-shadow:none}
 #lvlLine{transition:transform .15s ease}
 #lvlLine:active{transform:scale(.95)}
+
+/* --- Carte du monde & expéditions (Bloc 16) --- */
+.mapGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mapCell{
+  position:relative;border:3px solid var(--ink);border-radius:12px;background:var(--card);
+  box-shadow:var(--pop-sm);padding:8px 3px 6px;display:flex;flex-direction:column;
+  align-items:center;gap:3px;color:var(--ink);transition:transform .15s ease;
+}
+.mapCell:active{transform:scale(.94)}
+.mapCell.lock{opacity:.45;box-shadow:none}
+.mapCell.cur{box-shadow:var(--pop-sm), 0 0 0 3px var(--mint-d)}
+.mapCell.sel{background:var(--mint)}
+.mcIco{font-size:19px;line-height:1}
+.mcName{font-size:6.5px;letter-spacing:.2px;text-align:center;line-height:1.25}
+.mcBar{width:80%;height:4px;border:2px solid var(--ink);border-radius:999px;background:rgba(0,0,0,.1);overflow:hidden}
+.mcBar i{display:block;height:100%;background:var(--ink)}
+.mcDone{position:absolute;top:2px;right:4px;font-size:9px;color:var(--gold)}
+
+.expoBar{
+  display:flex;align-items:center;gap:9px;margin-bottom:10px;
+  background:var(--cream);border:3px solid var(--ink);border-radius:12px;
+  padding:8px 10px;box-shadow:var(--pop-sm);
+}
+.expoIco{font-size:19px}
+.expoTxt{flex:1 1 auto;text-align:left;font-size:8px;line-height:1.6}
+.expoTxt b{font-size:10px}
+.expoWait{font-size:15px;animation:expoSpin 2.4s linear infinite}
+@keyframes expoSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.habitatBadge.hasExpo::after{
+  content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;
+  border-radius:50%;background:var(--gold);border:2px solid var(--ink);
+}
+@media (prefers-reduced-motion:reduce){ .expoWait{animation:none} }
