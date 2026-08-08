@@ -722,7 +722,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "3.9.0";
+const VERSION = "3.9.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -861,11 +861,31 @@ cochondore:{pal:{P:"#FFD98A",D:"#E0AC3E",S:"#FFF0C4",K:"#3B2B20"},px:[
 "..PPKPPPPPPKPP..","..PPPPPPPPPPPP..",".PPPPPPPPPPPPPP.",".PPPPSSSSSSPPPP.",
 ".PPPPSKSSKSPPPP.",".PPPPSSSSSSPPPP.",".PPPPPPPPPPPPPP.","..DDDDDDDDDDDD..",
 "...DD......DD...","................","................","................"]},
-cochon:{pal:{P:"#FFAFC4",D:"#E88CA6",S:"#FFD6E0",K:"#3B2B20"},px:[
-"................","..PP........PP..","..PPPPPPPPPPPP..","..PPPPPPPPPPPP..",
-"..PPKPPPPPPKPP..","..PPPPPPPPPPPP..",".PPPPPPPPPPPPPP.",".PPPPSSSSSSPPPP.",
-".PPPPSKSSKSPPPP.",".PPPPSSSSSSPPPP.",".PPPPPPPPPPPPPP.","..DDDDDDDDDDDD..",
-"...DD......DD...","................","................","................"]},
+cochon:{size:24,pal:{P:"#FF9FC4",D:"#E06B98",S:"#FFD6E6",K:"#3B2B20",W:"#FFFFFF",H:"#8B5A2B"},px:[
+"........................",
+"........................",
+"........................",
+"....DDDD........DDDD....",
+"...DDPPD........DPPDD...",
+"...DDPPDD......DDPPDD...",
+"...PDDDDPPPPPPPPDDDDP...",
+"...PPPPPPPPPPPPPPPPPP...",
+"...PPPKWPPPPPPPPKWPPP...",
+"...PPPKKPPPPPPPPKKPPP...",
+"...PPPPPPPPPPPPPPPPPP...",
+"...PPPPSSSSSSSSSSPPPP...",
+"...PPPPSSSSSSSSSSPPPP...",
+"...PPPPSSKKSSSKKSPPPP...",
+"...PPPPSSSSSSSSSSPPPP...",
+"...PPPPSSSSSSSSSSPPPP...",
+"...PPPPSSSSSSSSSSPPPP...",
+"...DDDDDDDDDDDDDDDDDD...",
+"...DDDDDDDDDDDDDDDDDD...",
+"...DDDDDDDDDDDDDDDDDD...",
+"....DDDD........DDDD....",
+"....DDDD........DDDD....",
+"....HHHH........HHHH....",
+"....HHHH........HHHH...."]},
 lama:{pal:{L:"#F0E4D0",D:"#CBB89A",F:"#8A6E52",K:"#3B2B20",R:"#FF9FB2"},px:[
 "................","...LL......LL...","...LL......LL...","....LLLLLLLL....",
 "....LDLLLLDL....","....LLLLLLLL....","....LLFFFFLL....","....LFKFFKFL....",
@@ -933,12 +953,13 @@ chiendeberger:{pal:{N:"#3B3226",W:"#F0EAD6",K:"#1B1510"},px:[
 /* Dessine un sprite 16x16 sur un canvas. Tolère les lignes mal dimensionnées. */
 function paint(cv, key){
   const def = SPRITES[key]; if(!def || !cv) return;
-  cv.width = 16; cv.height = 16;
+  const n = def.size || 16;
+  cv.width = n; cv.height = n;
   const ctx = cv.getContext("2d");
-  ctx.clearRect(0,0,16,16);
-  for(let y=0;y<16;y++){
-    const row = (def.px[y]||"").padEnd(16,".");
-    for(let x=0;x<16;x++){
+  ctx.clearRect(0,0,n,n);
+  for(let y=0;y<n;y++){
+    const row = (def.px[y]||"").padEnd(n,".");
+    for(let x=0;x<n;x++){
       const col = def.pal[row[x]];
       if(!col) continue;
       ctx.fillStyle = col;
@@ -2111,6 +2132,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"3.9.1", lines:["Cochon redessiné en 24×24 (au lieu de 16×16) : oreilles détaillées, reflet dans les yeux, ombres de volume","Le moteur gère maintenant des sprites de taille variable — les 199 autres restent identiques"]},
   {v:"3.9.0", lines:["Palette réchauffée façon Stardew Valley / Egg Inc. : tons bois, terre, coucher de soleil","Uniquement le thème Pastel par défaut — Dark, GameBoy et Cyberpunk restent inchangés"]},
   {v:"3.8.1", lines:["Correctif : l'herbe se fondait dans le fond (contraste trop faible selon le thème), maintenant contourée","Correctif : le fond animé de l'accueil pouvait bloquer le tap sur le numéro de version","Insecte plus fréquent et jamais deux fois le même type de suite"]},
   {v:"3.8.0", lines:["Chaque animal a un trait (Gourmand/Joueur/Dormeur/Curieux) qui influence son comportement","Le trait s'affiche sur les animaux possédés · outil de test caché (7 tapes sur le numéro de version)"]},
