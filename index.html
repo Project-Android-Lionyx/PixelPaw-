@@ -121,9 +121,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #petName.pop{}
 #petWrap{
   position:relative;width:min(58vw,210px);height:min(58vw,210px);
-  display:grid;place-items:center;transition:transform .07s ease-out;
+  display:grid;place-items:center;transition:transform .1s cubic-bezier(.34,1.56,.64,1);
 }
-#petWrap.squish{transform:scale(1.12,.88) translateY(6px)}
+#petWrap.squish{transform:scale(1.24,.76) translateY(-4px)}
 #petWrap.idle{animation:breathe 2.6s ease-in-out infinite}
 @keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97) translateY(3px)}}
 #pet{width:100%;height:100%;grid-area:1/1}
@@ -141,11 +141,18 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   20%{transform:translate(-50%,-12px) scale(1.1);opacity:1}
   100%{transform:translate(-50%,-70px) scale(1);opacity:0}
 }
-.coin{position:absolute;width:10px;height:10px;border-radius:2px;background:var(--gold);border:2px solid var(--gold-d);animation:coinFly .8s ease-out forwards}
+.coin{position:absolute;width:12px;height:12px;border-radius:3px;background:var(--gold);border:2px solid var(--gold-d);animation:coinFly .65s cubic-bezier(.17,.89,.32,1.1) forwards}
 @keyframes coinFly{
-  0%{transform:translate(-50%,0) rotate(0);opacity:1}
-  100%{transform:translate(calc(-50% + var(--dx)), var(--dy)) rotate(220deg);opacity:0}
+  0%{transform:translate(-50%,0) scale(.4) rotate(0);opacity:1}
+  15%{transform:translate(-50%,0) scale(1.3) rotate(30deg);opacity:1}
+  100%{transform:translate(calc(-50% + var(--dx)), var(--dy)) scale(.9) rotate(280deg);opacity:0}
 }
+.tapPulse{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.9) 0%,rgba(255,201,74,.5) 40%,transparent 70%);
+  transform:translate(-50%,-50%);pointer-events:none;animation:tapPulseGo .35s ease-out forwards}
+@keyframes tapPulseGo{0%{width:10px;height:10px;opacity:1}100%{width:130px;height:130px;opacity:0}}
+#stage.critShake{animation:critShakeGo .28s ease-in-out}
+@keyframes critShakeGo{0%,100%{transform:translate(0,0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
 #bubble{
   position:absolute;left:50%;top:12%;transform:translateX(-50%);background:var(--mint);
   border:3px solid var(--ink);border-radius:999px;box-shadow:var(--pop-sm);padding:8px 12px;
@@ -741,7 +748,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.9.1";
+const VERSION = "4.10.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2405,11 +2412,16 @@ function spawnCoins(x,y,n){
   for(let i=0;i<n;i++){
     const c = document.createElement("div");
     c.className = "coin"; c.style.left = x+"px"; c.style.top = y+"px";
-    c.style.setProperty("--dx",(Math.random()*120-60).toFixed(0)+"px");
-    c.style.setProperty("--dy",(-40-Math.random()*60).toFixed(0)+"px");
-    c.style.animationDelay = (i*0.03)+"s";
-    fx.appendChild(c); setTimeout(()=>c.remove(), 900+i*30);
+    c.style.setProperty("--dx",(Math.random()*200-100).toFixed(0)+"px");
+    c.style.setProperty("--dy",(-60-Math.random()*100).toFixed(0)+"px");
+    c.style.animationDelay = (i*0.025)+"s";
+    fx.appendChild(c); setTimeout(()=>c.remove(), 750+i*25);
   }
+}
+function spawnTapPulse(x,y){
+  const p = document.createElement("div");
+  p.className = "tapPulse"; p.style.left = x+"px"; p.style.top = y+"px";
+  fx.appendChild(p); setTimeout(()=>p.remove(), 380);
 }
 function doTap(cx, cy){
   idleSince = Date.now();
@@ -2424,8 +2436,10 @@ function doTap(cx, cy){
   const r = stage.getBoundingClientRect();
   spawnFloat(cx-r.left, cy-r.top, (preciseHit?"SUPER +":crit?"CRIT +":"+")+fmt(gain), crit);
   spawnCoins(cx-r.left, cy-r.top, (frenzyActive() ? 5 : 0) + (crit ? 10 : 2+rnd(4)));
+  spawnTapPulse(cx-r.left, cy-r.top);
   petWrap.classList.remove("idle");
   petWrap.classList.add("squish");
+  if(crit){ stage.classList.remove("critShake"); void stage.offsetWidth; stage.classList.add("critShake"); }
   setTimeout(()=>{ petWrap.classList.remove("squish"); petWrap.classList.add("idle"); }, 90);
   sfx("click"); vibrate(preciseHit ? 35 : crit ? 22 : 8);
   tickFrenzyGauge();
@@ -2980,6 +2994,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.10.0", lines:["Tape bien plus satisfaisante : écrasement plus marqué avec rebond, flash d'impact, pièces qui explosent plus loin","Les critiques secouent maintenant la scène brièvement — vraie différence ressentie, pas juste un chiffre plus gros"]},
   {v:"4.9.1", lines:["Décor enrichi façon Pokémon : buissons aux deux coins, herbe en grappes irrégulières, fleurs éparpillées","Correctifs : z-index du bouton Menus renforcé, croix du panneau recentrée, défilement du Dex optimisé"]},
   {v:"4.9.0", lines:["Navigation repensée : Animaux/Boutique/Dex s'ouvrent en fenêtre depuis le HUD, comme la Téléportation","Le bas ne garde que 3 onglets (Améliorations/Labo/Quotidien) · bouton Menus pleine largeur"]},
   {v:"4.8.2", lines:["Correctif : bloc rose plein sur l'herbe (reste de l'ancien CSS), retiré","Correctif : badge du nom de l'animal bloqué visible sans texte — rendu permanent au lieu d'une animation qui se bloquait"]},
