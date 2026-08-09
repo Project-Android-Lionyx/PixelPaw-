@@ -152,6 +152,16 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   background:radial-gradient(circle,rgba(255,255,255,.9) 0%,rgba(255,201,74,.5) 40%,transparent 70%);
   transform:translate(-50%,-50%);pointer-events:none;animation:tapPulseGo .35s ease-out forwards}
 @keyframes tapPulseGo{0%{width:10px;height:10px;opacity:1}100%{width:130px;height:130px;opacity:0}}
+.bigPulse{position:fixed;width:20px;height:20px;border-radius:50%;pointer-events:none;z-index:40;
+  background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(255,201,74,.7) 35%,transparent 70%);
+  transform:translate(-50%,-50%);animation:bigPulseGo .7s ease-out forwards}
+@keyframes bigPulseGo{0%{width:20px;height:20px;opacity:1}100%{width:340px;height:340px;opacity:0}}
+.confetti{position:fixed;width:9px;height:9px;border-radius:2px;pointer-events:none;z-index:41;
+  transform:translate(-50%,-50%);animation:confettiGo .95s cubic-bezier(.17,.89,.32,1.1) forwards}
+@keyframes confettiGo{
+  0%{transform:translate(-50%,-50%) scale(.5) rotate(0);opacity:1}
+  100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(340deg);opacity:0}
+}
 #stage.critShake{animation:critShakeGo .28s ease-in-out}
 @keyframes critShakeGo{0%,100%{transform:translate(0,0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
 #bubble{
@@ -768,7 +778,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.12.0";
+const VERSION = "4.12.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2454,6 +2464,27 @@ function spawnTapPulse(x,y){
   p.className = "tapPulse"; p.style.left = x+"px"; p.style.top = y+"px";
   fx.appendChild(p); setTimeout(()=>p.remove(), 380);
 }
+function bigCelebrate(){
+  const r = petWrap.getBoundingClientRect(), cx = r.left+r.width/2, cy = r.top+r.height/2;
+  const ring = document.createElement("div");
+  ring.className = "bigPulse"; ring.style.left = cx+"px"; ring.style.top = cy+"px";
+  fx.appendChild(ring); setTimeout(()=>ring.remove(), 700);
+  const colors = ["#FFC94A","#FF9FC4","#7DD3C0","#5EA8FF","#B47BFF"];
+  for(let i=0;i<24;i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = cx+"px"; c.style.top = cy+"px";
+    c.style.background = colors[i%colors.length];
+    const ang = (Math.PI*2*i/24) + Math.random()*0.4;
+    const dist = 70+Math.random()*70;
+    c.style.setProperty("--dx",(Math.cos(ang)*dist).toFixed(0)+"px");
+    c.style.setProperty("--dy",(Math.sin(ang)*dist - 30).toFixed(0)+"px");
+    c.style.animationDelay = (Math.random()*0.08)+"s";
+    fx.appendChild(c); setTimeout(()=>c.remove(), 950);
+  }
+  stage.classList.remove("critShake"); void stage.offsetWidth; stage.classList.add("critShake");
+  celebrate();
+}
 function doTap(cx, cy){
   idleSince = Date.now();
   if(petWrap.classList.contains("sleep")) petWrap.classList.remove("sleep");
@@ -2795,7 +2826,7 @@ function animalClick(a){
     const cost = animalCost(a);
     if(S.coins < cost) return;
     S.coins -= cost; S.owned[a.id] = true; S.animal = a.id;
-    discover(a.id); renderPet(); vibrate(40);
+    discover(a.id); renderPet(); bigCelebrate(); vibrate(40);
     toast(a.name+" débloqué !");
   }
   save(); renderHUD(); refreshLists();
@@ -3017,7 +3048,7 @@ function doPrestige(){
   ensureTierCache();
   closeModal(); sfx("big"); vibrate(120);
   flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go");
-  renderPet(); save(); renderHUD(); refreshLists(); celebrate();
+  renderPet(); save(); renderHUD(); refreshLists(); bigCelebrate();
   toast("Renaissance ! +"+fmt(g)+" Pattes Célestes");
 }
 
@@ -3026,6 +3057,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.12.1", lines:["Grande célébration (anneau doré, confettis, secousse) sur succès débloqué, nouvel animal et Renaissance","Même niveau d'énergie que la tape, plus les moments importants ne font pas pâle figure"]},
   {v:"4.12.0", lines:["Achat en masse : sélecteur ×1/×5/×10/×50/MAX en haut d'Améliorations, s'applique aux tapes, au passif et aux upgrades par animal","MAX calcule automatiquement ce que tu peux vraiment te permettre"]},
   {v:"4.11.1", lines:["Herbe et fleurs repositionnées sur les côtés uniquement — ne tombent plus sur le visage de l'animal"]},
   {v:"4.11.0", lines:["Analyse vidéo complète : décor caché par le bouton Menus en mode replié, corrigé (repositionné)","Animaux/Boutique/Dex ont maintenant un vrai voile sombre derrière, comme la Téléportation — fini l'effet deux menus","Texte trompeur «paiement simulé» corrigé alors que les vrais liens PayPal fonctionnaient déjà"]},
@@ -4289,7 +4321,7 @@ function claimAchv(id){
   S.achv = S.achv||{};
   if(!a || S.achv[id] || achvValue(a) < a.target) return;
   S.achv[id] = true; S.gems += a.gems;
-  celebrate(); sfx("big"); vibrate(50);
+  bigCelebrate(); sfx("big"); vibrate(50);
   toast("Succès débloqué : +"+a.gems+" gemmes");
   save(); renderHUD(); refreshAchv();
 }
