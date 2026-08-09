@@ -464,8 +464,10 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 /* --- grille de cartes (inventaire, dex) --- */
 .petGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .petCard{
-  position:relative;aspect-ratio:.86;border:3px solid var(--ink);border-radius:10px;
-  background:var(--card);display:flex;flex-direction:column;align-items:center;
+  position:relative;aspect-ratio:.86;border:3px solid var(--ink);border-radius:13px;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 70%);
+  background-color:var(--card);box-shadow:0 4px 0 var(--ink-soft);
+  display:flex;flex-direction:column;align-items:center;
   justify-content:center;padding:2px;overflow:hidden;touch-action:none;
 }
 .petCard canvas{width:76%;aspect-ratio:1;height:auto}
@@ -496,9 +498,11 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   box-shadow:var(--pop-sm);padding:10px 8px;margin-bottom:10px;
 }
 .slot{
-  aspect-ratio:1;border:3px dashed var(--ink-soft);border-radius:12px;
+  aspect-ratio:1;border:3px dashed var(--ink-soft);border-radius:13px;
   display:grid;place-items:center;position:relative;background:rgba(128,110,160,.12);
+  cursor:pointer;
 }
+.slot.full{border-style:solid;box-shadow:0 4px 0 var(--ink-soft)}
 .slot.full{border-style:solid;border-color:var(--mint-d);background:var(--card)}
 .slot.hot{border-color:var(--pink-d);background:rgba(255,143,177,.25)}
 .slot canvas{width:74%;height:74%}
@@ -733,7 +737,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.7.2";
+const VERSION = "4.8.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2942,6 +2946,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.8.0", lines:["Fusion : taper une case ouvre une fenêtre pour choisir la créature, plus besoin de glisser-déposer","Cartes et cases dans le même style en relief que le reste de l'interface"]},
   {v:"4.7.2", lines:["Arbre de Renaissance : niveau réel affiché sur le maximum (ex. niv. 12/90), plus un total général"]},
   {v:"4.7.1", lines:["Correctif important : les cosmétiques (couronne, lunettes, écharpe...) étaient mal placés depuis le passage des animaux en 24×24","Système séparé du labo de fusion pour ne rien casser là-bas — testé des deux côtés avant envoi"]},
   {v:"4.7.0", lines:["Monde de l'Air : 6 nouveaux animaux (Faucon, Chouette, Colibri, Libellule, Esprit du Vent, Papillon Géant)","N'apparaissent en Boutique qu'une fois le Monde 2 atteint — pas de vitrine vide avant"]},
@@ -3516,6 +3521,31 @@ const MINI_FREE_PLAYS = 5;
 let slotA = null, slotB = null;
 
 function labSlots(){ return [document.getElementById("slotA"), document.getElementById("slotB")]; }
+function openSlotPicker(which){
+  const keys = Object.keys(S.inv||{}).filter(k=>petInfo(k) && invCount(k) >= 2 && petInfo(k).stage < 3)
+    .sort((x,y)=>{ const a=petInfo(x), b=petInfo(y); return a.li-b.li || a.stage-b.stage; });
+  let html = '<h2>Choisir une créature</h2>';
+  if(!keys.length){
+    html += '<p>Aucune créature fusionnable pour l\'instant — il en faut deux identiques.</p>';
+  } else {
+    keys.forEach(k=>{
+      const inf = petInfo(k);
+      html += '<div class="row" data-k="'+k+'"><div class="thumb"><canvas></canvas></div>' +
+        '<div class="rInfo"><div class="rName">'+inf.name+'</div>' +
+        '<div class="rSub">×'+invCount(k)+' · '+"★".repeat(inf.stage+1)+'</div></div></div>';
+    });
+  }
+  html += '<button class="mBtn ghost" id="mNo">Fermer</button>';
+  openModal(html);
+  modal.querySelectorAll("[data-k]").forEach(row=>{
+    paintCreature(row.querySelector("canvas"), row.dataset.k);
+    row.onclick = ()=>{
+      setSlot(which, row.dataset.k);
+      closeModal(); buildLab(); sfx("tab");
+    };
+  });
+  document.getElementById("mNo").onclick = closeModal;
+}
 function drawSlot(el, key){
   el.innerHTML = "";
   if(key){
@@ -3914,6 +3944,8 @@ function initLab(){
   buildLabStatic();
   drawSlot(document.getElementById("slotA"), null);
   drawSlot(document.getElementById("slotB"), null);
+  document.getElementById("slotA").addEventListener("click", ()=>openSlotPicker("A"));
+  document.getElementById("slotB").addEventListener("click", ()=>openSlotPicker("B"));
   document.getElementById("fuseGo").onclick = doFusion;
   document.querySelectorAll("#eggRow [data-egg]").forEach(b=>{
     b.onclick = ()=>buyEgg(EGGS.find(e=>e.id === b.dataset.egg));
