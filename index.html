@@ -733,7 +733,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.7.1";
+const VERSION = "4.7.2";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2875,10 +2875,12 @@ function pawGain(){
 function openPrestige(){
   const g = pawGain();
   let tree = "";
+  let lvlSum = 0, maxSum = 0;
   PRESTIGE_UPS.forEach(p=>{
     const lvl = pLvl(p.id), c = prestCost(p), max = lvl >= p.max;
+    lvlSum += lvl; maxSum += p.max;
     tree += '<div class="row"><div class="thumb">👑</div><div class="rInfo">' +
-      '<div class="rName">'+p.name+' · niv. '+lvl+'</div><div class="rSub">'+p.desc+'</div></div>' +
+      '<div class="rName">'+p.name+' · niv. '+lvl+'/'+p.max+'</div><div class="rSub">'+p.desc+'</div></div>' +
       '<button class="rBtn pawBtn" data-p="'+p.id+'"'+((max||S.pawPoints<c)?" disabled":"")+'>' +
       (max ? "MAX" : "🐾<br>"+fmt(c)) + '</button></div>';
   });
@@ -2886,6 +2888,7 @@ function openPrestige(){
     '<h2>Renaissance</h2>' +
     '<canvas id="pawBig" style="width:56px;height:56px;margin:0 auto 8px"></canvas>' +
     '<div class="big">'+fmt(S.pawPoints)+' Pattes Célestes</div>' +
+    '<p style="margin-bottom:8px">Arbre : '+lvlSum+'/'+maxSum+' niveaux au total</p>' +
     '<p>Renaissances : '+S.rebirths+'<br>Cumul : '+fmt(S.totalEarned)+' pièces</p>' +
     tree +
     (g > 0
@@ -2939,6 +2942,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.7.2", lines:["Arbre de Renaissance : niveau réel affiché sur le maximum (ex. niv. 12/90), plus un total général"]},
   {v:"4.7.1", lines:["Correctif important : les cosmétiques (couronne, lunettes, écharpe...) étaient mal placés depuis le passage des animaux en 24×24","Système séparé du labo de fusion pour ne rien casser là-bas — testé des deux côtés avant envoi"]},
   {v:"4.7.0", lines:["Monde de l'Air : 6 nouveaux animaux (Faucon, Chouette, Colibri, Libellule, Esprit du Vent, Papillon Géant)","N'apparaissent en Boutique qu'une fois le Monde 2 atteint — pas de vitrine vide avant"]},
   {v:"4.6.1", lines:["Correctif + vrai mécanisme : Monde 2 se débloque en gardant 1 quadrillion de pièces sans les dépenser (au lieu d'un compteur de renaissances)","Vraie tension stratégique : dépenser maintenant ou économiser pour changer de monde"]},
