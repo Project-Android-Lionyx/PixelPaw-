@@ -813,7 +813,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.16.1";
+const VERSION = "4.16.2";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -3227,6 +3227,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.16.2", lines:["Vrai correctif : après avoir choisi le starter, le jeu entre maintenant automatiquement en jeu — plus besoin de retaper JOUER une deuxième fois","C'était la cause du blocage et de l'oeuf qui semblait rester affiché"]},
   {v:"4.16.1", lines:["Correctif : une nouvelle partie relance maintenant vraiment le tuto (oeuf + starter), au lieu d'afficher juste le Cochon","Gemmes et achats en gemmes partagés entre les 4 emplacements — jamais à repayer en créant une nouvelle partie","Suppression d'un emplacement avec confirmation, bouton Passer sur le tuto"]},
   {v:"4.16.0", lines:["4 emplacements de sauvegarde sur l'écran d'accueil — ta partie actuelle est passée automatiquement en Emplacement 1, rien de perdu","Chaque emplacement affiche un résumé (animal, pièces, renaissances) avant de choisir"]},
   {v:"4.15.1", lines:["Formulaire de support refait : catégorie de problème, où tu l'as vu, texte sans limite","Prêt pour un envoi direct sans quitter l'app dès qu'EmailJS est configuré (repli par mail en attendant)"]},
@@ -3589,6 +3590,7 @@ function showStarter(){
           $("#starter").classList.remove("on");
           toast(s.name+" · "+s.bonus+" pour toujours");
           save(); renderHUD(); refreshLists();
+          if(typeof enterGame === "function") enterGame();
           runTuto();
         }, 300);
       }, 620);
@@ -4859,22 +4861,9 @@ function startHome(){
     bar.style.width = p+"%";
   }, 130);
   document.getElementById("homePlay").addEventListener("click", ()=>{
-    if(!S.starter){
-      sfx("good");
-      checkFtue();
-      return;                     // l'oeuf/starter prend le relais ; JOUER refonctionnera normalement une fois termine
-    }
     sfx("good");
-    const h = document.getElementById("home");
-    h.classList.add("leaving");
-    setTimeout(()=>{
-      h.style.display = "none";
-      if(S.volBgm > 0) startBgm();
-      renderPet();                 // re-peint le canvas, invisible pendant qu'il était sous l'accueil
-      const gb = document.getElementById("greetBubble");
-      gb.textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
-      gb.classList.remove("on"); void gb.offsetWidth; gb.classList.add("on");
-    }, 420);
+    if(!S.starter){ checkFtue(); return; }   // l'oeuf/starter prend le relais, puis entre en jeu tout seul
+    enterGame();
   });
   document.getElementById("homeNews").addEventListener("click", ()=>{
     let html = '<h2>Nouveautés</h2>';
@@ -5018,6 +5007,18 @@ tickBanner();
    caché sans savoir pourquoi. */
 resume();
 function checkFtue(){ if(!S.starter){ if(!S.hatched) showEggIntro(); else showStarter(); } }
+function enterGame(){
+  const h = document.getElementById("home");
+  h.classList.add("leaving");
+  setTimeout(()=>{
+    h.style.display = "none";
+    if(S.volBgm > 0) startBgm();
+    renderPet();                 // re-peint le canvas, invisible pendant qu'il était sous l'accueil
+    const gb = document.getElementById("greetBubble");
+    gb.textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
+    gb.classList.remove("on"); void gb.offsetWidth; gb.classList.add("on");
+  }, 420);
+}
 checkFtue();
 if(S.notifs) scheduleNotifs();
 /* l'audio ne peut démarrer qu'après un geste : on attend la première tape */
