@@ -67,12 +67,13 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 
 /* ---------- HUD ---------- */
 #hud{flex:0 0 auto;padding:calc(6px + env(safe-area-inset-top)) 8px 6px}
-.hud-row{display:grid;grid-template-columns:1fr 1fr auto auto;gap:5px}
+.hud-row{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;align-items:center}
 .stat{
   background-image:linear-gradient(180deg,rgba(255,255,255,.28) 0%,transparent 70%);
   background-color:var(--cream);border:3px solid var(--ink);border-radius:20px;
   box-shadow:0 4px 8px rgba(0,0,0,.08), inset 0 2px 0 rgba(255,255,255,.35), var(--pop-sm);
   padding:6px 9px;display:flex;align-items:center;gap:5px;min-width:0;
+  flex:1 1 78px;
 }
 .stat .ico{width:15px;height:15px;flex:0 0 auto}
 .stat .val{font-size:11px;letter-spacing:-.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -188,13 +189,15 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #panelClose:active{transform:translateY(2px)}
 /* état réduit : le panneau et les onglets disparaissent */
 #app.zen #panel{height:0;min-height:0;padding-top:0;padding-bottom:0;opacity:0;overflow:hidden;border-width:0}
+#panel.floating{height:72dvh;box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 -8px 24px rgba(0,0,0,.25);border-width:4px}
+#panel.floating #panelClose{background:var(--pink);color:#fff;border-color:var(--ink)}
 #app.zen #tabs{display:none}
 #app.zen #banner{display:none}
 #reopen{
-  display:none;position:absolute;left:50%;transform:translateX(-50%);
+  display:none;position:absolute;left:12px;right:12px;
   bottom:calc(10px + env(safe-area-inset-bottom));z-index:12;
-  background:var(--cream);border:3px solid var(--ink);border-radius:999px;
-  box-shadow:var(--pop-sm);padding:8px 18px;font-size:9px;letter-spacing:1px;
+  background:var(--cream);border:3px solid var(--ink);border-radius:20px;
+  box-shadow:var(--pop-sm);padding:12px 18px;font-size:10px;letter-spacing:1px;
 }
 #app.zen #reopen{display:block}
 #reopen:active{transform:translateX(-50%) translateY(3px);box-shadow:none}
@@ -265,6 +268,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 .tab.on{background:var(--pink);box-shadow:inset 0 3px 6px rgba(0,0,0,.2);transform:translateY(2px) scale(.97)}
 .tab .dot{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--pink-d);border:1px solid var(--ink);display:none}
 .tab .dot.on{display:block}
+.iconBtn .dot{position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--pink-d);border:2px solid var(--ink);display:none}
+.iconBtn .dot.on{display:block}
+.iconBtn{position:relative}
 
 /* ---------- MODALES ---------- */
 #veil{position:absolute;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;padding:20px;z-index:95}
@@ -447,7 +453,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 .tab{padding:6px 1px 4px;border-radius:10px}
 .tab .tIco{font-size:14px;margin-bottom:2px}
 .tab .tTxt{font-size:6.5px}
-.hud-row{grid-template-columns:1fr 1fr 1fr auto auto;gap:4px}
+.hud-row{gap:4px}
 .stat{padding:6px 5px;gap:4px}
 .stat .val{font-size:10px}
 .stat .ico{width:13px;height:13px}
@@ -561,6 +567,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
       <div class="stat"><canvas class="ico" id="icoCoin"></canvas><span class="val" id="coinVal">0</span></div>
       <div class="stat"><canvas class="ico" id="icoGem"></canvas><span class="val" id="gemVal">0</span></div>
       <div class="stat"><span class="ico" style="font-size:12px;line-height:1">🧪</span><span class="val" id="fcVal">0</span></div>
+      <button class="iconBtn" id="animalsBtn" aria-label="Animaux">🐾<i class="dot" id="dot-animals"></i></button>
+      <button class="iconBtn" id="shopBtn" aria-label="Boutique">💎<i class="dot" id="dot-shop"></i></button>
+      <button class="iconBtn" id="dexBtn" aria-label="Dex">📖</button>
       <button class="iconBtn" id="prestigeBtn" aria-label="Renaissance">👑</button>
       <button class="iconBtn" id="worldBtn" aria-label="Téléportation">🌍</button>
       <button class="iconBtn" id="gearBtn" aria-label="Options">⚙️</button>
@@ -666,12 +675,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   </section>
 
   <nav id="tabs">
-    <button class="tab on" data-tab="animals"><span class="tIco">🐾</span><span class="tTxt">Animaux</span><i class="dot" id="dot-animals"></i></button>
-    <button class="tab" data-tab="upgrades"><span class="tIco">⚡</span><span class="tTxt">Amélio</span><i class="dot" id="dot-upgrades"></i></button>
-    <button class="tab" data-tab="shop"><span class="tIco">💎</span><span class="tTxt">Boutique</span><i class="dot" id="dot-shop"></i></button>
+    <button class="tab on" data-tab="upgrades"><span class="tIco">⚡</span><span class="tTxt">Amélio</span><i class="dot" id="dot-upgrades"></i></button>
     <button class="tab" data-tab="labo"><span class="tIco">🧪</span><span class="tTxt">Labo</span><i class="dot" id="dot-labo"></i></button>
     <button class="tab" data-tab="daily"><span class="tIco">🎁</span><span class="tTxt">Quotidien</span><i class="dot" id="dot-daily"></i></button>
-    <button class="tab" data-tab="dex"><span class="tIco">📖</span><span class="tTxt">Dex</span><i class="dot" id="dot-dex"></i></button>
   </nav>
 
   <button id="reopen">▲ Menus</button>
@@ -729,7 +735,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.8.2";
+const VERSION = "4.9.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2685,7 +2691,7 @@ function refreshDots(){
   setCls($("#dot-upgrades"),"on", ALL_UPS.some(u=>S.coins >= upCost(u)));
   setCls($("#dot-shop"),"on", PREMIUM.some(p=>!S.premium[p.id] && S.gems >= p.gems) || Date.now() >= S.adReadyAt);
   setCls($("#dot-daily"),"on", S.dailyLast !== today() || S.quests.some(q=>!q.done && (S.qstat[q.stat]||0) >= q.target));
-  setCls($("#dot-dex"),"on", false);
+  // le Dex n'a pas de point de notification
 }
 
 /* ============================================================
@@ -2938,6 +2944,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.9.0", lines:["Navigation repensée : Animaux/Boutique/Dex s'ouvrent en fenêtre depuis le HUD, comme la Téléportation","Le bas ne garde que 3 onglets (Améliorations/Labo/Quotidien) · bouton Menus pleine largeur"]},
   {v:"4.8.2", lines:["Correctif : bloc rose plein sur l'herbe (reste de l'ancien CSS), retiré","Correctif : badge du nom de l'animal bloqué visible sans texte — rendu permanent au lieu d'une animation qui se bloquait"]},
   {v:"4.8.1", lines:["Menu du bas agrandi (38% -> 47% de l'écran)"]},
   {v:"4.8.0", lines:["Fusion : taper une case ouvre une fenêtre pour choisir la créature, plus besoin de glisser-déposer","Cartes et cases dans le même style en relief que le reste de l'interface"]},
@@ -3055,6 +3062,9 @@ function openSettings(){
 $("#gearBtn").addEventListener("click", ()=>{ sfx("tab"); openSettings(); });
 $("#prestigeBtn").addEventListener("click", ()=>{ sfx("tab"); openPrestige(); });
 $("#worldBtn").addEventListener("click", ()=>{ sfx("tab"); openWorlds(); });
+$("#animalsBtn").addEventListener("click", ()=>{ switchTab("animals"); setCls($("#panel"),"floating",true); });
+$("#shopBtn").addEventListener("click", ()=>{ switchTab("shop"); setCls($("#panel"),"floating",true); });
+$("#dexBtn").addEventListener("click", ()=>{ switchTab("dex"); setCls($("#panel"),"floating",true); });
 
 /* ============================================================
    30. MODE ZEN — panneau réductible, plein écran
@@ -3063,7 +3073,10 @@ function setZen(on){
   setCls(app,"zen",on); S.zen = on; save();
   if(!on) sfx("tab");
 }
-$("#panelClose").addEventListener("click", ()=>setZen(true));
+$("#panelClose").addEventListener("click", ()=>{
+  if($("#panel").classList.contains("floating")) switchTab("upgrades");
+  else setZen(true);
+});
 $("#reopen").addEventListener("click", ()=>setZen(false));
 /* double-tape sur la scène = plein écran (une simple tape reste une tape utile) */
 let lastTapAt = 0;
@@ -3122,6 +3135,7 @@ function switchTab(name){
   document.querySelectorAll(".tab").forEach(t=>setCls(t,"on", t.dataset.tab === name));
   document.querySelectorAll(".tabView").forEach(v=>setCls(v,"on", v.id === "view-"+name));
   $("#panel").scrollTop = 0;
+  if(["upgrades","labo","daily"].includes(name)) setCls($("#panel"),"floating",false);
   if(app.classList.contains("zen")) setZen(false);
   sfx("tab");
 }
