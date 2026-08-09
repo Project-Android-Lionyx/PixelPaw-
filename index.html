@@ -175,6 +175,18 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   border:3px solid var(--ink);border-radius:14px;box-shadow:var(--pop-sm);padding:8px 12px;
   font-size:8.5px;line-height:1.5;max-width:240px;text-align:center;opacity:0;z-index:5;
 }
+#tutoBubble{
+  position:fixed;left:50%;bottom:14%;transform:translateX(-50%);background:var(--cream);
+  border:4px solid var(--ink);border-radius:18px;box-shadow:var(--pop-sm);padding:14px 16px;
+  width:min(84vw,320px);text-align:center;z-index:60;display:none;
+}
+#tutoBubble.on{display:block;animation:tutoIn .25s ease-out}
+#tutoBubble p{font-size:10px;line-height:1.7;color:var(--ink);margin-bottom:10px}
+#tutoBubble button{
+  border:3px solid var(--ink);border-radius:12px;padding:8px 20px;font-size:9px;
+  background-color:var(--gold);box-shadow:0 3px 0 var(--gold-d);color:#2B2333;
+}
+@keyframes tutoIn{0%{opacity:0;transform:translateX(-50%) translateY(10px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
 #greetBubble.on{animation:greetPop 5s ease-in-out forwards}
 @keyframes greetPop{
   0%{opacity:0;transform:translateX(-50%) scale(.8)}
@@ -625,6 +637,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
     <div id="propsStrip"></div>
     <button id="bubble">🎁 Bonus · +50 💎</button>
     <div id="greetBubble"></div>
+    <div id="tutoBubble"><p></p><button>Suivant</button></div>
     <div id="fx"></div>
   </main>
 
@@ -778,7 +791,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.12.1";
+const VERSION = "4.13.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -3057,6 +3070,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.13.0", lines:["Tuto léger pour les nouveaux joueurs : 4 bulles courtes après le choix du starter (tape, améliorations, animaux, gemmes)","Ne s'affiche qu'une seule fois, jamais aux joueurs qui reviennent"]},
   {v:"4.12.1", lines:["Grande célébration (anneau doré, confettis, secousse) sur succès débloqué, nouvel animal et Renaissance","Même niveau d'énergie que la tape, plus les moments importants ne font pas pâle figure"]},
   {v:"4.12.0", lines:["Achat en masse : sélecteur ×1/×5/×10/×50/MAX en haut d'Améliorations, s'applique aux tapes, au passif et aux upgrades par animal","MAX calcule automatiquement ce que tu peux vraiment te permettre"]},
   {v:"4.11.1", lines:["Herbe et fleurs repositionnées sur les côtés uniquement — ne tombent plus sur le visage de l'animal"]},
@@ -3363,6 +3377,30 @@ function showEggIntro(){
     }
   };
 }
+function runTuto(){
+  if(S.tutorialSeen) return;
+  S.tutorialSeen = true; save();
+  const steps = [
+    "Tape sur ton animal pour gagner des pièces 🪙",
+    "Utilise ces pièces dans Améliorations pour gagner plus, plus vite ⚡",
+    "Débloque de nouveaux animaux dans 🐾 — chacun a son propre style",
+    "Les gemmes 💎 sont plus rares : garde-les pour les animaux premium et la Boutique"
+  ];
+  let i = 0;
+  const box = document.getElementById("tutoBubble");
+  const show = ()=>{
+    box.querySelector("p").textContent = steps[i];
+    box.querySelector("button").textContent = (i === steps.length-1) ? "Compris !" : "Suivant";
+    box.classList.add("on");
+  };
+  box.querySelector("button").onclick = ()=>{
+    sfx("tab");
+    i++;
+    if(i >= steps.length){ box.classList.remove("on"); return; }
+    box.classList.remove("on"); void box.offsetWidth; show();
+  };
+  setTimeout(show, 500);
+}
 function showStarter(){
   const row = $("#starterRow"); row.innerHTML = "";
   STARTERS.forEach(s=>{
@@ -3382,6 +3420,7 @@ function showStarter(){
           $("#starter").classList.remove("on");
           toast(s.name+" · "+s.bonus+" pour toujours");
           save(); renderHUD(); refreshLists();
+          runTuto();
         }, 300);
       }, 620);
     };
