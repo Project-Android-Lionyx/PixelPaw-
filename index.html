@@ -729,7 +729,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.4.0";
+const VERSION = "4.4.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1247,26 +1247,26 @@ singe:{size:24,pal:{P:"#8A6244",D:"#6B4A32",S:"#E8C9A0",K:"#2B2018",W:"#FFFFFF",
 /* --- Biome Ferme : silhouettes distinctes, pas des recolorations --- */
 renardpionnier:{size:24,pal:{P:"#FF9F4A",D:"#D97A2A",S:"#FFEBD6",K:"#2B1810",W:"#FFFFFF",Y:"#FFE066",H:"#2B1810"},px:[
 "........................",
-"..PPPPPPP......PPPPPPP..",
-"..PPPPPPP..Y...PPPPPPP..",
-"..PKKKKYP......PYKKKKP..",
-"..PKKKKKP......PKKKKKP..",
-"..PKKKKKP......PKKKKKP..",
-"..PKKKKKP......PKKKKKP..",
-"..PKKKKKP......PKKKKKP..",
-"..PKKKKKP......PKKKKKP..",
-"..PPPPPPPPPPPPPPPPPPPP..",
-"...PPPKWKPPPPPPKWKPPP...",
-"...PPPKKKPPPPPPKKKPPP...",
-"...PPPKKKPPPPPPKKKPPP...",
-"...PPPPPPSSSSSSPPPPPP...",
-"...PPPPPPSSSSSSPPPPPP...",
-"...PPPPPPSSSSSSPPPPPP...",
-"...PPPPPPSSSSSSPPPPPP...",
-"...PPPPPPSSKKSSPPPPPP...",
-"...DDDDDDSSSSSSDDDDDD...",
-"...DDDDDDSSSSSSDDDDDD...",
-"...DDHHHHDDDDDDHHHHDD...",
+"..KKKKKK........KKKKKK..",
+"..KKKKKK...Y....KKKKKK..",
+"..KPPPPK........KPPPPK..",
+"..KPPPPY........YPPPPK..",
+"..KPPPPK........KPPPPK..",
+"..KPPPPK........KPPPPK..",
+"..KPPPPK........KPPPPK..",
+"..KPPPPPPPPPPPPPPPPPPK..",
+"..KPPPPPPPPPPPPPPPPPPK..",
+".....PPPPPPPPPPPPPP.....",
+".....PKWKPPPPPPKWKP.....",
+".....PKKKPPPPPPKKKP.....",
+"....PPPPPSSSSSSPPPPP....",
+"....PPSSSSSSSSSSSSPP....",
+"....PPSSSSSSSSSSSSPP....",
+"....PPSSSPSSSSPSSSPP....",
+"....PPSSSPSKSSPSSSPP....",
+"....DDDDDDDSSDDDDDDD....",
+"....DDDDDDDDDDDDDDDD....",
+"....DHHHHDDDDDDHHHHD....",
 ".....HHHH......HHHH.....",
 ".....HHHH......HHHH.....",
 "........................"]},
@@ -2727,6 +2727,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.4.1", lines:["Correctif important : la grille Cosmétiques plantait sur les cadres, rendant impossible de les retirer","Renard Pionnier redessiné : silhouette triangulaire, museau fin et pointu, vraiment reconnaissable comme renard"]},
   {v:"4.4.0", lines:["Nouvelle catégorie Boutique : Sessions — animaux exclusifs débloqués uniquement par code","Premier animal de session : Renard Pionnier (code PIONNIER1), ×16 sur tout"]},
   {v:"4.3.0", lines:["Les 10 animaux du Biome Ferme redessinés en 24×24 — les 28 animaux du jeu sont maintenant à la même résolution","Vache et Oie retouchées 2 fois chacune avant validation finale"]},
   {v:"4.2.1", lines:["Museaux propres à chaque espèce : Bouledogue (court, plat, plissé) et les 3 chats (petit nez triangulaire au lieu du museau générique)"]},
@@ -3803,7 +3804,11 @@ function buildCosmGrid(){
     const cv = document.createElement("canvas"); cv.width=16; cv.height=16;
     const pctx = cv.getContext("2d");
     const pat = ACC[c.acc];
-    for(let y=0;y<16;y++){ const row=(pat.px[y]||"").padEnd(16,"."); for(let x=0;x<16;x++){ if(row[x]==="A"){ pctx.fillStyle=c.color; pctx.fillRect(x,y,1,1); } } }
+    if(pat){
+      for(let y=0;y<16;y++){ const row=(pat.px[y]||"").padEnd(16,"."); for(let x=0;x<16;x++){ if(row[x]==="A"){ pctx.fillStyle=c.color; pctx.fillRect(x,y,1,1); } } }
+    } else {
+      pctx.fillStyle = c.color; pctx.fillRect(2,2,12,12); pctx.clearRect(5,5,6,6);
+    }
     const lbl = document.createElement("span"); lbl.className = "px";
     lbl.textContent = owned ? c.name : "💎"+c.gems;
     cell.append(cv, lbl);
