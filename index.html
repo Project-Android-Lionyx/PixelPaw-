@@ -622,6 +622,10 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 
       <div class="catHeader">⭐ Premium</div>
       <div class="panelTitle">Gemmes &amp; pass</div><div id="listPacks"></div>
+
+      <div class="catHeader">🗓️ Sessions</div>
+      <div class="panelTitle">Animaux exclusifs, un par vague de testeurs</div>
+      <div id="listSessions"></div>
     </div>
 
     <div class="tabView" id="view-labo">
@@ -725,7 +729,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.3.0";
+const VERSION = "4.4.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1241,6 +1245,31 @@ singe:{size:24,pal:{P:"#8A6244",D:"#6B4A32",S:"#E8C9A0",K:"#2B2018",W:"#FFFFFF",
 "......HHHH....HHHH......"]},
 
 /* --- Biome Ferme : silhouettes distinctes, pas des recolorations --- */
+renardpionnier:{size:24,pal:{P:"#FF9F4A",D:"#D97A2A",S:"#FFEBD6",K:"#2B1810",W:"#FFFFFF",Y:"#FFE066",H:"#2B1810"},px:[
+"........................",
+"..PPPPPPP......PPPPPPP..",
+"..PPPPPPP..Y...PPPPPPP..",
+"..PKKKKYP......PYKKKKP..",
+"..PKKKKKP......PKKKKKP..",
+"..PKKKKKP......PKKKKKP..",
+"..PKKKKKP......PKKKKKP..",
+"..PKKKKKP......PKKKKKP..",
+"..PKKKKKP......PKKKKKP..",
+"..PPPPPPPPPPPPPPPPPPPP..",
+"...PPPKWKPPPPPPKWKPPP...",
+"...PPPKKKPPPPPPKKKPPP...",
+"...PPPKKKPPPPPPKKKPPP...",
+"...PPPPPPSSSSSSPPPPPP...",
+"...PPPPPPSSSSSSPPPPPP...",
+"...PPPPPPSSSSSSPPPPPP...",
+"...PPPPPPSSSSSSPPPPPP...",
+"...PPPPPPSSKKSSPPPPPP...",
+"...DDDDDDSSSSSSDDDDDD...",
+"...DDDDDDSSSSSSDDDDDD...",
+"...DDHHHHDDDDDDHHHHDD...",
+".....HHHH......HHHH.....",
+".....HHHH......HHHH.....",
+"........................"]},
 cochontirelire:{size:24,pal:{P:"#FF9FC4",D:"#E06B98",S:"#FFD6E6",K:"#3B2B20",W:"#FFFFFF",H:"#B4547A",G:"#FFC94A"},px:[
 "........................",
 "........................",
@@ -1564,7 +1593,8 @@ const PREMIUM = [
   {id:"oiebavarde",      name:"Oie Bavarde",     gems:45,  mult:2,   tap:700,  rar:"commun",    trait:"Joueur", desc:"×2 sur tout.", biome:"ferme"},
   {id:"canardplastique", name:"Canard en Plastique", gems:40, mult:1.5, tap:500, rar:"commun",  trait:"Curieux", desc:"×1,5 sur tout.", biome:"ferme"},
   {id:"dindonfurieux",   name:"Dindon Furieux",  gems:65,  mult:2.5, tap:1.1e3, rar:"peucommun", trait:"Joueur", desc:"×2,5 sur tout.", biome:"ferme"},
-  {id:"chiendeberger",   name:"Chien de Berger", gems:150, mult:1,   tap:2.5e3, rar:"legendaire", trait:"Joueur", desc:"+8 % par animal de la Ferme possédé.", packBonus:0.08, biome:"ferme"}
+  {id:"chiendeberger",   name:"Chien de Berger", gems:150, mult:1,   tap:2.5e3, rar:"legendaire", trait:"Joueur", desc:"+8 % par animal de la Ferme possédé.", packBonus:0.08, biome:"ferme"},
+  {id:"renardpionnier", name:"Renard Pionnier", gems:0, mult:16, tap:8e10, rar:"mythique", trait:"Curieux", desc:"Réservé aux tout premiers testeurs. ×16 sur tout.", codeOnly:true, session:"S1"}
 ];
 
 const ALL_PETS = ANIMALS.concat(PREMIUM);
@@ -1702,7 +1732,8 @@ const CODES = {
   BIENVENUE:{gems:100, coins:5e3,  label:"Bienvenue chez Pixel Paw !"},
   PIXELPAW: {gems:50,  coins:25e3, boost:{mult:3,secs:120}, label:"Merci de jouer !"},
   STARTER:  {gems:75,  coins:1e3,  label:"Coup de pouce de départ"},
-  PATTES:   {gems:150,             label:"Cadeau de la communauté"}
+  PATTES:   {gems:150,             label:"Cadeau de la communauté"},
+  PIONNIER1:{animal:"renardpionnier", label:"Renard Pionnier débloqué !"}
 };
 
 /* ============================================================
@@ -2236,7 +2267,7 @@ function makeRow(o){
   row._name = info.querySelector(".rName");
   row._sub  = info.querySelector(".rSub");
   row._btn  = btn;
-  btn.addEventListener("click", e=>{ e.stopPropagation(); o.onClick(); });
+  btn.addEventListener("click", e=>{ e.stopPropagation(); if(o.onClick) o.onClick(); });
   return row;
 }
 
@@ -2263,8 +2294,16 @@ function buildLists(){
   });
 
   PREMIUM.forEach(p=>{
+    if(p.codeOnly) return;
     const r = makeRow({sprite:p.id, rar:p.rar, btnClass:"gemBtn", onClick:()=>premiumClick(p)});
     r._name.textContent = p.name; $("#listPremium").appendChild(r); R.premium.push({p,r});
+  });
+  R.sessions = [];
+  PREMIUM.filter(p=>p.session).forEach(p=>{
+    const r = makeRow({sprite:S.premium[p.id] ? p.id : "", rar:p.rar});
+    r._name.textContent = S.premium[p.id] ? p.name : "??? · Semaine "+p.session.replace("S","");
+    R.sessions.push({p,r});
+    $("#listSessions").appendChild(r);
   });
   TIME_WARP.forEach(w=>{
     const r = makeRow({emoji:"⏩", btnClass:"gemBtn", onClick:()=>buyWarp(w)});
@@ -2388,6 +2427,18 @@ function refreshLists(){
     if(act){ setTxt(r._btn,"ACTIF"); r._btn.className="rBtn owned"; setDis(r._btn,true); }
     else if(own){ setTxt(r._btn,"CHOISIR"); r._btn.className="rBtn mintBtn"; setDis(r._btn,false); }
     else { setTxt(r._btn,"💎<br>"+fmt(p.gems)); r._btn.className="rBtn gemBtn"; setDis(r._btn, S.gems < p.gems); }
+  });
+  (R.sessions||[]).forEach(({p,r})=>{
+    const own = !!S.premium[p.id];
+    setCls(r,"active", own && S.animal===p.id);
+    if(own){
+      setTxt(r._sub, petSub(p)+" · ×"+p.mult);
+      r._btn.style.display = own && S.animal!==p.id ? "" : "none";
+      if(S.animal!==p.id){ setTxt(r._btn,"CHOISIR"); r._btn.className="rBtn mintBtn"; r._btn.onclick=()=>premiumClick(p); setDis(r._btn,false); }
+    } else {
+      setTxt(r._sub, "Débloqué par code cadeau uniquement");
+      r._btn.style.display = "none";
+    }
   });
   R.warp.forEach(({w,r})=>{
     setTxt(r._sub, "+"+fmt(perSec(false)*w.secs)+" pièces d'un coup");
@@ -2530,6 +2581,7 @@ function openCodes(){
     if(c.gems) S.gems += c.gems;
     if(c.coins) earn(c.coins);
     if(c.boost){ S.boostMult = c.boost.mult; S.boostUntil = Date.now()+c.boost.secs*1000; S.boostName = "Code "+v; }
+    if(c.animal){ S.premium[c.animal] = true; }
     closeModal(); sfx("big"); vibrate(50);
     toast(c.label); save(); renderHUD(); refreshLists();
   };
@@ -2675,6 +2727,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.4.0", lines:["Nouvelle catégorie Boutique : Sessions — animaux exclusifs débloqués uniquement par code","Premier animal de session : Renard Pionnier (code PIONNIER1), ×16 sur tout"]},
   {v:"4.3.0", lines:["Les 10 animaux du Biome Ferme redessinés en 24×24 — les 28 animaux du jeu sont maintenant à la même résolution","Vache et Oie retouchées 2 fois chacune avant validation finale"]},
   {v:"4.2.1", lines:["Museaux propres à chaque espèce : Bouledogue (court, plat, plissé) et les 3 chats (petit nez triangulaire au lieu du museau générique)"]},
   {v:"4.2.0", lines:["9 animaux premium redessinés en 24×24 : Siamois, Maine Coon, Sphynx, Shiba, Bouledogue, Berger Allemand, Cochon Doré, Lama, Singe","Chacun vérifié visuellement avant envoi, retouché 2 fois (Maine Coon, Singe) avant validation"]},
