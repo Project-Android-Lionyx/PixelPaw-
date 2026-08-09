@@ -452,6 +452,15 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #homeBg{position:absolute;inset:0;overflow:hidden;opacity:.5;pointer-events:none}
 #homeBg canvas{position:absolute;width:34px;height:34px;image-rendering:pixelated;filter:saturate(.7)}
 #homeTop{position:relative;text-align:center;margin-top:6vh}
+#slotPicker{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px;max-width:340px;margin:0 auto;width:100%}
+.slotCard{
+  border:3px solid var(--ink);border-radius:14px;padding:10px 8px;text-align:center;cursor:pointer;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.2) 0%,transparent 70%);
+  background-color:var(--card);box-shadow:0 4px 0 var(--ink-soft);color:var(--ink);
+}
+.slotCard.active{background-color:var(--gold);box-shadow:0 4px 0 var(--gold-d);color:#2B2333}
+.slotCard .slotNum{font-size:8px;letter-spacing:1px;opacity:.7;margin-bottom:4px}
+.slotCard .slotInfo{font-size:8px;line-height:1.6}
 #homeTitle{
   font-size:22px;line-height:1.5;letter-spacing:2px;color:var(--ink);
   text-shadow:3px 3px 0 rgba(255,255,255,.6), 5px 5px 0 rgba(0,0,0,.12);
@@ -754,6 +763,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
       <div id="homeTitle">PIXEL PAW<br>IDLE</div>
       <div id="homeVersion">v?</div>
     </div>
+    <div id="slotPicker"></div>
     <div id="homeBottom">
       <div id="homeBarWrap"><div id="homeBar"></div></div>
       <div id="homeBarTxt">Chargement…</div>
@@ -800,7 +810,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.15.1";
+const VERSION = "4.16.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2076,6 +2086,9 @@ const BUBBLE_EVERY = 90;
    ============================================================ */
 const SAVE_KEY = "pixelpaw.save";
 const OLD_KEY  = "pixelpaw.save.v1";
+const SLOT_KEY_PREFIX = "pixelpaw.slot.";
+const ACTIVE_SLOT_KEY = "pixelpaw.activeSlot";
+const MAX_SLOTS = 4;
 const SCHEMA   = 3;
 const memFallback = {};
 const store = {
@@ -2128,22 +2141,46 @@ function migrate(d){
   return n;
 }
 
+function activeSlot(){
+  const v = parseInt(store.get(ACTIVE_SLOT_KEY), 10);
+  return (v>=1 && v<=MAX_SLOTS) ? v : 1;
+}
+function setActiveSlot(n){ store.set(ACTIVE_SLOT_KEY, String(n)); }
+function slotKey(n){ return SLOT_KEY_PREFIX+n; }
+function slotRaw(n){ return store.get(slotKey(n)); }
+function slotSummary(n){
+  const raw = slotRaw(n);
+  if(!raw) return null;
+  try{
+    const d = JSON.parse(raw);
+    const pet = petById(d.animal) || {name:"?"};
+    return { coins:d.coins||0, animalName:pet.name, rebirths:d.rebirths||0, lastSeen:d.lastSeen||0 };
+  }catch(e){ return null; }
+}
 function save(){
   S.lastSeen = Date.now();
-  store.set(SAVE_KEY, JSON.stringify(S));
+  store.set(slotKey(activeSlot()), JSON.stringify(S));
 }
 function load(){
-  let raw = store.get(SAVE_KEY);
-  let legacy = false;
-  if(!raw){ raw = store.get(OLD_KEY); legacy = !!raw; }
-  if(!raw) return;
+  /* migration ponctuelle : une ancienne sauvegarde unique devient l'Emplacement 1,
+     seulement si aucun emplacement n'existe encore — jamais d'ecrasement. */
+  if(!slotRaw(1)){
+    let legacyRaw = store.get(SAVE_KEY);
+    let legacy = false;
+    if(!legacyRaw){ legacyRaw = store.get(OLD_KEY); legacy = !!legacyRaw; }
+    if(legacyRaw){
+      store.set(slotKey(1), legacyRaw);
+      if(legacy) store.del(OLD_KEY);
+    }
+  }
+  const raw = slotRaw(activeSlot());
+  if(!raw){ S = freshState(); return; }                    // emplacement vide : partie neuve, pas l'ancien S
   let d;
-  try{ d = JSON.parse(raw); }catch(e){ return; }          // sauvegarde illisible : partie neuve
-  if(legacy || d.schema !== SCHEMA) d = migrate(d);
+  try{ d = JSON.parse(raw); }catch(e){ S = freshState(); return; }  // sauvegarde illisible : partie neuve
+  if(d.schema !== SCHEMA) d = migrate(d);
   S = Object.assign(freshState(), d);                      // les clés manquantes reprennent la valeur par défaut
   S.schema = SCHEMA;
   if(!petById(S.animal)) S.animal = "cochon";
-  if(legacy) store.del(OLD_KEY);
 }
 
 /* ============================================================
@@ -3163,6 +3200,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.16.0", lines:["4 emplacements de sauvegarde sur l'écran d'accueil — ta partie actuelle est passée automatiquement en Emplacement 1, rien de perdu","Chaque emplacement affiche un résumé (animal, pièces, renaissances) avant de choisir"]},
   {v:"4.15.1", lines:["Formulaire de support refait : catégorie de problème, où tu l'as vu, texte sans limite","Prêt pour un envoi direct sans quitter l'app dès qu'EmailJS est configuré (repli par mail en attendant)"]},
   {v:"4.15.0", lines:["Tape sur le nom de ton animal pour le renommer et lui choisir une palette de couleurs (7 styles)","Bouton de retour sur l'écran d'accueil — envoie un mail direct avec les infos de la partie"]},
   {v:"4.14.2", lines:["Bouton Menus déplacé en position fixe tout en fin de page — plus fiable, plus d'ambiguïté d'empilement possible","Devrait régler le souci de taps multiples et le décalage visuel"]},
@@ -4881,7 +4919,27 @@ document.getElementById("homeFeedback").addEventListener("click", ()=>{
 /* ============================================================
    35. DÉMARRAGE
    ============================================================ */
+function buildSlotPicker(){
+  const el = document.getElementById("slotPicker"); if(!el) return;
+  el.innerHTML = "";
+  const cur = activeSlot();
+  for(let n=1; n<=MAX_SLOTS; n++){
+    const sum = slotSummary(n);
+    const card = document.createElement("div");
+    card.className = "slotCard" + (n===cur ? " active" : "");
+    card.innerHTML = '<div class="slotNum">EMPLACEMENT '+n+'</div>' +
+      (sum
+        ? '<div class="slotInfo">'+sum.animalName+'<br>'+fmt(sum.coins)+' 🪙'+(sum.rebirths?'<br>'+sum.rebirths+' 🐾':'')+'</div>'
+        : '<div class="slotInfo">Nouvelle partie</div>');
+    card.onclick = ()=>{
+      if(n === activeSlot()) return;
+      setActiveSlot(n); load(); buildSlotPicker(); sfx("tab");
+    };
+    el.appendChild(card);
+  }
+}
 load();
+buildSlotPicker();
 startHome();
 checkPaypalReturn();
 bumpStreak();
