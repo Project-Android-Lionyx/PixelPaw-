@@ -185,8 +185,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #tutoBubble p{font-size:10px;line-height:1.7;color:var(--ink);margin-bottom:10px}
 #tutoBubble button{
   border:3px solid var(--ink);border-radius:12px;padding:8px 20px;font-size:9px;
-  background-color:var(--gold);box-shadow:0 3px 0 var(--gold-d);color:#2B2333;
+  background-color:var(--gold);box-shadow:0 3px 0 var(--gold-d);color:#2B2333;flex:1;
 }
+#tutoBubble button.ghost{background-color:transparent;box-shadow:none;color:var(--ink-soft)}
 @keyframes tutoIn{0%{opacity:0;transform:translateX(-50%) translateY(10px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
 #greetBubble.on{animation:greetPop 5s ease-in-out forwards}
 @keyframes greetPop{
@@ -461,6 +462,8 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 .slotCard.active{background-color:var(--gold);box-shadow:0 4px 0 var(--gold-d);color:#2B2333}
 .slotCard .slotNum{font-size:8px;letter-spacing:1px;opacity:.7;margin-bottom:4px}
 .slotCard .slotInfo{font-size:8px;line-height:1.6}
+.slotCard{position:relative}
+.slotDel{position:absolute;top:4px;right:4px;font-size:10px;opacity:.6;padding:2px}
 #homeTitle{
   font-size:22px;line-height:1.5;letter-spacing:2px;color:var(--ink);
   text-shadow:3px 3px 0 rgba(255,255,255,.6), 5px 5px 0 rgba(0,0,0,.12);
@@ -654,7 +657,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
     <div id="propsStrip"></div>
     <button id="bubble">🎁 Bonus · +50 💎</button>
     <div id="greetBubble"></div>
-    <div id="tutoBubble"><p></p><button>Suivant</button></div>
+    <div id="tutoBubble"><p></p><div style="display:flex;gap:8px;justify-content:center"><button id="tutoSkip" class="ghost">Passer</button><button id="tutoNext">Suivant</button></div></div>
     <div id="fx"></div>
   </main>
 
@@ -810,7 +813,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.16.0";
+const VERSION = "4.16.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2088,6 +2091,8 @@ const SAVE_KEY = "pixelpaw.save";
 const OLD_KEY  = "pixelpaw.save.v1";
 const SLOT_KEY_PREFIX = "pixelpaw.slot.";
 const ACTIVE_SLOT_KEY = "pixelpaw.activeSlot";
+const GLOBAL_KEY = "pixelpaw.global";
+const GLOBAL_FIELDS = ["gems","premium","cosm","equip","noAds"];
 const MAX_SLOTS = 4;
 const SCHEMA   = 3;
 const memFallback = {};
@@ -2157,9 +2162,21 @@ function slotSummary(n){
     return { coins:d.coins||0, animalName:pet.name, rebirths:d.rebirths||0, lastSeen:d.lastSeen||0 };
   }catch(e){ return null; }
 }
+function loadGlobal(seedFrom){
+  const raw = store.get(GLOBAL_KEY);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  const g = {}; GLOBAL_FIELDS.forEach(k=>{ g[k] = seedFrom[k]; });
+  store.set(GLOBAL_KEY, JSON.stringify(g));
+  return g;
+}
+function saveGlobal(){
+  const g = {}; GLOBAL_FIELDS.forEach(k=>{ g[k] = S[k]; });
+  store.set(GLOBAL_KEY, JSON.stringify(g));
+}
 function save(){
   S.lastSeen = Date.now();
   store.set(slotKey(activeSlot()), JSON.stringify(S));
+  saveGlobal();
 }
 function load(){
   /* migration ponctuelle : une ancienne sauvegarde unique devient l'Emplacement 1,
@@ -2174,13 +2191,23 @@ function load(){
     }
   }
   const raw = slotRaw(activeSlot());
-  if(!raw){ S = freshState(); return; }                    // emplacement vide : partie neuve, pas l'ancien S
-  let d;
-  try{ d = JSON.parse(raw); }catch(e){ S = freshState(); return; }  // sauvegarde illisible : partie neuve
-  if(d.schema !== SCHEMA) d = migrate(d);
-  S = Object.assign(freshState(), d);                      // les clés manquantes reprennent la valeur par défaut
-  S.schema = SCHEMA;
-  if(!petById(S.animal)) S.animal = "cochon";
+  if(!raw){ S = freshState(); }
+  else{
+    let d;
+    try{ d = JSON.parse(raw); }catch(e){ d = null; }
+    if(!d){ S = freshState(); }
+    else{
+      if(d.schema !== SCHEMA) d = migrate(d);
+      S = Object.assign(freshState(), d);
+      S.schema = SCHEMA;
+      if(!petById(S.animal)) S.animal = "cochon";
+    }
+  }
+  /* les gemmes et tout ce qui est achete avec sont partages entre les emplacements :
+     jamais remis a zero en creant une nouvelle partie. Seed une seule fois depuis
+     l'etat qui vient d'etre charge (donc depuis la save existante lors de la mise a jour). */
+  const g = loadGlobal(S);
+  GLOBAL_FIELDS.forEach(k=>{ S[k] = g[k]; });
 }
 
 /* ============================================================
@@ -3200,6 +3227,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.16.1", lines:["Correctif : une nouvelle partie relance maintenant vraiment le tuto (oeuf + starter), au lieu d'afficher juste le Cochon","Gemmes et achats en gemmes partagés entre les 4 emplacements — jamais à repayer en créant une nouvelle partie","Suppression d'un emplacement avec confirmation, bouton Passer sur le tuto"]},
   {v:"4.16.0", lines:["4 emplacements de sauvegarde sur l'écran d'accueil — ta partie actuelle est passée automatiquement en Emplacement 1, rien de perdu","Chaque emplacement affiche un résumé (animal, pièces, renaissances) avant de choisir"]},
   {v:"4.15.1", lines:["Formulaire de support refait : catégorie de problème, où tu l'as vu, texte sans limite","Prêt pour un envoi direct sans quitter l'app dès qu'EmailJS est configuré (repli par mail en attendant)"]},
   {v:"4.15.0", lines:["Tape sur le nom de ton animal pour le renommer et lui choisir une palette de couleurs (7 styles)","Bouton de retour sur l'écran d'accueil — envoie un mail direct avec les infos de la partie"]},
@@ -3526,17 +3554,20 @@ function runTuto(){
   ];
   let i = 0;
   const box = document.getElementById("tutoBubble");
+  const nextBtn = document.getElementById("tutoNext");
+  const skipBtn = document.getElementById("tutoSkip");
   const show = ()=>{
     box.querySelector("p").textContent = steps[i];
-    box.querySelector("button").textContent = (i === steps.length-1) ? "Compris !" : "Suivant";
+    nextBtn.textContent = (i === steps.length-1) ? "Compris !" : "Suivant";
     box.classList.add("on");
   };
-  box.querySelector("button").onclick = ()=>{
+  nextBtn.onclick = ()=>{
     sfx("tab");
     i++;
     if(i >= steps.length){ box.classList.remove("on"); return; }
     box.classList.remove("on"); void box.offsetWidth; show();
   };
+  skipBtn.onclick = ()=>{ sfx("tab"); box.classList.remove("on"); };
   setTimeout(show, 500);
 }
 function showStarter(){
@@ -4828,6 +4859,11 @@ function startHome(){
     bar.style.width = p+"%";
   }, 130);
   document.getElementById("homePlay").addEventListener("click", ()=>{
+    if(!S.starter){
+      sfx("good");
+      checkFtue();
+      return;                     // l'oeuf/starter prend le relais ; JOUER refonctionnera normalement une fois termine
+    }
     sfx("good");
     const h = document.getElementById("home");
     h.classList.add("leaving");
@@ -4929,14 +4965,33 @@ function buildSlotPicker(){
     card.className = "slotCard" + (n===cur ? " active" : "");
     card.innerHTML = '<div class="slotNum">EMPLACEMENT '+n+'</div>' +
       (sum
-        ? '<div class="slotInfo">'+sum.animalName+'<br>'+fmt(sum.coins)+' 🪙'+(sum.rebirths?'<br>'+sum.rebirths+' 🐾':'')+'</div>'
+        ? '<div class="slotInfo">'+sum.animalName+'<br>'+fmt(sum.coins)+' 🪙'+(sum.rebirths?'<br>'+sum.rebirths+' 🐾':'')+'</div>' +
+          '<div class="slotDel" data-del="'+n+'">🗑️</div>'
         : '<div class="slotInfo">Nouvelle partie</div>');
-    card.onclick = ()=>{
+    card.onclick = (e)=>{
+      if(e.target.closest("[data-del]")) return;   // le clic sur la corbeille ne selectionne pas
       if(n === activeSlot()) return;
       setActiveSlot(n); load(); buildSlotPicker(); sfx("tab");
     };
     el.appendChild(card);
   }
+  el.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      const n = parseInt(btn.dataset.del, 10);
+      openModal(
+        '<h2>Supprimer ?</h2><p>Emplacement '+n+' sera définitivement effacé. Impossible à annuler.</p>' +
+        '<button class="mBtn" id="mDelYes" style="background:var(--pink)">Supprimer</button>' +
+        '<button class="mBtn ghost" id="mDelNo">Annuler</button>'
+      );
+      document.getElementById("mDelYes").onclick = ()=>{
+        store.del(slotKey(n));
+        if(n === activeSlot()) load();     // l'emplacement actif efface : repartir sur un etat neuf
+        buildSlotPicker(); closeModal(); sfx("tab");
+      };
+      document.getElementById("mDelNo").onclick = closeModal;
+    };
+  });
 }
 load();
 buildSlotPicker();
@@ -4962,7 +5017,8 @@ tickBanner();
    ouverture d'app à l'autre : un testeur ne doit jamais tomber sur un menu
    caché sans savoir pourquoi. */
 resume();
-if(!S.starter){ if(!S.hatched) showEggIntro(); else showStarter(); }
+function checkFtue(){ if(!S.starter){ if(!S.hatched) showEggIntro(); else showStarter(); } }
+checkFtue();
 if(S.notifs) scheduleNotifs();
 /* l'audio ne peut démarrer qu'après un geste : on attend la première tape */
 document.addEventListener("pointerdown", function once(){
