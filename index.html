@@ -733,7 +733,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.6.1";
+const VERSION = "4.7.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1254,6 +1254,156 @@ grass:{size:14,pal:{D:"#5C7A3A",G:"#8FBC5A"},px:[
 "....G.G.G.....","....G.G.G.....","....D.G.D.....","....D.G.D.....",
 "....D.G.D.....","....D.D.D.....","....D.D.D.....","....D.D.D.....",
 "....D.D.D.....","....D.D.D....."]},
+faucon:{size:24,pal:{P:"#8A6E52",D:"#5E4630",S:"#B8A688",K:"#2B2018",Y:"#FFD24A",O:"#FF9F1C",A:"#C4700F",H:"#FFC94A"},px:[
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"...SSSSSSSSSSSSSSSSSS...",
+"...SSSSSSSSSSSSSSSSSS...",
+"...SSSKKKKSSSSKKKKSSS...",
+"...SSSKKYKSSSSKYKKSSS...",
+".DDDDDKKKKSSSSKKKKDDDDD.",
+".DDDDDSKKKOOOOKKKSDDDDD.",
+".DDDDDPPPPOOOOPPPPDDDDD.",
+".DDDDDPPPPOOOOPPPPDDDDD.",
+".DDDDDPPPPOAOOPPPPDDDDD.",
+".DDDDDPPPPOOOOPPPPDDDDD.",
+".DDDDDPPPPPPPPPPPPDDDDD.",
+".DDDDDPPPPPPPPPPPPDDDDD.",
+"....DDDDDDDDDDDDDDDD....",
+"....DDDDDDDDDDDDDDDD....",
+"....DDDDDDDDDDDDDDDD....",
+"......HHHH....HHHH......",
+"......HHHH....HHHH......",
+"......HHHH....HHHH......"]},
+chouette:{size:24,pal:{P:"#B8865E",D:"#8A5F3C",S:"#E8D4B0",K:"#2B2018",Y:"#FFE066",O:"#FF9F1C",H:"#8A5F3C"},px:[
+"........................",
+"........................",
+"........................",
+".......D........D.......",
+"........D......D........",
+"........................",
+"........................",
+"........................",
+".....SSSSSSSSSSSSSS.....",
+"....PSSSSSSSSSSSSSSP....",
+"....PSKKKKKSSKKKKKSP....",
+"....PSKYYYKSSKYYYKSP....",
+"....PSKYKYKSSKYKYKSP....",
+"....PSKYKYKSSKYKYKSP....",
+"....PSKYYYKSSKYYYKSP....",
+"....PSKKKKKOOKKKKKSP....",
+"....PSSSSSSOOSSSSSSP....",
+"....PSSSSSSOOSSSSSSP....",
+"....DDDDDDDDDDDDDDDD....",
+"....DDDDDDDDDDDDDDDD....",
+"....DDDDDDDDDDDDDDDD....",
+".....HHHH......HHHH.....",
+".....HHHH......HHHH.....",
+".....HHHH......HHHH....."]},
+colibri:{size:24,pal:{P:"#3FBFA0",D:"#2A9080",S:"#7ADFC0",K:"#2B2018",W:"#FFFFFF",O:"#2B2018",H:"#FF9F1C"},px:[
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"......SSSSSSSSSSSS......",
+"......SSKWKSSKWKSS......",
+"......SSKKKSSKKKSS......",
+"......SSKKKSSKKKSS......",
+"...DDDDDSSOOOOSSDDDDD...",
+"...DDDDDPPOOOOPPDDDDD...",
+"...DDDDDPPPPPPPPDDDDD...",
+"...DDDDDPPPPPPPPDDDDD...",
+"...DDDDDPPPPPPPPDDDDD...",
+".......PPPPPPPPPP.......",
+".......PPPPPPPPPP.......",
+".......DDDDDDDDDD.......",
+".......DDDDDDDDDD.......",
+".......DDDDDDDDDD.......",
+"..........HHHHHH........",
+"..........HHHHHH........",
+"..........HHHHHH........",
+"........................"]},
+libellule:{size:24,pal:{P:"#3FA0BF",D:"#2A7A96",W:"#D6F0F5",K:"#1B2B32",Y:"#FFD24A",S:"#8FD9E8",H:"#1B2B32"},px:[
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"WWWWWWWWW.......WWWWWWWW",
+"WWWWWWKKKKKKKKKKKKWWWWWW",
+"WWWWWWKYYYYKKKYYYYWWWWWW",
+"WWWWWWKYYYYKKKYYYYWWWWWW",
+"WWWWWWKYYYYKKKYYYYWWWWWW",
+"WWWWWWKYYYYKKKYYYYWWWWWW",
+"WWWWWWKYYYYKKKYYYYWWWWWW",
+"WWWWWWKKKKKKKKKKKKWWWWWW",
+"......KKKKKKKKKKKK......",
+".........PPPPPPP........",
+".........PPSSPPP........",
+".........PPPPPPP........",
+".........PPPPPPP........",
+".........DDDDDDD........",
+".........DDDDDDD........",
+".........DDDDDDD........",
+"..........HH.HH.........",
+"..........HH.HH.........",
+"..........HH.HH........."]},
+espritvent:{size:24,pal:{P:"#E8F0F5",D:"#B8CDD9",W:"#F5FAFC",K:"#4A6070",C:"#7ADFF0",S:"#D0E4EC",H:"#B8CDD9"},px:[
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"..WWWWWWWWWWWWWWWWWWWW..",
+"..WWWWWWWWWWWWWWWWWWWW..",
+"..WWWWWWWWWWWWWWWWWWWW..",
+"..WWWWWWWWWWWWWWWWWWWW..",
+"..WWWWWWWWWWWWWWWWWWWW..",
+"..WWWWWWWWWWWWWWWWWWWW..",
+"WWWWWPPKCKPPPPPKCKPWWWWW",
+"WWWWWPPKKKPPPPPKKKPWWWWW",
+"WWWWWPPKKKPPPPPKKKPWWWWW",
+"WWWWWPPPPPSSSSPPPPPWWWWW",
+"WWWWWPPPPPSSSSPPPPPWWWWW",
+"....PPPPPPSDDSPPPPPP....",
+"....PPPPPPSSSSPPPPPP....",
+"....DDDDDDDDDDDDDDDD....",
+"....DDDDDDDDDDDDDDDD....",
+"....DDDDDDDDDDDDDDDD....",
+"......HHHH....HHHH......",
+"......HHHH....HHHH......",
+"......HHHH....HHHH......"]},
+papillon:{size:24,pal:{P:"#2B2320",D:"#1B1510",W:"#FF9FC4",O:"#FFE066",K:"#1B1510",H:"#8A6E52"},px:[
+"........................",
+"........................",
+".........KK..KK.........",
+"WWWWWWWWWKK..KKWWWWWWWWW",
+"WWWWWWWWWKK..KKWWWWWWWWW",
+"WWWWOOOOOWW..WWOOOOOWWWW",
+"WWWWOOOOOWW..WWOOOOOWWWW",
+"WWWWOOOOOWK..KWOOOOOWWWW",
+"WWWWOOOOOWW..WWOOOOOWWWW",
+"WWWWOOOOOWWPPWWOOOOOWWWW",
+"WWWWOOOOOWWPPWWOOOOOWWWW",
+"WWWWWWWWWWWPPWWWWWWWWWWW",
+"WWWWWWWWWWWPPWWWWWWWWWWW",
+"WWWWWWWWWWWPPWWWWWWWWWWW",
+"WWWWWWWWWWWPPWWWWWWWWWWW",
+"WWWWWWWWWWWPPWWWWWWWWWWW",
+".........PPPPPP.........",
+".........PPPPPP.........",
+".........DDDDDD.........",
+".........DDDDDD.........",
+".........DDDDDD.........",
+"..........HHHH..........",
+"..........HHHH..........",
+"..........HHHH.........."]},
 renardpionnier:{size:24,pal:{P:"#FF9F4A",D:"#D97A2A",S:"#FFEBD6",K:"#2B1810",W:"#FFFFFF",Y:"#FFE066",H:"#2B1810"},px:[
 "........................",
 "..KKKKKK........KKKKKK..",
@@ -1603,7 +1753,13 @@ const PREMIUM = [
   {id:"canardplastique", name:"Canard en Plastique", gems:40, mult:1.5, tap:500, rar:"commun",  trait:"Curieux", desc:"×1,5 sur tout.", biome:"ferme"},
   {id:"dindonfurieux",   name:"Dindon Furieux",  gems:65,  mult:2.5, tap:1.1e3, rar:"peucommun", trait:"Joueur", desc:"×2,5 sur tout.", biome:"ferme"},
   {id:"chiendeberger",   name:"Chien de Berger", gems:150, mult:1,   tap:2.5e3, rar:"legendaire", trait:"Joueur", desc:"+8 % par animal de la Ferme possédé.", packBonus:0.08, biome:"ferme"},
-  {id:"renardpionnier", name:"Renard Pionnier", gems:0, mult:16, tap:8e10, rar:"mythique", trait:"Curieux", desc:"Réservé aux tout premiers testeurs. ×16 sur tout.", codeOnly:true, session:"S1"}
+  {id:"renardpionnier", name:"Renard Pionnier", gems:0, mult:16, tap:8e10, rar:"mythique", trait:"Curieux", desc:"Réservé aux tout premiers testeurs. ×16 sur tout.", codeOnly:true, session:"S1"},
+  {id:"faucon",     name:"Faucon",       gems:3000, mult:35, tap:5e11, rar:"mythique", trait:"Curieux",  desc:"×35 sur tout.", world:"W2"},
+  {id:"chouette",   name:"Chouette",     gems:2600, mult:30, tap:3e11, rar:"mythique", trait:"Dormeur",  desc:"×30 sur tout.", world:"W2"},
+  {id:"colibri",    name:"Colibri",      gems:2400, mult:28, tap:2e11, rar:"legendaire", trait:"Joueur", desc:"×28 sur tout.", world:"W2"},
+  {id:"libellule",  name:"Libellule",    gems:2800, mult:32, tap:4e11, rar:"legendaire", trait:"Curieux", desc:"×32 sur tout.", world:"W2"},
+  {id:"espritvent", name:"Esprit du Vent", gems:4500, mult:45, tap:9e11, rar:"mythique", trait:"Curieux", desc:"Rare et insaisissable. ×45 sur tout.", world:"W2"},
+  {id:"papillon",   name:"Papillon Géant", gems:2200, mult:26, tap:18e10, rar:"legendaire", trait:"Joueur", desc:"×26 sur tout.", world:"W2"}
 ];
 
 const ALL_PETS = ANIMALS.concat(PREMIUM);
@@ -1682,6 +1838,7 @@ function openWorlds(){
       const w = WORLDS.find(x=>x.id===b.dataset.w);
       if(!w || !w.unlocked() || S.world===w.id) return;
       S.world = w.id; save(); sfx("evo"); vibrate(60);
+      buildLists();
       closeModal(); toast("Bienvenue dans "+w.name);
     };
   });
@@ -2349,6 +2506,7 @@ function buildLists(){
 
   PREMIUM.forEach(p=>{
     if(p.codeOnly) return;
+    if(p.world && p.world !== (S.world||"W1")) return;
     const r = makeRow({sprite:p.id, rar:p.rar, btnClass:"gemBtn", onClick:()=>premiumClick(p)});
     r._name.textContent = p.name; $("#listPremium").appendChild(r); R.premium.push({p,r});
   });
@@ -2781,6 +2939,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.7.0", lines:["Monde de l'Air : 6 nouveaux animaux (Faucon, Chouette, Colibri, Libellule, Esprit du Vent, Papillon Géant)","N'apparaissent en Boutique qu'une fois le Monde 2 atteint — pas de vitrine vide avant"]},
   {v:"4.6.1", lines:["Correctif + vrai mécanisme : Monde 2 se débloque en gardant 1 quadrillion de pièces sans les dépenser (au lieu d'un compteur de renaissances)","Vraie tension stratégique : dépenser maintenant ou économiser pour changer de monde"]},
   {v:"4.6.0", lines:["Fondation du système de téléportation : bouton 🌍, Monde 1 (La Ferme) toujours accessible","Monde 2 verrouillé jusqu'à 500 Renaissances + arbre principal au max — le contenu du Monde 2 reste à définir"]},
   {v:"4.5.0", lines:["Arbre de Renaissance étendu : 5 nouvelles améliorations, plafonds doublés à triplés sur les 10 existantes","Les Pattes Célestes gardent une vraie utilité beaucoup plus longtemps avant d'être toutes maximisées"]},
