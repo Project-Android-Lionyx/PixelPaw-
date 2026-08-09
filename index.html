@@ -610,6 +610,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #miniQuit{border:2px solid var(--ink);border-radius:9px;padding:5px 9px;font-size:8px;background:var(--cream)}
 
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body data-theme="pastel">
 <div id="app">
@@ -799,7 +800,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.15.0";
+const VERSION = "4.15.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -3162,6 +3163,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.15.1", lines:["Formulaire de support refait : catégorie de problème, où tu l'as vu, texte sans limite","Prêt pour un envoi direct sans quitter l'app dès qu'EmailJS est configuré (repli par mail en attendant)"]},
   {v:"4.15.0", lines:["Tape sur le nom de ton animal pour le renommer et lui choisir une palette de couleurs (7 styles)","Bouton de retour sur l'écran d'accueil — envoie un mail direct avec les infos de la partie"]},
   {v:"4.14.2", lines:["Bouton Menus déplacé en position fixe tout en fin de page — plus fiable, plus d'ambiguïté d'empilement possible","Devrait régler le souci de taps multiples et le décalage visuel"]},
   {v:"4.14.1", lines:["Correctif : les pièces/gemmes/FC pouvaient s'afficher tronquées («2.00...») au lieu du nombre complet avec sa lettre","HUD réorganisé en deux lignes : stats en haut, boutons en dessous — plus propre, plus de place pour les grands nombres"]},
@@ -4810,28 +4812,70 @@ function startHome(){
     openModal(html);
     document.getElementById("mNo").onclick = closeModal;
   });
-  document.getElementById("homeFeedback").addEventListener("click", ()=>{
-    openModal(
-      '<h2>✉️ Un souci ? Une idée ?</h2>' +
-      '<p style="margin-bottom:10px">Décris ce que tu as vu — je lis tout, même les petits détails.</p>' +
-      '<textarea id="fbText" rows="5" maxlength="600" placeholder="Ex : le bouton X ne réagit pas, ou une idée de nouvel animal..." ' +
-      'style="width:100%;padding:10px;font-family:inherit;font-size:11px;border:3px solid var(--ink);' +
-      'border-radius:12px;background:var(--card);color:var(--ink);resize:none;margin-bottom:12px"></textarea>' +
-      '<button class="mBtn" id="mSendFb">Envoyer par mail</button>' +
-      '<button class="mBtn ghost" id="mNo">Annuler</button>'
-    );
-    document.getElementById("fbText").focus();
-    document.getElementById("mSendFb").onclick = ()=>{
-      const txt = document.getElementById("fbText").value.trim() || "(pas de message)";
-      const debugInfo = "\n\n---\nVersion: "+VERSION+"\nAnimal actif: "+(S.animal||"?")+
-        "\nPièces: "+fmt(S.coins)+"\nGemmes: "+fmt(S.gems)+"\nRenaissances: "+(S.rebirths||0);
-      const subject = encodeURIComponent("Pixel Paw Idle — retour v"+VERSION);
-      const body = encodeURIComponent(txt + debugInfo);
+const EMAILJS_CONFIG = { serviceId:"", templateId:"", publicKey:"" }; // à remplir : rend l'envoi direct possible, sans quitter l'app
+const FEEDBACK_CATS = [
+  {id:"bug",    label:"🐞 Un bug"},
+  {id:"lag",    label:"🐢 Ça rame / plante"},
+  {id:"visuel", label:"🎨 Souci visuel"},
+  {id:"idee",   label:"💡 Une idée"},
+  {id:"achat",  label:"💳 Souci de paiement"},
+  {id:"autre",  label:"✏️ Autre"}
+];
+const FEEDBACK_WHERE = ["Écran principal","Animaux","Boutique","Améliorations","Labo","Quotidien","Dex","Renaissance","Téléportation","Réglages","Ailleurs"];
+document.getElementById("homeFeedback").addEventListener("click", ()=>{
+  let catBtns = FEEDBACK_CATS.map(c=>'<button class="qtyBtn fbCat" data-cat="'+c.id+'" style="flex:0 0 31%">'+c.label+'</button>').join("");
+  let whereOpts = FEEDBACK_WHERE.map(w=>'<option value="'+w+'">'+w+'</option>').join("");
+  openModal(
+    '<h2>Support Pixel Paw</h2>' +
+    '<p style="margin-bottom:10px;font-size:9px;color:var(--ink-soft)">On lit tout, aussi précis que possible ça aide.</p>' +
+    '<p style="font-size:8px;color:var(--ink-soft);text-align:left;margin-bottom:4px">TYPE DE RETOUR</p>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">'+catBtns+'</div>' +
+    '<p style="font-size:8px;color:var(--ink-soft);text-align:left;margin-bottom:4px">OÙ TU AS VU ÇA</p>' +
+    '<select id="fbWhere" style="width:100%;padding:10px;font-family:inherit;font-size:10px;' +
+    'border:3px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);margin-bottom:12px">'+whereOpts+'</select>' +
+    '<p style="font-size:8px;color:var(--ink-soft);text-align:left;margin-bottom:4px">DESCRIPTION</p>' +
+    '<textarea id="fbText" rows="6" placeholder="Décris ce que tu as vu, le plus précisément possible..." ' +
+    'style="width:100%;padding:10px;font-family:inherit;font-size:11px;border:3px solid var(--ink);' +
+    'border-radius:12px;background:var(--card);color:var(--ink);resize:vertical;margin-bottom:12px"></textarea>' +
+    '<button class="mBtn" id="mSendFb">Envoyer</button>' +
+    '<button class="mBtn ghost" id="mNo">Annuler</button>' +
+    '<p id="fbStatus" style="margin-top:8px;font-size:8px;color:var(--ink-soft)"></p>'
+  );
+  let chosenCat = "bug";
+  modal.querySelectorAll(".fbCat").forEach((b,i)=>{
+    if(i===0) setCls(b,"on",true);
+    b.onclick = ()=>{ chosenCat = b.dataset.cat; modal.querySelectorAll(".fbCat").forEach(x=>setCls(x,"on",x===b)); sfx("tab"); };
+  });
+  document.getElementById("fbText").focus();
+  document.getElementById("mSendFb").onclick = async ()=>{
+    const txt = document.getElementById("fbText").value.trim();
+    const where = document.getElementById("fbWhere").value;
+    if(!txt){ document.getElementById("fbStatus").textContent = "Écris un message avant d'envoyer."; return; }
+    const catLabel = FEEDBACK_CATS.find(c=>c.id===chosenCat).label;
+    const debugInfo = "Version: "+VERSION+" | Animal: "+(S.animal||"?")+" | Pièces: "+fmt(S.coins)+
+      " | Gemmes: "+fmt(S.gems)+" | Renaissances: "+(S.rebirths||0);
+    const btn = document.getElementById("mSendFb");
+    if(EMAILJS_CONFIG.serviceId && window.emailjs){
+      btn.disabled = true; btn.textContent = "Envoi...";
+      try{
+        await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+          category: catLabel, location: where, message: txt, debug: debugInfo
+        }, EMAILJS_CONFIG.publicKey);
+        document.getElementById("fbStatus").textContent = "Envoyé, merci !";
+        setTimeout(closeModal, 900); sfx("good");
+      }catch(e){
+        document.getElementById("fbStatus").textContent = "Échec de l'envoi, réessaie.";
+        btn.disabled = false; btn.textContent = "Envoyer";
+      }
+    } else {
+      const subject = encodeURIComponent("Pixel Paw — "+catLabel+" ("+where+")");
+      const body = encodeURIComponent(txt + "\n\n---\n" + debugInfo);
       location.href = "mailto:pixelpaw.contact@gmail.com?subject="+subject+"&body="+body;
       closeModal();
-    };
-    document.getElementById("mNo").onclick = closeModal;
-  });
+    }
+  };
+  document.getElementById("mNo").onclick = closeModal;
+});
 }
 
 /* ============================================================
