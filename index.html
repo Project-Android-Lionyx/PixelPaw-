@@ -733,7 +733,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.6.0";
+const VERSION = "4.6.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1652,16 +1652,16 @@ const PRESTIGE_MIN = 2e13;          // 20 000 milliards : première Renaissance 
 /* ============================================================
    TÉLÉPORTATION — mondes
    ============================================================ */
+const W2_COINS = 1e15;
 const WORLDS = [
-  {id:"W1", name:"La Ferme", desc:"Le monde de départ.", unlocked:()=>true},
-  {id:"W2", name:"???", desc:"Débloqué à 500 Renaissances et l'arbre principal au maximum.",
-    unlocked:()=> (S.rebirths||0) >= 500 && PRESTIGE_UPS.slice(0,10).every(p=>pLvl(p.id) >= p.max)}
+  {id:"W1", name:"La Ferme", desc:()=>"Le monde de départ.", unlocked:()=>true},
+  {id:"W2", name:"???", desc:()=>"Débloqué en gardant "+fmt(W2_COINS)+" pièces sans les dépenser, avec l'arbre principal au maximum.",
+    unlocked:()=> S.coins >= W2_COINS && PRESTIGE_UPS.slice(0,10).every(p=>pLvl(p.id) >= p.max)}
 ];
 function worldProgress(w){
   if(w.id !== "W2") return "";
-  const reb = Math.min(500, S.rebirths||0);
   const maxed = PRESTIGE_UPS.slice(0,10).filter(p=>pLvl(p.id) >= p.max).length;
-  return reb+"/500 Renaissances · "+maxed+"/10 améliorations au max";
+  return fmt(S.coins)+"/"+fmt(W2_COINS)+" pièces gardées · "+maxed+"/10 améliorations au max";
 }
 function openWorlds(){
   let html = '<h2>🌍 Téléportation</h2>';
@@ -1670,7 +1670,7 @@ function openWorlds(){
     const active = (S.world||"W1") === w.id;
     html += '<div class="row'+(active?' active':'')+(on?'':' locked')+'">' +
       '<div class="rInfo"><div class="rName">'+(on?w.name:"🔒 "+w.name)+'</div>' +
-      '<div class="rSub">'+(on ? w.desc : worldProgress(w))+'</div></div>' +
+      '<div class="rSub">'+(on ? w.desc() : worldProgress(w))+'</div></div>' +
       '<button class="rBtn '+(active?'owned':'mintBtn')+'" '+(on&&!active?'':'disabled')+' data-w="'+w.id+'">'+
       (active?'ICI':'ALLER')+'</button></div>';
   });
@@ -2781,6 +2781,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.6.1", lines:["Correctif + vrai mécanisme : Monde 2 se débloque en gardant 1 quadrillion de pièces sans les dépenser (au lieu d'un compteur de renaissances)","Vraie tension stratégique : dépenser maintenant ou économiser pour changer de monde"]},
   {v:"4.6.0", lines:["Fondation du système de téléportation : bouton 🌍, Monde 1 (La Ferme) toujours accessible","Monde 2 verrouillé jusqu'à 500 Renaissances + arbre principal au max — le contenu du Monde 2 reste à définir"]},
   {v:"4.5.0", lines:["Arbre de Renaissance étendu : 5 nouvelles améliorations, plafonds doublés à triplés sur les 10 existantes","Les Pattes Célestes gardent une vraie utilité beaucoup plus longtemps avant d'être toutes maximisées"]},
   {v:"4.4.2", lines:["Herbe refaite en vrai pixel art (brins pointus, hauteurs variées) au lieu de capsules arrondies","Testé en conditions réelles (navigateur simulé) avant envoi cette fois, pas juste visuellement"]},
