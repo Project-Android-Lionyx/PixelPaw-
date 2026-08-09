@@ -97,8 +97,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #stage{
   flex:1 1 auto;position:relative;display:flex;flex-direction:column;
   align-items:center;justify-content:center;overflow:hidden;min-height:0;
+  will-change:transform;
 }
-#decor{position:absolute;bottom:2%;left:0;right:0;height:70px;pointer-events:none;z-index:1;overflow:visible}
+#decor{position:absolute;bottom:8px;left:0;right:0;height:70px;pointer-events:none;z-index:1;overflow:visible}
 .bushDeco{position:absolute;bottom:-4px;width:66px;height:66px}
 .bushDeco canvas{width:100%;height:100%}
 .bushDeco.left{left:-14px}
@@ -748,7 +749,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.10.0";
+const VERSION = "4.10.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2435,7 +2436,7 @@ function doTap(cx, cy){
   earn(gain); S.taps++; bump("taps",1);
   const r = stage.getBoundingClientRect();
   spawnFloat(cx-r.left, cy-r.top, (preciseHit?"SUPER +":crit?"CRIT +":"+")+fmt(gain), crit);
-  spawnCoins(cx-r.left, cy-r.top, (frenzyActive() ? 5 : 0) + (crit ? 10 : 2+rnd(4)));
+  spawnCoins(cx-r.left, cy-r.top, (frenzyActive() ? 3 : 0) + (crit ? 8 : 2+rnd(3)));
   spawnTapPulse(cx-r.left, cy-r.top);
   petWrap.classList.remove("idle");
   petWrap.classList.add("squish");
@@ -2994,6 +2995,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.10.1", lines:["Correctif : le décor restait ancré à un pourcentage de la scène, se déplaçait mal quand le menu s'ouvrait/repliait","Allègement des performances : moins de touffes d'herbe animées en continu, moins de particules par tape"]},
   {v:"4.10.0", lines:["Tape bien plus satisfaisante : écrasement plus marqué avec rebond, flash d'impact, pièces qui explosent plus loin","Les critiques secouent maintenant la scène brièvement — vraie différence ressentie, pas juste un chiffre plus gros"]},
   {v:"4.9.1", lines:["Décor enrichi façon Pokémon : buissons aux deux coins, herbe en grappes irrégulières, fleurs éparpillées","Correctifs : z-index du bouton Menus renforcé, croix du panneau recentrée, défilement du Dex optimisé"]},
   {v:"4.9.0", lines:["Navigation repensée : Animaux/Boutique/Dex s'ouvrent en fenêtre depuis le HUD, comme la Téléportation","Le bas ne garde que 3 onglets (Améliorations/Labo/Quotidien) · bouton Menus pleine largeur"]},
@@ -4077,7 +4079,7 @@ function buildDecor(){
   const cvR = document.createElement("canvas"); paint(cvR, "bushdeco"); br.appendChild(cvR);
   d.appendChild(bl); d.appendChild(br);
   // herbe en grappes irregulieres plutot qu'une ligne parfaitement reguliere
-  const clusters = [[8,3],[24,2],[40,4],[56,2],[72,3],[88,2]];
+  const clusters = [[10,2],[28,2],[46,3],[64,2],[82,2]];
   clusters.forEach(([cx,count])=>{
     for(let i=0;i<count;i++){
       const g = document.createElement("div");
