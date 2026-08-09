@@ -99,7 +99,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   align-items:center;justify-content:center;overflow:hidden;min-height:0;
   will-change:transform;
 }
-#decor{position:absolute;bottom:8px;left:0;right:0;height:70px;pointer-events:none;z-index:1;overflow:visible}
+#decor{position:absolute;bottom:58px;left:0;right:0;height:70px;pointer-events:none;z-index:1;overflow:visible}
 .bushDeco{position:absolute;bottom:-4px;width:66px;height:66px}
 .bushDeco canvas{width:100%;height:100%}
 .bushDeco.left{left:-14px}
@@ -191,7 +191,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   border-top:3px solid var(--ink);border-left:3px solid var(--ink);border-right:3px solid var(--ink);
   border-radius:24px 24px 0 0;overflow-y:auto;overscroll-behavior:contain;
   box-shadow:inset 0 4px 0 rgba(255,255,255,.5);
-  -webkit-overflow-scrolling:touch;padding:6px 10px 14px;position:relative;
+  -webkit-overflow-scrolling:touch;padding:6px 10px 14px;position:relative;z-index:16;
   transition:height .22s ease, min-height .22s ease, padding .22s ease, opacity .18s ease;
 }
 #panelBar{
@@ -203,8 +203,10 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #panelClose:active{transform:translateY(2px)}
 /* état réduit : le panneau et les onglets disparaissent */
 #app.zen #panel{height:0;min-height:0;padding-top:0;padding-bottom:0;opacity:0;overflow:hidden;border-width:0}
-#panel.floating{height:72dvh;box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 -8px 24px rgba(0,0,0,.25);border-width:4px}
+#panel.floating{height:78dvh;box-shadow:inset 0 4px 0 rgba(255,255,255,.5), 0 -8px 24px rgba(0,0,0,.25);border-width:4px}
 #panel.floating #panelClose{background:var(--pink);color:#fff;border-color:var(--ink)}
+#floatVeil{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:15;display:none}
+#floatVeil.on{display:block}
 #app.zen #tabs{display:none}
 #app.zen #banner{display:none}
 #reopen{
@@ -612,6 +614,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
     <button class="bGo" id="bannerBtn">VOIR</button>
   </div>
 
+  <div id="floatVeil"></div>
   <section id="panel">
     <div id="panelBar">
       <span style="width:26px"></span>
@@ -749,7 +752,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.10.1";
+const VERSION = "4.11.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2591,7 +2594,7 @@ function buildLists(){
   $("#listPacks").appendChild(fz);
   PACKS.forEach(p=>{
     const r = makeRow({emoji:"💎", btnClass:"gemBtn", onClick:()=>buyPack(p)});
-    r._name.textContent = fmt(p.gems)+" gemmes"; r._sub.textContent = "Paiement simulé";
+    r._name.textContent = fmt(p.gems)+" gemmes"; r._sub.textContent = "Paiement sécurisé via PayPal";
     r._btn.textContent = p.price; $("#listPacks").appendChild(r);
   });
 
@@ -2995,6 +2998,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.11.0", lines:["Analyse vidéo complète : décor caché par le bouton Menus en mode replié, corrigé (repositionné)","Animaux/Boutique/Dex ont maintenant un vrai voile sombre derrière, comme la Téléportation — fini l'effet deux menus","Texte trompeur «paiement simulé» corrigé alors que les vrais liens PayPal fonctionnaient déjà"]},
   {v:"4.10.1", lines:["Correctif : le décor restait ancré à un pourcentage de la scène, se déplaçait mal quand le menu s'ouvrait/repliait","Allègement des performances : moins de touffes d'herbe animées en continu, moins de particules par tape"]},
   {v:"4.10.0", lines:["Tape bien plus satisfaisante : écrasement plus marqué avec rebond, flash d'impact, pièces qui explosent plus loin","Les critiques secouent maintenant la scène brièvement — vraie différence ressentie, pas juste un chiffre plus gros"]},
   {v:"4.9.1", lines:["Décor enrichi façon Pokémon : buissons aux deux coins, herbe en grappes irrégulières, fleurs éparpillées","Correctifs : z-index du bouton Menus renforcé, croix du panneau recentrée, défilement du Dex optimisé"]},
@@ -3116,9 +3120,10 @@ function openSettings(){
 $("#gearBtn").addEventListener("click", ()=>{ sfx("tab"); openSettings(); });
 $("#prestigeBtn").addEventListener("click", ()=>{ sfx("tab"); openPrestige(); });
 $("#worldBtn").addEventListener("click", ()=>{ sfx("tab"); openWorlds(); });
-$("#animalsBtn").addEventListener("click", ()=>{ switchTab("animals"); setCls($("#panel"),"floating",true); });
-$("#shopBtn").addEventListener("click", ()=>{ switchTab("shop"); setCls($("#panel"),"floating",true); });
-$("#dexBtn").addEventListener("click", ()=>{ switchTab("dex"); setCls($("#panel"),"floating",true); });
+$("#animalsBtn").addEventListener("click", ()=>switchTab("animals"));
+$("#shopBtn").addEventListener("click", ()=>switchTab("shop"));
+$("#dexBtn").addEventListener("click", ()=>switchTab("dex"));
+$("#floatVeil").addEventListener("click", ()=>switchTab("upgrades"));
 
 /* ============================================================
    30. MODE ZEN — panneau réductible, plein écran
@@ -3189,7 +3194,9 @@ function switchTab(name){
   document.querySelectorAll(".tab").forEach(t=>setCls(t,"on", t.dataset.tab === name));
   document.querySelectorAll(".tabView").forEach(v=>setCls(v,"on", v.id === "view-"+name));
   $("#panel").scrollTop = 0;
-  if(["upgrades","labo","daily"].includes(name)) setCls($("#panel"),"floating",false);
+  const isFloating = ["animals","shop","dex"].includes(name);
+  setCls($("#panel"),"floating", isFloating);
+  setCls($("#floatVeil"),"on", isFloating);
   if(app.classList.contains("zen")) setZen(false);
   sfx("tab");
 }
