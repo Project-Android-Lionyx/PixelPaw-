@@ -84,6 +84,8 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 .iconBtn:active{transform:translateY(3px);box-shadow:none}
 #prestigeBtn{background:var(--paw);display:none}
 #prestigeBtn.on{display:grid}
+#worldBtn{background:var(--gem);display:none}
+#worldBtn.on{display:grid}
 #cpsLine{margin-top:5px;text-align:center;font-size:9px;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase}
 #frenzyWrap{width:78%;max-width:220px;height:9px;margin:6px auto 0;border:2px solid var(--ink);border-radius:999px;background:var(--card);overflow:hidden}
 #frenzyBar{height:100%;width:0%;background:linear-gradient(90deg,var(--gem),var(--pink));transition:width .12s linear}
@@ -564,6 +566,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
       <div class="stat"><canvas class="ico" id="icoGem"></canvas><span class="val" id="gemVal">0</span></div>
       <div class="stat"><span class="ico" style="font-size:12px;line-height:1">🧪</span><span class="val" id="fcVal">0</span></div>
       <button class="iconBtn" id="prestigeBtn" aria-label="Renaissance">👑</button>
+      <button class="iconBtn" id="worldBtn" aria-label="Téléportation">🌍</button>
       <button class="iconBtn" id="gearBtn" aria-label="Options">⚙️</button>
     </div>
     <div id="cpsLine">0 pièces / sec</div>
@@ -730,7 +733,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.5.0";
+const VERSION = "4.6.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1646,6 +1649,44 @@ const STARTERS = [
    6. PRESTIGE — "Pattes Célestes"
    ============================================================ */
 const PRESTIGE_MIN = 2e13;          // 20 000 milliards : première Renaissance en fin de partie normale
+/* ============================================================
+   TÉLÉPORTATION — mondes
+   ============================================================ */
+const WORLDS = [
+  {id:"W1", name:"La Ferme", desc:"Le monde de départ.", unlocked:()=>true},
+  {id:"W2", name:"???", desc:"Débloqué à 500 Renaissances et l'arbre principal au maximum.",
+    unlocked:()=> (S.rebirths||0) >= 500 && PRESTIGE_UPS.slice(0,10).every(p=>pLvl(p.id) >= p.max)}
+];
+function worldProgress(w){
+  if(w.id !== "W2") return "";
+  const reb = Math.min(500, S.rebirths||0);
+  const maxed = PRESTIGE_UPS.slice(0,10).filter(p=>pLvl(p.id) >= p.max).length;
+  return reb+"/500 Renaissances · "+maxed+"/10 améliorations au max";
+}
+function openWorlds(){
+  let html = '<h2>🌍 Téléportation</h2>';
+  WORLDS.forEach(w=>{
+    const on = w.unlocked();
+    const active = (S.world||"W1") === w.id;
+    html += '<div class="row'+(active?' active':'')+(on?'':' locked')+'">' +
+      '<div class="rInfo"><div class="rName">'+(on?w.name:"🔒 "+w.name)+'</div>' +
+      '<div class="rSub">'+(on ? w.desc : worldProgress(w))+'</div></div>' +
+      '<button class="rBtn '+(active?'owned':'mintBtn')+'" '+(on&&!active?'':'disabled')+' data-w="'+w.id+'">'+
+      (active?'ICI':'ALLER')+'</button></div>';
+  });
+  html += '<button class="mBtn ghost" id="mNo">Fermer</button>';
+  openModal(html);
+  document.getElementById("mNo").onclick = closeModal;
+  document.querySelectorAll("[data-w]").forEach(b=>{
+    b.onclick = ()=>{
+      const w = WORLDS.find(x=>x.id===b.dataset.w);
+      if(!w || !w.unlocked() || S.world===w.id) return;
+      S.world = w.id; save(); sfx("evo"); vibrate(60);
+      closeModal(); toast("Bienvenue dans "+w.name);
+    };
+  });
+}
+
 const PRESTIGE_UPS = [
   {id:"g1", name:"Aura dorée",     desc:"+40 % de pièces globales",         base:9,  rate:1.85, max:90},
   {id:"g2", name:"Négociant",      desc:"-3 % sur tous les coûts",          base:12, rate:1.9,  max:40},
@@ -1800,7 +1841,7 @@ function freshState(){
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
-    frenzyGauge:0, frenzyTier:0, frenzyTapsLeft:0, hatched:false,
+    frenzyGauge:0, frenzyTier:0, frenzyTapsLeft:0, hatched:false, world:"W1",
     offCoinSteps:0, offGemPacks:{},
     totalEarned:0, lifetimeEarned:0,
     /* --- quotidien --- */
@@ -2244,6 +2285,7 @@ function renderHUD(){
   setTxt(cpsLine, fmt(perSec()) + " / sec &nbsp;·&nbsp; ×" + (m<100 ? m.toFixed(1) : fmt(m)) +
     (critChance()>0 ? " &nbsp;·&nbsp; crit " + Math.round(critChance()*100) + "%" : ""));
   setCls($("#prestigeBtn"), "on", true);
+  setCls($("#worldBtn"), "on", (S.rebirths||0) >= 1);
 }
 function renderPet(){
   const p = currentPet();
@@ -2739,6 +2781,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.6.0", lines:["Fondation du système de téléportation : bouton 🌍, Monde 1 (La Ferme) toujours accessible","Monde 2 verrouillé jusqu'à 500 Renaissances + arbre principal au max — le contenu du Monde 2 reste à définir"]},
   {v:"4.5.0", lines:["Arbre de Renaissance étendu : 5 nouvelles améliorations, plafonds doublés à triplés sur les 10 existantes","Les Pattes Célestes gardent une vraie utilité beaucoup plus longtemps avant d'être toutes maximisées"]},
   {v:"4.4.2", lines:["Herbe refaite en vrai pixel art (brins pointus, hauteurs variées) au lieu de capsules arrondies","Testé en conditions réelles (navigateur simulé) avant envoi cette fois, pas juste visuellement"]},
   {v:"4.4.1", lines:["Correctif important : la grille Cosmétiques plantait sur les cadres, rendant impossible de les retirer","Renard Pionnier redessiné : silhouette triangulaire, museau fin et pointu, vraiment reconnaissable comme renard"]},
@@ -2847,6 +2890,7 @@ function openSettings(){
 }
 $("#gearBtn").addEventListener("click", ()=>{ sfx("tab"); openSettings(); });
 $("#prestigeBtn").addEventListener("click", ()=>{ sfx("tab"); openPrestige(); });
+$("#worldBtn").addEventListener("click", ()=>{ sfx("tab"); openWorlds(); });
 
 /* ============================================================
    30. MODE ZEN — panneau réductible, plein écran
