@@ -730,7 +730,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.4.2";
+const VERSION = "4.5.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1647,16 +1647,21 @@ const STARTERS = [
    ============================================================ */
 const PRESTIGE_MIN = 2e13;          // 20 000 milliards : première Renaissance en fin de partie normale
 const PRESTIGE_UPS = [
-  {id:"g1", name:"Aura dorée",     desc:"+40 % de pièces globales",         base:9,  rate:1.85, max:40},
-  {id:"g2", name:"Négociant",      desc:"-3 % sur tous les coûts",          base:12, rate:1.9,  max:18},
-  {id:"g3", name:"Griffe critique",desc:"+2 % de chance de critique (×7)",  base:12, rate:1.88, max:25},
-  {id:"g4", name:"Sommeil profond",desc:"+10 % de gains hors-ligne",        base:14, rate:1.9,  max:20},
-  {id:"g5", name:"Départ rapide",  desc:"Commence avec plus de pièces",    base:16, rate:1.95, max:15},
-  {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:14, rate:1.95, max:10},
-  {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:16, rate:1.9,  max:20},
-  {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:16, rate:1.9,  max:15},
-  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:10, rate:1.8,  max:25},
-  {id:"g10",name:"Insomnie dorée",     desc:"+1 h de limite hors-ligne",    base:22, rate:1.85, max:12}
+  {id:"g1", name:"Aura dorée",     desc:"+40 % de pièces globales",         base:9,  rate:1.85, max:90},
+  {id:"g2", name:"Négociant",      desc:"-3 % sur tous les coûts",          base:12, rate:1.9,  max:40},
+  {id:"g3", name:"Griffe critique",desc:"+2 % de chance de critique (×7)",  base:12, rate:1.88, max:55},
+  {id:"g4", name:"Sommeil profond",desc:"+10 % de gains hors-ligne",        base:14, rate:1.9,  max:45},
+  {id:"g5", name:"Départ rapide",  desc:"Commence avec plus de pièces",    base:16, rate:1.95, max:35},
+  {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:14, rate:1.95, max:25},
+  {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:16, rate:1.9,  max:45},
+  {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:16, rate:1.9,  max:35},
+  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:10, rate:1.8,  max:55},
+  {id:"g10",name:"Insomnie dorée",     desc:"+1 h de limite hors-ligne",    base:22, rate:1.85, max:28},
+  {id:"g11",name:"Danse cosmique",     desc:"+1 % de multiplicateur de Frénésie", base:18, rate:1.92, max:20},
+  {id:"g12",name:"Faveur du destin",   desc:"+1 % de chance de critique",   base:20, rate:1.92, max:20},
+  {id:"g13",name:"Écho doré",          desc:"+2 % de pièces globales",      base:14, rate:1.85, max:20},
+  {id:"g14",name:"Sommeil éternel",    desc:"+3 % de gains hors-ligne",     base:18, rate:1.9,  max:20},
+  {id:"g15",name:"Patience infinie",   desc:"+30 min de limite hors-ligne", base:24, rate:1.9,  max:20}
 ];
 /* CORRECTIF v2.3 : courbes adoucies (le seuil d'entrée a baissé, les premières
    Renaissances rapportent moins de Pattes Célestes qu'avant — sans ça, tout
@@ -1901,6 +1906,7 @@ function globalMult(withBoost){
   m *= collectionMult();                                    // lot 2 : collection                                                          // +2 %/PixelDex
   m *= 1 + 0.50 * pLvl("g1");                                                          // Aura dorée
   m *= 1 + 0.02 * pLvl("g9");                                                          // Cœur généreux
+  m *= 1 + 0.02 * pLvl("g13");                                                         // Écho doré
   m *= 1 + 0.15 * (S.pawPoints||0) / 10;                                               // Pattes Célestes
   if(S.starter === "chat") m *= 1.05;
   /* Biome Ferme : Chien de Berger boost les autres animaux de Ferme possédés */
@@ -1937,7 +1943,7 @@ function farmIdleFlat(){
   return s;
 }
 function critChance(){
-  let c = 0.02*pLvl("g3") + 0.01*pLvl("g7");
+  let c = 0.02*pLvl("g3") + 0.01*pLvl("g7") + 0.01*pLvl("g12");
   if(S.starter === "lapin") c += 0.05;
   if(S.premium.anetetu) c += 0.03;
   c += 0.01 * Math.floor((S.taps||0)/1000);          // Clicker Fou : +1%/1000 tapes cumulées
@@ -1963,11 +1969,11 @@ function perSec(withBoost){
   return Math.floor(s);
 }
 function offlineCap(){
-  let cap = OFFLINE_BASE + pLvl("g10")*3600;
+  let cap = OFFLINE_BASE + pLvl("g10")*3600 + pLvl("g15")*1800;
   OFFLINE_GEM_PACKS.forEach(p=>{ if(S.offGemPacks[p.id]) cap += p.add; });
   return Math.min(OFFLINE_MAX, cap);
 }
-function offlineRate(){ return OFFLINE_RATE * (1 + 0.10*pLvl("g4") + 0.05*pLvl("g8")); }
+function offlineRate(){ return OFFLINE_RATE * (1 + 0.10*pLvl("g4") + 0.05*pLvl("g8") + 0.03*pLvl("g14")); }
 function earn(n){ S.coins += n; S.totalEarned += n; S.lifetimeEarned += n; bump("earned", n); }
 
 /* ============================================================
@@ -2196,7 +2202,7 @@ function doTap(cx, cy){
 const FRENZY_FILL_PER_TAP = 2.6;
 const FRENZY_TAPS = 500;
 function frenzyActive(){ return (S.frenzyTapsLeft||0) > 0; }
-function frenzyMultBase(){ return S.frenzyTier >= 1 ? 6 : 3; }
+function frenzyMultBase(){ return (S.frenzyTier >= 1 ? 6 : 3) * (1 + 0.01*pLvl("g11")); }
 function tickFrenzyGauge(){
   if(frenzyActive()){
     S.frenzyTapsLeft--;
@@ -2733,6 +2739,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.5.0", lines:["Arbre de Renaissance étendu : 5 nouvelles améliorations, plafonds doublés à triplés sur les 10 existantes","Les Pattes Célestes gardent une vraie utilité beaucoup plus longtemps avant d'être toutes maximisées"]},
   {v:"4.4.2", lines:["Herbe refaite en vrai pixel art (brins pointus, hauteurs variées) au lieu de capsules arrondies","Testé en conditions réelles (navigateur simulé) avant envoi cette fois, pas juste visuellement"]},
   {v:"4.4.1", lines:["Correctif important : la grille Cosmétiques plantait sur les cadres, rendant impossible de les retirer","Renard Pionnier redessiné : silhouette triangulaire, museau fin et pointu, vraiment reconnaissable comme renard"]},
   {v:"4.4.0", lines:["Nouvelle catégorie Boutique : Sessions — animaux exclusifs débloqués uniquement par code","Premier animal de session : Renard Pionnier (code PIONNIER1), ×16 sur tout"]},
