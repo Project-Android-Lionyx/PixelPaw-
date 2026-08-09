@@ -791,7 +791,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.13.0";
+const VERSION = "4.13.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1933,21 +1933,21 @@ function openWorlds(){
 }
 
 const PRESTIGE_UPS = [
-  {id:"g1", name:"Aura dorée",     desc:"+40 % de pièces globales",         base:9,  rate:1.85, max:90},
-  {id:"g2", name:"Négociant",      desc:"-3 % sur tous les coûts",          base:12, rate:1.9,  max:40},
-  {id:"g3", name:"Griffe critique",desc:"+2 % de chance de critique (×7)",  base:12, rate:1.88, max:55},
-  {id:"g4", name:"Sommeil profond",desc:"+10 % de gains hors-ligne",        base:14, rate:1.9,  max:45},
-  {id:"g5", name:"Départ rapide",  desc:"Commence avec plus de pièces",    base:16, rate:1.95, max:35},
-  {id:"g6", name:"Alchimiste",     desc:"+1 Pièce de Fusion par fusion",    base:14, rate:1.95, max:25},
-  {id:"g7", name:"Instinct de chasse", desc:"+1 % de chance de critique",   base:16, rate:1.9,  max:45},
-  {id:"g8", name:"Mémoire infinie",    desc:"+5 % de gains hors-ligne",     base:16, rate:1.9,  max:35},
-  {id:"g9", name:"Cœur généreux",      desc:"+2 % de pièces globales",      base:10, rate:1.8,  max:55},
-  {id:"g10",name:"Insomnie dorée",     desc:"+1 h de limite hors-ligne",    base:22, rate:1.85, max:28},
-  {id:"g11",name:"Danse cosmique",     desc:"+1 % de multiplicateur de Frénésie", base:18, rate:1.92, max:20},
-  {id:"g12",name:"Faveur du destin",   desc:"+1 % de chance de critique",   base:20, rate:1.92, max:20},
-  {id:"g13",name:"Écho doré",          desc:"+2 % de pièces globales",      base:14, rate:1.85, max:20},
-  {id:"g14",name:"Sommeil éternel",    desc:"+3 % de gains hors-ligne",     base:18, rate:1.9,  max:20},
-  {id:"g15",name:"Patience infinie",   desc:"+30 min de limite hors-ligne", base:24, rate:1.9,  max:20}
+  {id:"g1", name:"Aura dorée I",       desc:"+40 % de pièces globales par niveau — le plus puissant des 3 rangs \"pièces\"", base:9,  rate:1.85, max:90},
+  {id:"g2", name:"Négociant",          desc:"-3 % sur tous les coûts d'achat",  base:12, rate:1.9,  max:40},
+  {id:"g3", name:"Griffe critique I",  desc:"+2 % de critique par niveau — le plus fort des 3 rangs \"critique\" (×7 sur les dégâts crit)", base:12, rate:1.88, max:55},
+  {id:"g4", name:"Repos doré I",       desc:"+10 % de gains hors-ligne par niveau — le plus fort des 3 rangs \"hors-ligne\"", base:14, rate:1.9,  max:45},
+  {id:"g5", name:"Départ rapide",      desc:"Commence chaque Renaissance avec plus de pièces", base:16, rate:1.95, max:35},
+  {id:"g6", name:"Alchimiste",         desc:"+1 Pièce de Fusion à chaque fusion réussie", base:14, rate:1.95, max:25},
+  {id:"g7", name:"Griffe critique II", desc:"+1 % de critique par niveau — rang intermédiaire, se cumule avec Griffe critique I et III", base:16, rate:1.9,  max:45},
+  {id:"g8", name:"Repos doré II",      desc:"+5 % de gains hors-ligne par niveau — rang intermédiaire, se cumule avec Repos doré I et III", base:16, rate:1.9,  max:35},
+  {id:"g9", name:"Aura dorée II",      desc:"+2 % de pièces globales par niveau — rang intermédiaire, se cumule avec Aura dorée I et III", base:10, rate:1.8,  max:55},
+  {id:"g10",name:"Réserve de temps I", desc:"+1 h de limite hors-ligne par niveau — le plus fort des 2 rangs \"limite\"", base:22, rate:1.85, max:28},
+  {id:"g11",name:"Danse cosmique",     desc:"+1 % de multiplicateur de Frénésie par niveau", base:18, rate:1.92, max:20},
+  {id:"g12",name:"Griffe critique III",desc:"+1 % de critique par niveau — dernier rang, se cumule avec Griffe critique I et II", base:20, rate:1.92, max:20},
+  {id:"g13",name:"Aura dorée III",     desc:"+2 % de pièces globales par niveau — dernier rang, se cumule avec Aura dorée I et II", base:14, rate:1.85, max:20},
+  {id:"g14",name:"Repos doré III",     desc:"+3 % de gains hors-ligne par niveau — dernier rang, se cumule avec Repos doré I et II", base:18, rate:1.9,  max:20},
+  {id:"g15",name:"Réserve de temps II",desc:"+30 min de limite hors-ligne par niveau — se cumule avec Réserve de temps I", base:24, rate:1.9,  max:20}
 ];
 /* CORRECTIF v2.3 : courbes adoucies (le seuil d'entrée a baissé, les premières
    Renaissances rapportent moins de Pattes Célestes qu'avant — sans ça, tout
@@ -2165,15 +2165,22 @@ function pLvl(id){ return S.prest[id]||0; }
 function costMult(){ return Math.max(0.4, 1 - 0.03*pLvl("g2")); }          // Négociant
 function upCost(u){ return Math.floor(tieredCost(u.base, u.rate, S.up[u.id]||0) * costMult()); }
 let buyQty = 1;
-function bulkCalc(base, rate, curLvl){
+function bulkCalcFn(costFn, curLvl, afford, maxLvl){
   let lvl = curLvl, total = 0, count = 0;
   const cap = buyQty === "max" ? 1000 : buyQty;
-  while(count < cap){
-    const c = Math.floor(tieredCost(base, rate, lvl) * costMult());
-    if(buyQty === "max" && S.coins < total + c) break;
+  const ceiling = maxLvl===undefined ? Infinity : maxLvl;
+  while(count < cap && lvl < ceiling){
+    const c = costFn(lvl);
+    if(buyQty === "max" && afford < total + c) break;
     total += c; lvl++; count++;
   }
   return {count, total};
+}
+function bulkCalc(base, rate, curLvl){
+  return bulkCalcFn(lvl=>Math.floor(tieredCost(base, rate, lvl) * costMult()), curLvl, S.coins);
+}
+function bulkCalcPrest(p){
+  return bulkCalcFn(lvl=>Math.floor(p.base * Math.pow(p.rate, lvl)), pLvl(p.id), S.pawPoints, p.max);
 }
 /* Croissance du coût par paliers : douce jusqu'au niveau 50, puis nettement plus
    raide (50-99), puis très raide au-delà de 100 — le "mur" décrit dans le document,
@@ -3005,12 +3012,13 @@ function openPrestige(){
   let tree = "";
   let lvlSum = 0, maxSum = 0;
   PRESTIGE_UPS.forEach(p=>{
-    const lvl = pLvl(p.id), c = prestCost(p), max = lvl >= p.max;
+    const lvl = pLvl(p.id), max = lvl >= p.max;
+    const {count, total} = bulkCalcPrest(p);
     lvlSum += lvl; maxSum += p.max;
     tree += '<div class="row"><div class="thumb">👑</div><div class="rInfo">' +
       '<div class="rName">'+p.name+' · niv. '+lvl+'/'+p.max+'</div><div class="rSub">'+p.desc+'</div></div>' +
-      '<button class="rBtn pawBtn" data-p="'+p.id+'"'+((max||S.pawPoints<c)?" disabled":"")+'>' +
-      (max ? "MAX" : "🐾<br>"+fmt(c)) + '</button></div>';
+      '<button class="rBtn pawBtn" data-p="'+p.id+'"'+((max||count===0||S.pawPoints<total)?" disabled":"")+'>' +
+      (max ? "MAX" : "🐾<br>"+fmt(total)+(count>1?" ×"+count:"")) + '</button></div>';
   });
   openModal(
     '<h2>Renaissance</h2>' +
@@ -3018,21 +3026,34 @@ function openPrestige(){
     '<div class="big">'+fmt(S.pawPoints)+' Pattes Célestes</div>' +
     '<p style="margin-bottom:8px">Arbre : '+lvlSum+'/'+maxSum+' niveaux au total</p>' +
     '<p>Renaissances : '+S.rebirths+'<br>Cumul : '+fmt(S.totalEarned)+' pièces</p>' +
-    tree +
     (g > 0
       ? '<button class="mBtn" id="mReb">Renaître · +'+fmt(g)+' 🐾</button>'
       : '<button class="mBtn" disabled>Requiert '+fmt(PRESTIGE_MIN)+' pièces cumulées</button>') +
+    '<div class="qtyRow" id="qtyRowPrest">' +
+      '<button class="qtyBtn'+(buyQty===1?' on':'')+'" data-q="1">×1</button>' +
+      '<button class="qtyBtn'+(buyQty===5?' on':'')+'" data-q="5">×5</button>' +
+      '<button class="qtyBtn'+(buyQty===10?' on':'')+'" data-q="10">×10</button>' +
+      '<button class="qtyBtn'+(buyQty===50?' on':'')+'" data-q="50">×50</button>' +
+      '<button class="qtyBtn'+(buyQty==="max"?' on':'')+'" data-q="max">MAX</button>' +
+    '</div>' +
+    tree +
     '<p style="margin-top:10px">Perdu : pièces, animaux classiques, améliorations.<br>Gardé : gemmes, races premium, pass, arbre de Renaissance, PixelDex, limites hors-ligne.</p>' +
     '<button class="mBtn ghost" id="mNo">Fermer</button>'
   );
   paint($("#pawBig"),"paw");
   $("#mNo").onclick = closeModal;
+  modal.querySelectorAll("#qtyRowPrest .qtyBtn").forEach(b=>{
+    b.onclick = ()=>{
+      buyQty = b.dataset.q === "max" ? "max" : parseInt(b.dataset.q,10);
+      sfx("tab"); openPrestige();
+    };
+  });
   modal.querySelectorAll("[data-p]").forEach(b=>{
     b.onclick = ()=>{
       const p = PRESTIGE_UPS.find(x=>x.id === b.dataset.p);
-      const c = prestCost(p);
-      if(pLvl(p.id) >= p.max || S.pawPoints < c) return;
-      S.pawPoints -= c; S.prest[p.id] = pLvl(p.id)+1;
+      const {count, total} = bulkCalcPrest(p);
+      if(count === 0 || S.pawPoints < total) return;
+      S.pawPoints -= total; S.prest[p.id] = pLvl(p.id)+count;
       const scroll = modal.scrollTop;
       sfx("good"); save(); renderHUD(); refreshLists(); openPrestige();
       modal.scrollTop = scroll;
@@ -3070,6 +3091,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.13.1", lines:["Achat en masse étendu à l'arbre de Renaissance (Pattes Célestes) — il n'y était pas encore","Arbre de Renaissance renommé en rangs clairs (Aura dorée I/II/III, Griffe critique I/II/III...) — fini les noms qui cachaient des doublons"]},
   {v:"4.13.0", lines:["Tuto léger pour les nouveaux joueurs : 4 bulles courtes après le choix du starter (tape, améliorations, animaux, gemmes)","Ne s'affiche qu'une seule fois, jamais aux joueurs qui reviennent"]},
   {v:"4.12.1", lines:["Grande célébration (anneau doré, confettis, secousse) sur succès débloqué, nouvel animal et Renaissance","Même niveau d'énergie que la tape, plus les moments importants ne font pas pâle figure"]},
   {v:"4.12.0", lines:["Achat en masse : sélecteur ×1/×5/×10/×50/MAX en haut d'Améliorations, s'applique aux tapes, au passif et aux upgrades par animal","MAX calcule automatiquement ce que tu peux vraiment te permettre"]},
