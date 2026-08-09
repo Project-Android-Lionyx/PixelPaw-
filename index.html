@@ -752,7 +752,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.11.0";
+const VERSION = "4.11.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2998,6 +2998,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.11.1", lines:["Herbe et fleurs repositionnées sur les côtés uniquement — ne tombent plus sur le visage de l'animal"]},
   {v:"4.11.0", lines:["Analyse vidéo complète : décor caché par le bouton Menus en mode replié, corrigé (repositionné)","Animaux/Boutique/Dex ont maintenant un vrai voile sombre derrière, comme la Téléportation — fini l'effet deux menus","Texte trompeur «paiement simulé» corrigé alors que les vrais liens PayPal fonctionnaient déjà"]},
   {v:"4.10.1", lines:["Correctif : le décor restait ancré à un pourcentage de la scène, se déplaçait mal quand le menu s'ouvrait/repliait","Allègement des performances : moins de touffes d'herbe animées en continu, moins de particules par tape"]},
   {v:"4.10.0", lines:["Tape bien plus satisfaisante : écrasement plus marqué avec rebond, flash d'impact, pièces qui explosent plus loin","Les critiques secouent maintenant la scène brièvement — vraie différence ressentie, pas juste un chiffre plus gros"]},
@@ -4086,7 +4087,7 @@ function buildDecor(){
   const cvR = document.createElement("canvas"); paint(cvR, "bushdeco"); br.appendChild(cvR);
   d.appendChild(bl); d.appendChild(br);
   // herbe en grappes irregulieres plutot qu'une ligne parfaitement reguliere
-  const clusters = [[10,2],[28,2],[46,3],[64,2],[82,2]];
+  const clusters = [[6,3],[18,2],[74,2],[86,3]];
   clusters.forEach(([cx,count])=>{
     for(let i=0;i<count;i++){
       const g = document.createElement("div");
@@ -4100,7 +4101,7 @@ function buildDecor(){
     }
   });
   // fleurs eparpillees au ras du sol, entre les touffes
-  [14,32,50,68,84].forEach(x=>{
+  [10,22,78,90].forEach(x=>{
     const f = document.createElement("div");
     f.className = "flowerDeco";
     f.style.left = (x + rnd(5))+"%";
