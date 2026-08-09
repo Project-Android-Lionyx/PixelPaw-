@@ -725,7 +725,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.2.0";
+const VERSION = "4.2.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -978,10 +978,10 @@ siamois:{size:24,pal:{P:"#F2E4C4",D:"#D9C6A0",M:"#5E4636",K:"#2B2320",B:"#8FD9F2
 "...PPMMMMMMMMMMMMMMMP...",
 "...PPMMKBKMMMMMKBKMMP...",
 "...PPMMKKKMMMMMKKKMMP...",
-"...PPMMMMMNNNNMMMMMMP...",
-"...PPMMMMMNNNNMMMMMMP...",
-"...PPMMMMMNKNNMMMMMMP...",
 "...PPMMMMMMMMMMMMMMMP...",
+"...PPMMMMMMNNMMMMMMMP...",
+"...PPMMMMMMMMMMMMMMMP...",
+"...PPMMMMMMKMMMMMMMMP...",
 "...DDDDDDDDDDDDDDDDDD...",
 "...DDDDDDDDDDDDDDDDDD...",
 "...DDDDDDDDDDDDDDDDDD...",
@@ -1006,7 +1006,7 @@ mainecoon:{size:24,pal:{P:"#B08858",D:"#8A6438",S:"#E8D0AC",K:"#2B2320",W:"#FFFF
 "..PPPPKKKPPPPPPKKKPPPP..",
 "..PPPPPPPSSSSSSPPPPPPP..",
 "..PPPPPPPSSSSSSPPPPPPP..",
-"..PPPPPPPSSNSSSPPPPPPP..",
+"..PPPPPPPSSNNSSPPPPPPP..",
 "..PPPPPPPSSKSSSPPPPPPP..",
 "..DDDDDDDSSSSSSDDDDDDD..",
 "..DDDDDDDDDDDDDDDDDDDD..",
@@ -1030,10 +1030,10 @@ sphynx:{size:24,pal:{P:"#D4B8A0",D:"#B4906E",S:"#E8CFB8",K:"#2B2320",Y:"#D4E84A"
 "....PPKYKPPPPPPKYKPP....",
 "....PPKKKPPPPPPKKKPP....",
 "....PPKKKPPPPPPKKKPP....",
-"....PPPPPPNNNNPPPPPP....",
-"....PPPPPPNNNNPPPPPP....",
-"....PPPPPPNKNNPPPPPP....",
-"....PPPDDDNNNNDDDPPP....",
+"....PPPPPPPPPPPPPPPP....",
+"....PPPPPPPNNPPPPPPP....",
+"....PPPPPPPPPPPPPPPP....",
+"....PPPDDDPKPPDDDPPP....",
 "....DDDDDDDDDDDDDDDD....",
 "....DDDDDDDDDDDDDDDD....",
 "....DDDDDDDDDDDDDDDD....",
@@ -1067,7 +1067,7 @@ shiba:{size:24,pal:{P:"#E8A64E",D:"#C4823A",S:"#FFF3E0",K:"#3B2B20",W:"#FFFFFF"}
 ".....WWWW......WWWW.....",
 ".....WWWW......WWWW....."]},
 
-bouledogue:{size:24,pal:{P:"#D9C4A0",D:"#B89A6E",S:"#F2E4C8",K:"#2B2320",W:"#FFFFFF",H:"#8A6E52"},px:[
+bouledogue:{size:24,pal:{P:"#D9C4A0",D:"#B89A6E",S:"#F2E4C8",K:"#2B2320",W:"#FFFFFF",N:"#3B2B20",H:"#8A6E52"},px:[
 "........................",
 "........................",
 "..DDDDDDDD....DDDDDDDD..",
@@ -1084,10 +1084,10 @@ bouledogue:{size:24,pal:{P:"#D9C4A0",D:"#B89A6E",S:"#F2E4C8",K:"#2B2320",W:"#FFF
 "..PPPPKKKPPPPPPKKKPPPP..",
 "..PPPPKKKPPPPPPKKKPPPP..",
 "..PPPPPSSSSSSSSSSPPPPP..",
-"..PPPPPSSSSSSSSSSPPPPP..",
-"..PPPPPSSSKSSKSSSPPPPP..",
-"..DDDDDSSSSSSSSSSDDDDD..",
-"..DDDDDSSSSSSSSSSDDDDD..",
+"..PPPPPSSNNNNNNSSPPPPP..",
+"..PPPPPDDNNNNNNDDPPPPP..",
+"..DDDDDDDNNNNNNDDDDDDD..",
+"..DDDDDSSSKSSSSSSDDDDD..",
 "..DDDDDDDDDDDDDDDDDDDD..",
 "....HHHH........HHHH....",
 "....HHHH........HHHH....",
@@ -2475,6 +2475,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.2.1", lines:["Museaux propres à chaque espèce : Bouledogue (court, plat, plissé) et les 3 chats (petit nez triangulaire au lieu du museau générique)"]},
   {v:"4.2.0", lines:["9 animaux premium redessinés en 24×24 : Siamois, Maine Coon, Sphynx, Shiba, Bouledogue, Berger Allemand, Cochon Doré, Lama, Singe","Chacun vérifié visuellement avant envoi, retouché 2 fois (Maine Coon, Singe) avant validation"]},
   {v:"4.1.0", lines:["Les couleurs des animaux s'adaptent maintenant au thème actif (Dark/GameBoy/Cyberpunk), pas que l'interface","Dragon : museau allongé, yeux en amande dorés, cornes incurvées — nouvel essai"]},
   {v:"4.0.2", lines:["Dragon : ailes vraiment angulaires (ne ressemble plus à des oreilles d'éléphant)","Perruche : vraie houppe pointue façon calopsite, avec la joue orange caractéristique"]},
