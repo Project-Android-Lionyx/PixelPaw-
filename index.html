@@ -791,7 +791,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.13.1";
+const VERSION = "4.14.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2749,14 +2749,16 @@ function refreshLists(){
     else if(own){ setTxt(r._btn,"CHOISIR"); r._btn.className="rBtn mintBtn"; setDis(r._btn,false); }
     else { setTxt(r._btn,"🔓<br>"+fmt(cost)); r._btn.className="rBtn"; setDis(r._btn, S.coins < cost); }
   });
-  const upd = (o, suf)=>{
+  const upd = (o, suf, curTotal)=>{
     const lvl = S.up[o.u.id]||0;
     const {count, total} = bulkCalc(o.u.base, o.u.rate, lvl);
-    setTxt(o.r._sub, "Niv. "+lvl+" · +"+fmt(o.u.add)+suf);
+    const gain = count * o.u.add * globalMult();
+    const pctTxt = curTotal > 0.5 ? "(+"+Math.max(0.1,(gain/curTotal*100)).toFixed(1)+"% de ton gain)" : "(première source)";
+    setTxt(o.r._sub, "Niv. "+lvl+" · +"+fmt(o.u.add)+suf+" "+pctTxt);
     setTxt(o.r._btn, "💰<br>"+fmt(total)+(count>1?" ×"+count:"")); setDis(o.r._btn, count===0 || S.coins < total);
   };
-  R.tap.forEach(o=>upd(o," / tape"));
-  R.idle.forEach(o=>upd(o," / sec"));
+  R.tap.forEach(o=>upd(o," / tape", perTap()));
+  R.idle.forEach(o=>upd(o," / sec", perSec(false)));
 
   R.off.forEach(o=>{
     {
@@ -3091,6 +3093,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.14.0", lines:["Chaque amélioration affiche maintenant le vrai pourcentage qu'elle ajoute à ton gain actuel — plus facile de voir ce qui vaut le coup","x50 et MAX vérifiés explicitement sur toutes les catégories (par tape, par animal, Renaissance)"]},
   {v:"4.13.1", lines:["Achat en masse étendu à l'arbre de Renaissance (Pattes Célestes) — il n'y était pas encore","Arbre de Renaissance renommé en rangs clairs (Aura dorée I/II/III, Griffe critique I/II/III...) — fini les noms qui cachaient des doublons"]},
   {v:"4.13.0", lines:["Tuto léger pour les nouveaux joueurs : 4 bulles courtes après le choix du starter (tape, améliorations, animaux, gemmes)","Ne s'affiche qu'une seule fois, jamais aux joueurs qui reviennent"]},
   {v:"4.12.1", lines:["Grande célébration (anneau doré, confettis, secousse) sur succès débloqué, nouvel animal et Renaissance","Même niveau d'énergie que la tape, plus les moments importants ne font pas pâle figure"]},
@@ -4567,8 +4570,11 @@ function refreshAnimalUps(){
     const r = RAU[u.id]; if(!r) return;
     const unlocked = auUnlocked(u), lvl = S.aup[u.id]||0;
     const {count, total} = bulkCalc(u.base, u.rate, lvl);
+    const curSec = perSec(false);
+    const gain = count * u.add * globalMult();
+    const pctTxt = curSec > 0.5 ? "(+"+Math.max(0.1,(gain/curSec*100)).toFixed(1)+"%)" : "(première source)";
     setCls(r, "locked", !unlocked);
-    setTxt(r._sub, unlocked ? (petById(u.animal).name+" · niv. "+lvl+" · +"+fmt(u.add)+" / sec")
+    setTxt(r._sub, unlocked ? (petById(u.animal).name+" · niv. "+lvl+" · +"+fmt(u.add)+" / sec "+pctTxt)
                              : (petById(u.animal).name+" · nécessite le palier précédent"));
     setTxt(r._btn, "💰<br>"+fmt(total)+(count>1?" ×"+count:"")); setDis(r._btn, !unlocked || count===0 || S.coins < total);
   });
