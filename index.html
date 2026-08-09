@@ -482,6 +482,10 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   margin-top:10px;border:2px solid var(--ink);border-radius:10px;background:var(--card);
   padding:8px 14px;font-size:8px;letter-spacing:.5px;display:none;
 }
+#homeFeedback{
+  margin-top:8px;border:2px solid var(--ink);border-radius:10px;background:var(--card);
+  padding:8px 14px;font-size:8px;letter-spacing:.5px;display:none;
+}
 .wheelIcon{position:absolute;top:50%;left:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
   display:flex;align-items:center;justify-content:center;font-size:14px;pointer-events:none;
   text-shadow:0 1px 0 rgba(255,255,255,.5)}
@@ -754,6 +758,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
       <div id="homeBarTxt">Chargement…</div>
       <button id="homePlay">▶ JOUER</button>
       <button id="homeNews">📰 Nouveautés</button>
+      <button id="homeFeedback">✉️ Un souci ? Une idée ?</button>
     </div>
   </div>
 
@@ -794,7 +799,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.14.2";
+const VERSION = "4.15.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -2439,6 +2444,8 @@ function askNotifs(){
 const $ = s => document.querySelector(s);
 const app=$("#app"), coinVal=$("#coinVal"), gemVal=$("#gemVal"), cpsLine=$("#cpsLine");
 const petCv=$("#pet"), petWrap=$("#petWrap"), petLabel=$("#petLabel"), rarityTag=$("#rarityTag");
+petLabel.addEventListener("click", e=>{ e.stopPropagation(); openRename(); });
+petLabel.style.cursor = "pointer";
 const fx=$("#fx"), stage=$("#stage"), bubble=$("#bubble"), toastEl=$("#toast");
 const bannerEl=$("#banner"), bannerTxt=$("#bannerTxt"), bannerBtn=$("#bannerBtn");
 const veil=$("#veil"), modal=$("#modal"), flash=$("#flash");
@@ -2586,12 +2593,71 @@ function renderPet(){
   paint(petCv, p.id);
   drawCosmOverlay(petCv);
   applyFrame();
-  petLabel.textContent = p.name;
+  const pal = S.petPalette && S.petPalette[p.id];
+  petCv.style.filter = pal && PET_PALETTES[pal] ? PET_PALETTES[pal] : "";
+  petLabel.textContent = (S.petNames && S.petNames[p.id]) || p.name;
   const r = RARITIES[p.rar];
   rarityTag.textContent = r.name;
   rarityTag.style.background = r.col;
   S.dex[p.id] = S.dex[p.id] || 1;
 }
+function openRename(){
+  const p = currentPet();
+  const cur = (S.petNames && S.petNames[p.id]) || p.name;
+  const palettes = [
+    {id:"defaut", name:"Défaut", css:""},
+    {id:"dore",   name:"Doré",    css:"sepia(.5) saturate(2) hue-rotate(-10deg) brightness(1.05)"},
+    {id:"glace",  name:"Glacé",   css:"saturate(1.3) hue-rotate(150deg) brightness(1.05)"},
+    {id:"toxique",name:"Toxique", css:"saturate(1.8) hue-rotate(70deg)"},
+    {id:"rose",   name:"Rosé",    css:"saturate(1.4) hue-rotate(-60deg)"},
+    {id:"sombre", name:"Sombre",  css:"saturate(1.2) brightness(.75) contrast(1.15)"},
+    {id:"arc",    name:"Prisme",  css:"saturate(2.2) hue-rotate(200deg) contrast(1.1)"}
+  ];
+  const curPal = (S.petPalette && S.petPalette[p.id]) || "defaut";
+  let swatches = '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0 16px">';
+  palettes.forEach(pl=>{
+    swatches += '<button class="qtyBtn'+(pl.id===curPal?' on':'')+'" data-pal="'+pl.id+'" style="flex:0 0 30%">'+pl.name+'</button>';
+  });
+  swatches += '</div>';
+  openModal(
+    '<h2>Personnaliser</h2>' +
+    '<input id="renameInput" maxlength="16" value="'+cur.replace(/"/g,"&quot;")+'" ' +
+    'style="width:100%;padding:12px;font-family:inherit;font-size:12px;text-align:center;' +
+    'border:3px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);margin:10px 0">' +
+    '<p style="margin-top:6px;font-size:8px;color:var(--ink-soft)">🎨 PALETTE</p>' +
+    swatches +
+    '<button class="mBtn" id="mSaveName">Valider</button>' +
+    '<button class="mBtn ghost" id="mResetName">Réinitialiser</button>' +
+    '<button class="mBtn ghost" id="mNo">Annuler</button>'
+  );
+  let chosenPal = curPal;
+  const input = document.getElementById("renameInput");
+  input.focus(); input.select();
+  modal.querySelectorAll("[data-pal]").forEach(b=>{
+    b.onclick = ()=>{
+      chosenPal = b.dataset.pal;
+      modal.querySelectorAll("[data-pal]").forEach(x=>setCls(x,"on", x===b));
+      sfx("tab");
+    };
+  });
+  document.getElementById("mSaveName").onclick = ()=>{
+    const v = input.value.trim();
+    S.petNames = S.petNames || {}; S.petPalette = S.petPalette || {};
+    if(v) S.petNames[p.id] = v; else delete S.petNames[p.id];
+    if(chosenPal === "defaut") delete S.petPalette[p.id]; else S.petPalette[p.id] = chosenPal;
+    save(); renderPet(); closeModal(); sfx("good");
+  };
+  document.getElementById("mResetName").onclick = ()=>{
+    S.petNames = S.petNames || {}; S.petPalette = S.petPalette || {};
+    delete S.petNames[p.id]; delete S.petPalette[p.id];
+    save(); renderPet(); closeModal(); sfx("tab");
+  };
+  document.getElementById("mNo").onclick = closeModal;
+}
+const PET_PALETTES = {dore:"sepia(.5) saturate(2) hue-rotate(-10deg) brightness(1.05)",
+  glace:"saturate(1.3) hue-rotate(150deg) brightness(1.05)", toxique:"saturate(1.8) hue-rotate(70deg)",
+  rose:"saturate(1.4) hue-rotate(-60deg)", sombre:"saturate(1.2) brightness(.75) contrast(1.15)",
+  arc:"saturate(2.2) hue-rotate(200deg) contrast(1.1)"};
 function applyFrame(){
   const id = S.equip && S.equip.cadre;
   const c = COSMETICS.find(x=>x.id === id);
@@ -3096,6 +3162,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.15.0", lines:["Tape sur le nom de ton animal pour le renommer et lui choisir une palette de couleurs (7 styles)","Bouton de retour sur l'écran d'accueil — envoie un mail direct avec les infos de la partie"]},
   {v:"4.14.2", lines:["Bouton Menus déplacé en position fixe tout en fin de page — plus fiable, plus d'ambiguïté d'empilement possible","Devrait régler le souci de taps multiples et le décalage visuel"]},
   {v:"4.14.1", lines:["Correctif : les pièces/gemmes/FC pouvaient s'afficher tronquées («2.00...») au lieu du nombre complet avec sa lettre","HUD réorganisé en deux lignes : stats en haut, boutons en dessous — plus propre, plus de place pour les grands nombres"]},
   {v:"4.14.0", lines:["Chaque amélioration affiche maintenant le vrai pourcentage qu'elle ajoute à ton gain actuel — plus facile de voir ce qui vaut le coup","x50 et MAX vérifiés explicitement sur toutes les catégories (par tape, par animal, Renaissance)"]},
@@ -4716,6 +4783,7 @@ function startHome(){
       txt.textContent = "Prêt !";
       document.getElementById("homePlay").style.display = "block";
       document.getElementById("homeNews").style.display = "block";
+      document.getElementById("homeFeedback").style.display = "block";
     }
     bar.style.width = p+"%";
   }, 130);
@@ -4740,6 +4808,28 @@ function startHome(){
     });
     html += '<button class="mBtn ghost" id="mNo">Fermer</button>';
     openModal(html);
+    document.getElementById("mNo").onclick = closeModal;
+  });
+  document.getElementById("homeFeedback").addEventListener("click", ()=>{
+    openModal(
+      '<h2>✉️ Un souci ? Une idée ?</h2>' +
+      '<p style="margin-bottom:10px">Décris ce que tu as vu — je lis tout, même les petits détails.</p>' +
+      '<textarea id="fbText" rows="5" maxlength="600" placeholder="Ex : le bouton X ne réagit pas, ou une idée de nouvel animal..." ' +
+      'style="width:100%;padding:10px;font-family:inherit;font-size:11px;border:3px solid var(--ink);' +
+      'border-radius:12px;background:var(--card);color:var(--ink);resize:none;margin-bottom:12px"></textarea>' +
+      '<button class="mBtn" id="mSendFb">Envoyer par mail</button>' +
+      '<button class="mBtn ghost" id="mNo">Annuler</button>'
+    );
+    document.getElementById("fbText").focus();
+    document.getElementById("mSendFb").onclick = ()=>{
+      const txt = document.getElementById("fbText").value.trim() || "(pas de message)";
+      const debugInfo = "\n\n---\nVersion: "+VERSION+"\nAnimal actif: "+(S.animal||"?")+
+        "\nPièces: "+fmt(S.coins)+"\nGemmes: "+fmt(S.gems)+"\nRenaissances: "+(S.rebirths||0);
+      const subject = encodeURIComponent("Pixel Paw Idle — retour v"+VERSION);
+      const body = encodeURIComponent(txt + debugInfo);
+      location.href = "mailto:pixelpaw.contact@gmail.com?subject="+subject+"&body="+body;
+      closeModal();
+    };
     document.getElementById("mNo").onclick = closeModal;
   });
 }
