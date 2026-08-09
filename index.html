@@ -98,7 +98,13 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   flex:1 1 auto;position:relative;display:flex;flex-direction:column;
   align-items:center;justify-content:center;overflow:hidden;min-height:0;
 }
-#decor{position:absolute;bottom:6%;left:0;right:0;height:34px;pointer-events:none;z-index:1;overflow:hidden}
+#decor{position:absolute;bottom:2%;left:0;right:0;height:70px;pointer-events:none;z-index:1;overflow:visible}
+.bushDeco{position:absolute;bottom:-4px;width:66px;height:66px}
+.bushDeco canvas{width:100%;height:100%}
+.bushDeco.left{left:-14px}
+.bushDeco.right{right:-14px;transform:scaleX(-1)}
+.flowerDeco{position:absolute;bottom:2px;width:16px;height:16px}
+.flowerDeco canvas{width:100%;height:100%}
 .grassTuft{position:absolute;bottom:0;width:20px;height:28px;transform-origin:bottom center;animation:swayGrass 3s ease-in-out infinite}
 .grassTuft canvas{width:100%;height:100%}
 .grassTuft:nth-child(4n){animation-duration:2.4s}
@@ -185,7 +191,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   justify-content:space-between;padding:2px 0 6px;margin-bottom:2px;
 }
 #panelGrip{width:44px;height:5px;border-radius:3px;background:var(--ink);opacity:.25;margin:0 auto}
-#panelClose{font-size:13px;width:26px;height:26px;display:grid;place-items:center;border:2px solid var(--ink);border-radius:8px;background:var(--card)}
+#panelClose{font-size:13px;line-height:1;width:26px;height:26px;display:grid;place-items:center;border:2px solid var(--ink);border-radius:8px;background:var(--card)}
 #panelClose:active{transform:translateY(2px)}
 /* état réduit : le panneau et les onglets disparaissent */
 #app.zen #panel{height:0;min-height:0;padding-top:0;padding-bottom:0;opacity:0;overflow:hidden;border-width:0}
@@ -195,7 +201,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #app.zen #banner{display:none}
 #reopen{
   display:none;position:absolute;left:12px;right:12px;
-  bottom:calc(10px + env(safe-area-inset-bottom));z-index:12;
+  bottom:calc(10px + env(safe-area-inset-bottom));z-index:50;
   background:var(--cream);border:3px solid var(--ink);border-radius:20px;
   box-shadow:var(--pop-sm);padding:12px 18px;font-size:10px;letter-spacing:1px;
 }
@@ -247,10 +253,10 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 .rarityDot{position:absolute;top:1px;right:1px;width:8px;height:8px;border-radius:2px;border:1px solid var(--ink)}
 
 /* ---------- DEX ---------- */
-#dexGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+#dexGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;contain:layout style}
 .dexCell{
   aspect-ratio:1;border:3px solid var(--ink);border-radius:10px;background:var(--card);
-  display:grid;place-items:center;position:relative;overflow:hidden;
+  display:grid;place-items:center;position:relative;overflow:hidden;contain:layout style paint;
 }
 .dexCell canvas{width:74%;height:74%}
 .dexCell.unknown{background:var(--lock)}
@@ -735,7 +741,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.9.0";
+const VERSION = "4.9.1";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -1251,6 +1257,36 @@ singe:{size:24,pal:{P:"#8A6244",D:"#6B4A32",S:"#E8C9A0",K:"#2B2018",W:"#FFFFFF",
 "......HHHH....HHHH......"]},
 
 /* --- Biome Ferme : silhouettes distinctes, pas des recolorations --- */
+flowerdeco:{size:14,pal:{P:"#FF9FC4",Y:"#FFE066",D:"#5C7A3A"},px:[
+"..............",
+"..............",
+"..............",
+"......D.......",
+".....PYP......",
+"......D.......",
+"..............",
+".......D......",
+"......PYP.....",
+".......D......",
+"..............",
+"..............",
+"..............",
+".............."]},
+bushdeco:{size:14,pal:{D:"#5C7A3A",L:"#8FBC5A"},px:[
+"..............",
+"..............",
+"..............",
+"...LLLLLLLL...",
+".DDLLLLLLLLDD.",
+"DDDDDDDDDDDDDD",
+"DLLLLDDDDLLLLD",
+"DLLLLDDDDLLLLD",
+"DLLLLDDDDLLLLD",
+"DDDDDDDDDDDDDD",
+".DDDDDDDDDDDD.",
+"..............",
+"..............",
+".............."]},
 grass:{size:14,pal:{D:"#5C7A3A",G:"#8FBC5A"},px:[
 "..............","..............","......G.......","......G.......",
 "....G.G.G.....","....G.G.G.....","....D.G.D.....","....D.G.D.....",
@@ -2944,6 +2980,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.9.1", lines:["Décor enrichi façon Pokémon : buissons aux deux coins, herbe en grappes irrégulières, fleurs éparpillées","Correctifs : z-index du bouton Menus renforcé, croix du panneau recentrée, défilement du Dex optimisé"]},
   {v:"4.9.0", lines:["Navigation repensée : Animaux/Boutique/Dex s'ouvrent en fenêtre depuis le HUD, comme la Téléportation","Le bas ne garde que 3 onglets (Améliorations/Labo/Quotidien) · bouton Menus pleine largeur"]},
   {v:"4.8.2", lines:["Correctif : bloc rose plein sur l'herbe (reste de l'ancien CSS), retiré","Correctif : badge du nom de l'animal bloqué visible sans texte — rendu permanent au lieu d'une animation qui se bloquait"]},
   {v:"4.8.1", lines:["Menu du bas agrandi (38% -> 47% de l'écran)"]},
@@ -4018,16 +4055,36 @@ setInterval(moodTick, 2600);
 function buildDecor(){
   const d = document.getElementById("decor"); if(!d) return;
   d.innerHTML = "";
-  for(let i=0;i<9;i++){
-    const g = document.createElement("div");
-    g.className = "grassTuft";
-    g.style.left = (4 + i*10 + rnd(5))+"%";
-    g.style.animationDelay = (Math.random()*2.5)+"s";
+  // buissons aux coins, cadrent la scene comme un decor Pokemon
+  const bl = document.createElement("div"); bl.className = "bushDeco left";
+  const br = document.createElement("div"); br.className = "bushDeco right";
+  const cvL = document.createElement("canvas"); paint(cvL, "bushdeco"); bl.appendChild(cvL);
+  const cvR = document.createElement("canvas"); paint(cvR, "bushdeco"); br.appendChild(cvR);
+  d.appendChild(bl); d.appendChild(br);
+  // herbe en grappes irregulieres plutot qu'une ligne parfaitement reguliere
+  const clusters = [[8,3],[24,2],[40,4],[56,2],[72,3],[88,2]];
+  clusters.forEach(([cx,count])=>{
+    for(let i=0;i<count;i++){
+      const g = document.createElement("div");
+      g.className = "grassTuft";
+      g.style.left = (cx + i*4.5 + rnd(3))+"%";
+      g.style.animationDelay = (Math.random()*2.5)+"s";
+      const cv = document.createElement("canvas");
+      paint(cv, "grass");
+      g.appendChild(cv);
+      d.appendChild(g);
+    }
+  });
+  // fleurs eparpillees au ras du sol, entre les touffes
+  [14,32,50,68,84].forEach(x=>{
+    const f = document.createElement("div");
+    f.className = "flowerDeco";
+    f.style.left = (x + rnd(5))+"%";
     const cv = document.createElement("canvas");
-    paint(cv, "grass");
-    g.appendChild(cv);
-    d.appendChild(g);
-  }
+    paint(cv, "flowerdeco");
+    f.appendChild(cv);
+    d.appendChild(f);
+  });
 }
 let _lastBug = "";
 function maybeSpawnBug(){
