@@ -813,7 +813,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.16.2";
+const VERSION = "4.16.3";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -3227,6 +3227,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.16.3", lines:["Vraie cause trouvée : l'oeuf se déclenchait tout seul au démarrage selon l'emplacement resté actif en mémoire, bloquant tout l'écran avant même de pouvoir choisir","Le sélecteur d'emplacements est maintenant toujours accessible en premier — plus aucun risque de tomber sur le mauvais emplacement"]},
   {v:"4.16.2", lines:["Vrai correctif : après avoir choisi le starter, le jeu entre maintenant automatiquement en jeu — plus besoin de retaper JOUER une deuxième fois","C'était la cause du blocage et de l'oeuf qui semblait rester affiché"]},
   {v:"4.16.1", lines:["Correctif : une nouvelle partie relance maintenant vraiment le tuto (oeuf + starter), au lieu d'afficher juste le Cochon","Gemmes et achats en gemmes partagés entre les 4 emplacements — jamais à repayer en créant une nouvelle partie","Suppression d'un emplacement avec confirmation, bouton Passer sur le tuto"]},
   {v:"4.16.0", lines:["4 emplacements de sauvegarde sur l'écran d'accueil — ta partie actuelle est passée automatiquement en Emplacement 1, rien de perdu","Chaque emplacement affiche un résumé (animal, pièces, renaissances) avant de choisir"]},
@@ -5019,7 +5020,8 @@ function enterGame(){
     gb.classList.remove("on"); void gb.offsetWidth; gb.classList.add("on");
   }, 420);
 }
-checkFtue();
+// le tuto/oeuf ne se declenche plus tout seul au demarrage : le selecteur d'emplacements
+// reste toujours accessible en premier, c'est l'appui sur JOUER qui decide ensuite.
 if(S.notifs) scheduleNotifs();
 /* l'audio ne peut démarrer qu'après un geste : on attend la première tape */
 document.addEventListener("pointerdown", function once(){
