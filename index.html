@@ -348,9 +348,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 .themeBtn.on{background:var(--pink);color:#2B2333}
 
 /* starter / prestige : plein écran */
-#starter{position:absolute;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,var(--bg2),var(--bg4))}
+#starter{position:absolute;inset:0;z-index:95;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,var(--bg2),var(--bg4))}
 #eggIntro{
-  position:absolute;inset:0;z-index:65;display:none;flex-direction:column;align-items:center;justify-content:center;
+  position:absolute;inset:0;z-index:96;display:none;flex-direction:column;align-items:center;justify-content:center;
   padding:20px;background:radial-gradient(circle,var(--bg3) 0%,var(--bg2) 100%);
 }
 #eggIntro.on{display:flex}
@@ -381,7 +381,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   0%{transform:scale(1)}35%{transform:scale(1.25) rotate(-4deg)}
   60%{transform:scale(1.1) rotate(3deg)}100%{transform:scale(1)}
 }
-#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:70}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:97}
 #flash.go{animation:flashOut .8s ease-out}
 @keyframes flashOut{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
 
@@ -813,7 +813,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.16.3";
+const VERSION = "4.16.4";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -3227,6 +3227,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.16.4", lines:["LA vraie cause, cette fois confirmée avec un vrai navigateur : l'écran d'accueil restait au-dessus de l'oeuf et du choix du compagnon (mauvais ordre d'empilement), interceptant tous les vrais clics","Corrigé et vérifié avec de vrais clics simulés, pas juste du code — le parcours complet fonctionne enfin de bout en bout"]},
   {v:"4.16.3", lines:["Vraie cause trouvée : l'oeuf se déclenchait tout seul au démarrage selon l'emplacement resté actif en mémoire, bloquant tout l'écran avant même de pouvoir choisir","Le sélecteur d'emplacements est maintenant toujours accessible en premier — plus aucun risque de tomber sur le mauvais emplacement"]},
   {v:"4.16.2", lines:["Vrai correctif : après avoir choisi le starter, le jeu entre maintenant automatiquement en jeu — plus besoin de retaper JOUER une deuxième fois","C'était la cause du blocage et de l'oeuf qui semblait rester affiché"]},
   {v:"4.16.1", lines:["Correctif : une nouvelle partie relance maintenant vraiment le tuto (oeuf + starter), au lieu d'afficher juste le Cochon","Gemmes et achats en gemmes partagés entre les 4 emplacements — jamais à repayer en créant une nouvelle partie","Suppression d'un emplacement avec confirmation, bouton Passer sur le tuto"]},
