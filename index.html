@@ -813,7 +813,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
    PIXEL PAW IDLE — v2.0.0
    Fichier unique. Aucune dépendance externe. Fonctionne hors ligne.
    ============================================================ */
-const VERSION = "4.16.5";
+const VERSION = "4.17.0";
 
 /* ============================================================
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
@@ -3227,6 +3227,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
+  {v:"4.17.0", lines:["Bouton Retour au menu principal dans les Réglages — change d'emplacement sans perdre la partie en cours","Vrai correctif du gain hors-ligne : un appel de sauvegarde oublié écrasait l'horodatage à chaque chargement, avant même d'entrer en jeu — il s'affiche maintenant dans la partie, plus sur l'accueil"]},
   {v:"4.16.5", lines:["Audit complet du jeu avec de vrais clics — trouvé et corrigé un chevauchement entre le nom de l'animal et la barre de frénésie, apparu quand le HUD a été agrandi récemment","21 interactions principales revérifiées une par une (fenêtres, onglets, achats, fusion, renommage)"]},
   {v:"4.16.4", lines:["LA vraie cause, cette fois confirmée avec un vrai navigateur : l'écran d'accueil restait au-dessus de l'oeuf et du choix du compagnon (mauvais ordre d'empilement), interceptant tous les vrais clics","Corrigé et vérifié avec de vrais clics simulés, pas juste du code — le parcours complet fonctionne enfin de bout en bout"]},
   {v:"4.16.3", lines:["Vraie cause trouvée : l'oeuf se déclenchait tout seul au démarrage selon l'emplacement resté actif en mémoire, bloquant tout l'écran avant même de pouvoir choisir","Le sélecteur d'emplacements est maintenant toujours accessible en premier — plus aucun risque de tomber sur le mauvais emplacement"]},
@@ -3334,6 +3335,7 @@ function openSettings(){
     '<div class="sLabel" style="margin-bottom:6px"><span>Thème</span><span></span></div>' + tHtml +
     '<button class="mBtn ghost" id="mNotif">'+(S.notifs?"Rappels : activés":"Activer les rappels")+'</button>' +
     '<button class="mBtn ghost" id="mWipe">Effacer la sauvegarde</button>' +
+    '<button class="mBtn ghost" id="mHome">🏠 Retour au menu principal</button>' +
     '<button class="mBtn" id="mNo">Fermer</button>'
   );
   const bind = (id, key, lab)=>{
@@ -3355,6 +3357,14 @@ function openSettings(){
   });
   $("#mNotif").onclick = askNotifs;
   $("#mNo").onclick = closeModal;
+  $("#mHome").onclick = ()=>{
+    save();
+    closeModal();
+    const h = document.getElementById("home");
+    h.style.display = "flex"; h.classList.remove("leaving");
+    buildSlotPicker();
+    stopBgm();
+  };
   $("#mWipe").onclick = ()=>{
     openModal('<h2>Tout effacer ?</h2><p>Progression, gemmes et achats seront perdus. Irréversible.</p>' +
       '<button class="mBtn" id="mY">Effacer</button><button class="mBtn ghost" id="mN">Annuler</button>');
@@ -3505,7 +3515,7 @@ setInterval(refreshLists, 400);
 setInterval(save, 5000);
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ save(); stopBgm(); }
-  else { resume(); if(S.volBgm > 0) startBgm(); }
+  else { if(document.getElementById("home").style.display === "none") resume(); if(S.volBgm > 0) startBgm(); }
 });
 /* Redondant avec visibilitychange par sécurité : dans un WebView embarqué dans une
    app native (Sketchware Pro), le passage en arrière-plan via le bouton Accueil ou
@@ -3515,7 +3525,7 @@ document.addEventListener("visibilitychange", ()=>{
    risque de double gain : un second appel rapproché voit un écart de temps proche
    de zéro et sort immédiatement sans rien accorder. */
 window.addEventListener("blur", ()=>{ save(); stopBgm(); });
-window.addEventListener("focus", ()=>{ resume(); if(S.volBgm > 0) startBgm(); });
+window.addEventListener("focus", ()=>{ if(document.getElementById("home").style.display === "none") resume(); if(S.volBgm > 0) startBgm(); });
 window.addEventListener("pagehide", save);
 
 /* ============================================================
@@ -5008,7 +5018,8 @@ tickBanner();
    la session (double-tape sur l'animal) mais ne doit pas persister d'une
    ouverture d'app à l'autre : un testeur ne doit jamais tomber sur un menu
    caché sans savoir pourquoi. */
-resume();
+// resume() se declenche desormais depuis enterGame(), une fois reellement dans
+// la partie choisie — jamais avant le choix d'emplacement sur l'ecran d'accueil.
 function checkFtue(){ if(!S.starter){ if(!S.hatched) showEggIntro(); else showStarter(); } }
 function enterGame(){
   const h = document.getElementById("home");
@@ -5020,6 +5031,7 @@ function enterGame(){
     const gb = document.getElementById("greetBubble");
     gb.textContent = HOME_GREETS[rnd(HOME_GREETS.length)];
     gb.classList.remove("on"); void gb.offsetWidth; gb.classList.add("on");
+    resume();                    // gains hors-ligne calcules ici, une fois reellement dans la partie
   }, 420);
 }
 // le tuto/oeuf ne se declenche plus tout seul au demarrage : le selecteur d'emplacements
@@ -5030,7 +5042,8 @@ document.addEventListener("pointerdown", function once(){
   document.removeEventListener("pointerdown", once);
   if(S.volBgm > 0) startBgm();
 });
-save();
+// l'appel a save() ici a ete retire : il ecrasait S.lastSeen a chaque chargement
+// de page, avant meme le choix d'emplacement, cassant le calcul hors-ligne.
 </script>
 </body>
 </html>
