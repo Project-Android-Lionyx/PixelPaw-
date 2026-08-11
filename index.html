@@ -2218,22 +2218,21 @@ function saveGlobal(){
   store.set(GLOBAL_KEY, JSON.stringify(g));
 }
 function save(){
+  if(!S.starter) return;   // partie jamais vraiment commencee : reste "Nouvelle partie", pas de trace ecrite
   store.set(slotKey(activeSlot()), JSON.stringify(S));
   saveGlobal();
 }
 function markLeaving(){ S.lastSeen = Date.now(); save(); }
 function load(){
   /* migration ponctuelle : une ancienne sauvegarde unique devient l'Emplacement 1,
-     seulement si aucun emplacement n'existe encore — jamais d'ecrasement. */
+     seulement si aucun emplacement n'existe encore — jamais d'ecrasement.
+     Les deux cles historiques sont effacees juste apres, quelle que soit la source :
+     sinon une suppression volontaire de l'Emplacement 1 la ressuscite au chargement suivant. */
   if(!slotRaw(1)){
-    let legacyRaw = store.get(SAVE_KEY);
-    let legacy = false;
-    if(!legacyRaw){ legacyRaw = store.get(OLD_KEY); legacy = !!legacyRaw; }
-    if(legacyRaw){
-      store.set(slotKey(1), legacyRaw);
-      if(legacy) store.del(OLD_KEY);
-    }
+    const legacyRaw = store.get(SAVE_KEY) || store.get(OLD_KEY);
+    if(legacyRaw) store.set(slotKey(1), legacyRaw);
   }
+  store.del(SAVE_KEY); store.del(OLD_KEY);
   const raw = slotRaw(activeSlot());
   if(!raw){ S = freshState(); }
   else{
@@ -3610,13 +3609,6 @@ function pick3Random(arr){
   for(let i=copy.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [copy[i],copy[j]]=[copy[j],copy[i]]; }
   return copy.slice(0,3);
 }
-function rerollEggs(){
-  _starterPool = pick3Random(STARTERS);
-  _starterPeek = null;
-  _starterStage = 0;
-  renderStarterStep();
-  sfx("tab");
-}
 function showStarter(){
   _starterPool = pick3Random(STARTERS);
   _starterPeek = null;
@@ -3643,11 +3635,6 @@ function renderStarterStep(){
       card.onclick = ()=>{ _starterPeek = idx; _starterStage = 1; renderStarterStep(); sfx("tab"); vibrate(20); };
       row.appendChild(card);
     });
-    const rerollBtn = document.createElement("button");
-    rerollBtn.className = "mBtn ghost"; rerollBtn.textContent = "🔄 Relancer les œufs";
-    rerollBtn.style.marginTop = "14px";
-    rerollBtn.onclick = rerollEggs;
-    row.appendChild(rerollBtn);
   } else if(_starterStage === 1){
     // etape 1 : silhouette seule, AUCUNE info de bonus encore
     row.style.gridTemplateColumns = "1fr";
