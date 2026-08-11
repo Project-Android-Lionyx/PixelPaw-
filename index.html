@@ -3604,15 +3604,23 @@ function paintSilhouette(cv, key, color){
 }
 let _starterPool = null;
 let _starterPeek = null;
-let _starterTapsLeft = 0;
+let _starterStage = 0;   // 0 = oeuf normal, 1 = silhouette, 2 = revele
 function pick3Random(arr){
   const copy = arr.slice();
   for(let i=copy.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [copy[i],copy[j]]=[copy[j],copy[i]]; }
   return copy.slice(0,3);
 }
+function rerollEggs(){
+  _starterPool = pick3Random(STARTERS);
+  _starterPeek = null;
+  _starterStage = 0;
+  renderStarterStep();
+  sfx("tab");
+}
 function showStarter(){
   _starterPool = pick3Random(STARTERS);
   _starterPeek = null;
+  _starterStage = 0;
   renderStarterStep();
   $("#starter").classList.add("on");
 }
@@ -3622,43 +3630,44 @@ function renderStarterStep(){
   const row = $("#starterRow"); row.innerHTML = "";
 
   if(_starterPeek === null){
+    // etape 0 pour les 3 : toujours un oeuf normal, jamais rien de plus
     row.style.gridTemplateColumns = "repeat(3,1fr)";
     h1.textContent = "Choisis un œuf";
-    sub.innerHTML = "Une silhouette se devine dans chacun.<br>Tape pour le réchauffer et le découvrir.";
+    sub.innerHTML = "Tape sur un œuf pour commencer à le découvrir.";
     _starterPool.forEach((s, idx)=>{
       const card = document.createElement("button");
       card.className = "starterCard";
-      const c = document.createElement("canvas"); c.style.width="72px"; c.style.height="72px"; c.style.margin="0 auto";
-      paintSilhouette(c, s.id, "#2B2333");
+      const c = document.createElement("canvas"); paint(c, "egg0");
       const n = document.createElement("div"); n.className = "sn"; n.textContent = "Œuf "+(idx+1);
       card.append(c,n);
-      card.onclick = ()=>{ _starterPeek = idx; _starterTapsLeft = 5; renderStarterStep(); sfx("tab"); };
+      card.onclick = ()=>{ _starterPeek = idx; _starterStage = 1; renderStarterStep(); sfx("tab"); vibrate(20); };
       row.appendChild(card);
     });
-  } else if(_starterTapsLeft > 0){
+    const rerollBtn = document.createElement("button");
+    rerollBtn.className = "mBtn ghost"; rerollBtn.textContent = "🔄 Relancer les œufs";
+    rerollBtn.style.marginTop = "14px";
+    rerollBtn.onclick = rerollEggs;
+    row.appendChild(rerollBtn);
+  } else if(_starterStage === 1){
+    // etape 1 : silhouette seule, AUCUNE info de bonus encore
     row.style.gridTemplateColumns = "1fr";
     const s = _starterPool[_starterPeek];
-    h1.textContent = "Ça bouge...";
-    sub.innerHTML = "Tape sur l'œuf pour le réchauffer.";
+    h1.textContent = "Une ombre...";
+    sub.innerHTML = "Tape sur l'œuf pour le découvrir vraiment.";
     const card = document.createElement("button");
-    card.className = "starterCard"; card.id = "hatchCard";
-    const c = document.createElement("canvas"); c.id="hatchCv"; c.style.width="72px"; c.style.height="72px"; c.style.margin="0 auto";
+    card.className = "starterCard";
+    const c = document.createElement("canvas"); c.style.width="72px"; c.style.height="72px"; c.style.margin="0 auto";
     paintSilhouette(c, s.id, "#2B2333");
-    const n = document.createElement("div"); n.className = "sn"; n.id = "hatchCounter"; n.textContent = _starterTapsLeft+" touches restantes";
-    card.append(c,n);
-    card.onclick = ()=>{
-      _starterTapsLeft--;
-      document.getElementById("hatchCard").classList.remove("shake"); void document.getElementById("hatchCard").offsetWidth; document.getElementById("hatchCard").classList.add("shake");
-      sfx("click"); vibrate(30);
-      if(_starterTapsLeft <= 0){ setTimeout(renderStarterStep, 350); }
-      else document.getElementById("hatchCounter").textContent = _starterTapsLeft+" touches restantes";
-    };
+    card.appendChild(c);
+    card.onclick = ()=>{ _starterStage = 2; renderStarterStep(); sfx("evo"); vibrate(50); };
     row.appendChild(card);
+
     const backBtn = document.createElement("button");
     backBtn.className = "mBtn ghost"; backBtn.textContent = "Retour"; backBtn.style.marginTop = "14px";
-    backBtn.onclick = ()=>{ _starterPeek = null; renderStarterStep(); sfx("tab"); };
+    backBtn.onclick = ()=>{ _starterPeek = null; _starterStage = 0; renderStarterStep(); sfx("tab"); };
     row.appendChild(backBtn);
   } else {
+    // etape 2 : revele en couleur, bonus affiche seulement maintenant
     row.style.gridTemplateColumns = "1fr";
     const s = _starterPool[_starterPeek];
     h1.textContent = s.name;
@@ -3674,7 +3683,7 @@ function renderStarterStep(){
     btnRow.style.cssText = "display:flex;gap:8px;margin-top:14px";
     const backBtn = document.createElement("button");
     backBtn.className = "mBtn ghost"; backBtn.textContent = "Retour"; backBtn.style.flex = "1";
-    backBtn.onclick = ()=>{ _starterPeek = null; renderStarterStep(); sfx("tab"); };
+    backBtn.onclick = ()=>{ _starterPeek = null; _starterStage = 0; renderStarterStep(); sfx("tab"); };
     const confirmBtn = document.createElement("button");
     confirmBtn.className = "mBtn"; confirmBtn.textContent = "Confirmer"; confirmBtn.style.flex = "1";
     confirmBtn.onclick = ()=>{
