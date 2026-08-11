@@ -122,6 +122,12 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   display:flex;align-items:center;gap:6px;opacity:0;transition:opacity .5s ease;
 }
 #petName.show{opacity:1}
+#customizeBtn{
+  position:absolute;top:6px;right:8%;z-index:6;width:26px;height:26px;
+  border:3px solid var(--ink);border-radius:50%;background:var(--cream);
+  box-shadow:var(--pop-sm);font-size:12px;line-height:1;display:flex;
+  align-items:center;justify-content:center;padding:0;
+}
 #rarityTag{font-size:8px;padding:2px 6px;border-radius:6px;border:2px solid var(--ink);color:#2B2333}
 #petName.pop{}
 #petWrap{
@@ -653,6 +659,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
     <div id="decor"></div>
     <div id="bug"></div>
     <div id="petName"><span id="petLabel">Poussin</span><span id="rarityTag">Commun</span></div>
+    <button id="customizeBtn" aria-label="Personnaliser">🎨</button>
     <div id="petWrap" class="idle">
       <canvas id="pet" width="16" height="16"></canvas>
       <div id="shadow"></div>
@@ -2515,6 +2522,7 @@ const app=$("#app"), coinVal=$("#coinVal"), gemVal=$("#gemVal"), cpsLine=$("#cps
 const petCv=$("#pet"), petWrap=$("#petWrap"), petLabel=$("#petLabel"), rarityTag=$("#rarityTag");
 petLabel.addEventListener("click", e=>{ e.stopPropagation(); openRename(); });
 petLabel.style.cursor = "pointer";
+document.getElementById("customizeBtn").addEventListener("click", e=>{ e.stopPropagation(); openRename(); });
 const fx=$("#fx"), stage=$("#stage"), bubble=$("#bubble"), toastEl=$("#toast");
 const bannerEl=$("#banner"), bannerTxt=$("#bannerTxt"), bannerBtn=$("#bannerBtn");
 const veil=$("#veil"), modal=$("#modal"), flash=$("#flash");
@@ -3250,7 +3258,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
-  {v:"1.0.0", lines:["Choix du compagnon de départ refait en œufs mystère : 3 œufs, silhouette à la sélection, confirme ou reviens en voir un autre — l'animal cadeau change vraiment à chaque partie","Correctif : le compagnon choisi au départ est maintenant vraiment celui qui apparaît (restait bloqué sur Cochon avant)","Frénésie repensée : se déclenche après 750 tapes, dure 10 vraies secondes, pourcentage de progression affiché au-dessus de la barre","Le nom de l'animal s'affiche 3 secondes puis s'efface, pour tous les animaux","Personnalisation : chaque palette de couleur a maintenant un aperçu visuel, pas juste un nom","Gain hors-ligne fiabilisé pour de bon, chevauchements d'affichage corrigés — vérifiés avec un vrai navigateur sur plusieurs profils de sauvegarde"]},
+  {v:"1.0.0", lines:["🥚 Œufs mystère au départ","🐾 Bug du compagnon corrigé","⚡ Frénésie en secondes (750 tapes → 10s)","🎨 Personnalisation avec aperçus couleur","💾 Gains hors-ligne fiabilisés"]},
 ];
 function openSettings(){
   const themes = [["pastel","Pastel"],["dark","Dark Pixel"],["gameboy","GameBoy"],["cyber","Cyberpunk"]];
@@ -3267,7 +3275,7 @@ function openSettings(){
   });
   bgmHtml += '</div>';
   let clHtml = '<div style="text-align:left;font-size:8px;color:var(--ink-soft);line-height:1.9;margin:8px 0 4px">';
-  CHANGELOG.slice(0,2).forEach(c=>{ clHtml += '<b style="color:var(--ink)">v'+c.v+'</b> — '+c.lines.join(" · ")+'<br>'; });
+  CHANGELOG.slice(0,2).forEach(c=>{ clHtml += '<b style="color:var(--ink)">v'+c.v+'</b><br>'+c.lines.join("<br>")+'<br>'; });
   clHtml += '</div>';
   openModal(
     '<h2>Options · v'+VERSION+'</h2>' + clHtml +
@@ -4883,7 +4891,7 @@ function startHome(){
     let html = '<h2>Nouveautés</h2>';
     CHANGELOG.slice(0,6).forEach(c=>{
       html += '<div style="text-align:left;font-size:8.5px;color:var(--ink-soft);line-height:1.9;margin-bottom:6px">' +
-        '<b style="color:var(--ink)">v'+c.v+'</b> — '+c.lines.join(" · ")+'</div>';
+        '<b style="color:var(--ink)">v'+c.v+'</b><br>'+c.lines.join("<br>")+'</div>';
     });
     html += '<button class="mBtn ghost" id="mNo">Fermer</button>';
     openModal(html);
