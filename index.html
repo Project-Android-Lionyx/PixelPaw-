@@ -926,11 +926,26 @@ button:active{ filter:brightness(.96); }
 #stageBg .rug{position:absolute;left:50%;bottom:8%;width:72%;height:26%;transform:translateX(-50%);
   background:radial-gradient(ellipse at center, var(--roomRug,#E8956B) 0%, var(--roomRugLo,#D97F52) 72%, transparent 100%);
   border-radius:50%;opacity:.85}
-.shelfDeco{position:absolute;top:15%}
-.shelfDeco.left{left:3%}
-.shelfDeco.right{right:3%;transform:scaleX(-1)}
-.shelfDeco canvas{width:52px;height:34px;image-rendering:pixelated;filter:drop-shadow(0 3px 0 rgba(0,0,0,.12))}
-.shelfShadow{position:absolute;left:2px;right:2px;bottom:-5px;height:6px;background:radial-gradient(ellipse,rgba(0,0,0,.22),transparent 75%)}
+.roomFurn{position:absolute;z-index:2}
+.roomFurn canvas{width:100%;height:auto;image-rendering:pixelated;filter:drop-shadow(0 3px 0 rgba(0,0,0,.12))}
+.roomFurnShadow{position:absolute;left:6%;right:6%;bottom:-4px;height:6px;background:radial-gradient(ellipse,rgba(0,0,0,.22),transparent 75%)}
+
+.roomNav{
+  position:absolute;top:50%;z-index:8;width:32px;height:44px;transform:translateY(-50%);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--cream);border:3px solid var(--ink);color:var(--ink);font-size:13px;
+  box-shadow:0 3px 0 rgba(61,40,23,.28);
+}
+#roomNavLeft{left:0;border-radius:0 12px 12px 0}
+#roomNavRight{right:0;border-radius:12px 0 0 12px}
+.roomNav:active{transform:translateY(-50%) translateY(3px);box-shadow:none}
+#roomLabel{
+  position:absolute;top:32%;left:50%;transform:translateX(-50%);z-index:7;
+  padding:4px 12px;font-size:8px;letter-spacing:1px;background:var(--cream);border:2px solid var(--ink);
+  border-radius:999px;box-shadow:0 2px 0 rgba(61,40,23,.25);opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+}
+#roomLabel.show{opacity:1;transition:opacity .15s ease}
 
 /* ---------- LUMIÈRE DIRECTIONNELLE ---------- */
 .windowDeco{position:absolute;top:0%;left:4%;z-index:1}
@@ -1018,14 +1033,10 @@ body[data-theme="dark"] #stageBg .rug{--roomRug:#3A2B52;--roomRugLo:#241933}
   </header>
 
   <main id="stage">
-    <div id="stageBg">
-      <div class="wall"></div><div class="floor"></div><div class="baseboard"></div><div class="rug"></div>
-      <div class="lightBeam"></div>
-      <div class="windowDeco"><canvas></canvas><div class="windowGlow"></div></div>
-      <div class="shelfDeco left"><canvas></canvas><div class="shelfShadow"></div></div>
-      <div class="shelfDeco right"><canvas></canvas><div class="shelfShadow"></div></div>
-      <div class="dust d1"></div><div class="dust d2"></div><div class="dust d3"></div>
-    </div>
+    <div id="stageBg"></div>
+    <button id="roomNavLeft" class="roomNav" aria-label="Pièce précédente">◀</button>
+    <button id="roomNavRight" class="roomNav" aria-label="Pièce suivante">▶</button>
+    <div id="roomLabel"></div>
     <div id="decor"></div>
     <div id="bug"></div>
     <div id="petName"><span id="petLabel">Poussin</span><span id="rarityTag">Commun</span></div>
@@ -1205,6 +1216,142 @@ const VERSION = "1.0.0";
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
    ============================================================ */
 const SPRITES = {
+  ui_bed:{size:32,pal:{"K":"#5A3B1E","R":"#D97F52","Rd":"#B85F3A","C":"#8FCBE8","Cd":"#6FA8C7","W":"#FFF8EA"},px:[
+    "................................",
+    "................................",
+    "................................",
+    "..KKKKKKKKKKKKKKKKKKKKKKKKKK....",
+    ".KRRRRRRRRRRRRRRRRRRRRRRRRRRK...",
+    ".KRRRRRRRRRRRRRRRRRRRRRRRRRRK...",
+    ".KRdRdRdRdRdRdRdRdRdRdRdRdRdK...",
+    ".KRRRRRRRRRRRRRRRRRRRRRRRRRRK...",
+    ".KRRCCCCCCCCCCCCCCCCCCCCRRRRK...",
+    ".KRRCCdCdCdCdCdCdCdCdCCRRRRK....",
+    ".KRRCCCCCCCCCCCCCCCCCCCCRRRRK...",
+    ".KRRRWRRRRRRRRRRRRRRRRRRRRRK....",
+    "..KKKKKKKKKKKKKKKKKKKKKKKKKK....",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................"
+  ]},
+  ui_lamp:{size:32,pal:{"K":"#5A3B1E","S":"#8B6F4E","Y":"#FFE9A8","W":"#FFFBEA"},px:[
+    "................................",
+    ".........KKKKKKKKKK.............",
+    "........KYYYYYYYYYYK............",
+    "........KYYYWYYYYYYK............",
+    ".......KYYYYYYYYYYYYK...........",
+    "......KKKKKKKKKKKKKKK...........",
+    "..........KSSK..................",
+    "..........KSSK..................",
+    "..........KSSK..................",
+    ".........KSSSSK.................",
+    "........KKKKKKKK................",
+    "........KSSSSSSK................",
+    "........KKKKKKKK................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................"
+  ]},
+  ui_nightstand:{size:32,pal:{"K":"#5A3B1E","W":"#8B5E34","L":"#B88962","H":"#6B4423"},px:[
+    "................................",
+    "................................",
+    "................................",
+    "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+    "KWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWK",
+    "KWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWK",
+    "KWWLLLLLLLLLLLLLLLLLLLLLLLLLLWWK",
+    "KWWLHLLLLLLLLLLLLLLLLLLLLLLHLWWK",
+    "KWWLLLLLLLLLLLLLLLLLLLLLLLLLLWWK",
+    "KWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWK",
+    "K..............................K",
+    "K..............................K",
+    "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................"
+  ]},
+  ui_cattree:{size:32,pal:{"K":"#5A3B1E","S":"#C9935A","P":"#8FBC5A","R":"#E8956B"},px:[
+    "...............KKKKKKKK.........",
+    "..............KRRRRRRRK.........",
+    "..............KRRRRRRRK.........",
+    "...............KKKKKKKK.........",
+    "..................SS............",
+    "..................SS............",
+    "..................SS............",
+    "...............KKKKKKKKKK.......",
+    "..............KPPPPPPPPPK.......",
+    "..............KPPPPPPPPPK.......",
+    "...............KKKKKKKKKK.......",
+    "..................SS............",
+    "..................SS............",
+    "..................SS............",
+    "..................SS............",
+    ".................KSSKK..........",
+    "................KSSSSK..........",
+    "................KKKKKK..........",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................"
+  ]},
   ui_window:{size:32,pal:{"K":"#6B4423","A":"#D4A574","B":"#BFE3F0","C":"#8FCBE8","W":"#FFFFFF"},px:[
     "................................",
     ".KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.",
@@ -2809,7 +2956,7 @@ function freshState(){
     coins:0, animal:"cochon", owned:{cochon:true}, up:{}, aup:{}, evo:{}, rup:{},
     boostMult:1, boostUntil:0, boostName:"",
     /* --- conservé pour toujours --- */
-    gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0,
+    gems:30, premium:{}, prest:{}, pawPoints:0, rebirths:0, currentRoom:0,
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
@@ -3235,8 +3382,8 @@ paint($("#ico-world"),"ui_globe"); paint($("#ico-gear"),"ui_gear");
 paint($("#ico-tab-up"),"ui_lightning"); paint($("#ico-tab-labo"),"ui_flask");
 paint($("#ico-tab-daily"),"ui_gift");
 paint($("#ico-customize"),"ui_palette");
-document.querySelectorAll(".shelfDeco canvas").forEach(cv=>paint(cv,"ui_shelf"));
-document.querySelectorAll(".windowDeco canvas").forEach(cv=>paint(cv,"ui_window"));
+document.getElementById("roomNavLeft").addEventListener("click", ()=>changeRoom(-1));
+document.getElementById("roomNavRight").addEventListener("click", ()=>changeRoom(1));
 
 /* Écriture mise en cache.
    CORRECTIF v2 : la v1 réécrivait 20+ boutons toutes les 400 ms, même sans
@@ -5114,10 +5261,97 @@ function moodTick(){
   }
 }
 setInterval(moodTick, 2600);
+/* ============================================================
+   PIÈCES — 5 environnements navigables, même moteur canvas/pixel-art
+   ============================================================ */
+const ROOMS = [
+  { id:0, name:"Chambre",
+    wall:"#F3D9B8", wallLo:"#EACBA0", floor:"#C9935A", floorAlt:"#BE8A52", base:"#8B5E34",
+    rug:"#E8956B", rugLo:"#D97F52", window:true,
+    furniture:[
+      {sprite:"ui_bed", left:"50%", top:"58%", w:118, tx:"-50%"},
+      {sprite:"ui_nightstand", left:"11%", top:"56%", w:44},
+      {sprite:"ui_lamp", left:"11%", top:"34%", w:34},
+      {sprite:"ui_cattree", left:"89%", top:"42%", w:38, tx:"-50%"}
+    ], toys:true
+  },
+  { id:1, name:"Salle de bain",
+    wall:"#D8F1EF", wallLo:"#AAD8D7", floor:"#E8EEEE", floorAlt:"#B8C9C8", base:"#57999B",
+    rug:"#E9F7F2", rugLo:"#B8DAD3", window:false,
+    furniture:[
+      {sprite:"ui_nightstand", left:"50%", top:"60%", w:96, tx:"-50%"}
+    ], toys:false
+  },
+  { id:2, name:"Cuisine",
+    wall:"#FFE3B6", wallLo:"#F4C17E", floor:"#CDBEB5", floorAlt:"#9E8B81", base:"#A95E35",
+    rug:"#E8A86B", rugLo:"#C98A52", window:false,
+    furniture:[
+      {sprite:"ui_nightstand", left:"50%", top:"56%", w:130, tx:"-50%"}
+    ], toys:false
+  },
+  { id:3, name:"Salle de jeu",
+    wall:"#FFD9E8", wallLo:"#F5B8D0", floor:"#C9E8A0", floorAlt:"#AED080", base:"#6B9B4A",
+    rug:"#8FCBE8", rugLo:"#6FA8C7", window:true,
+    furniture:[
+      {sprite:"ui_cattree", left:"18%", top:"42%", w:42, tx:"-50%"},
+      {sprite:"ui_cattree", left:"82%", top:"46%", w:36, tx:"-50%"}
+    ], toys:true
+  },
+  { id:4, name:"Jardin",
+    wall:"#9BD1E8", wallLo:"#78C8E8", floor:"#8FBC5A", floorAlt:"#7CAA48", base:"#4E7333",
+    rug:"#B88962", rugLo:"#A6714E", window:false,
+    furniture:[
+      {sprite:"ui_cattree", left:"85%", top:"40%", w:40, tx:"-50%"}
+    ], toys:true
+  }
+];
+function currentRoomCfg(){ return ROOMS[(S.currentRoom||0) % ROOMS.length]; }
+function renderRoomBg(){
+  const bg = document.getElementById("stageBg"); if(!bg) return;
+  const r = currentRoomCfg();
+  bg.style.setProperty("--roomWall", r.wall);
+  bg.style.setProperty("--roomWallLo", r.wallLo);
+  bg.style.setProperty("--roomFloor", r.floor);
+  bg.style.setProperty("--roomFloorAlt", r.floorAlt);
+  bg.style.setProperty("--roomBase", r.base);
+  bg.style.setProperty("--roomRug", r.rug);
+  bg.style.setProperty("--roomRugLo", r.rugLo);
+  bg.innerHTML =
+    '<div class="wall"></div><div class="floor"></div><div class="baseboard"></div><div class="rug"></div><div class="lightBeam"></div>' +
+    (r.window ? '<div class="windowDeco"><canvas></canvas><div class="windowGlow"></div></div>' : '') +
+    '<div class="dust d1"></div><div class="dust d2"></div><div class="dust d3"></div>';
+  r.furniture.forEach(f=>{
+    const el = document.createElement("div");
+    el.className = "roomFurn";
+    el.style.left = f.left; el.style.top = f.top; el.style.width = f.w+"px";
+    if(f.tx) el.style.transform = "translateX("+f.tx+")";
+    const cv = document.createElement("canvas");
+    el.appendChild(cv);
+    const sh = document.createElement("div"); sh.className = "roomFurnShadow";
+    el.appendChild(sh);
+    bg.appendChild(el);
+    paint(cv, f.sprite);
+  });
+  const lbl = document.getElementById("roomLabel");
+  if(lbl){
+    lbl.textContent = r.name; lbl.classList.remove("show"); void lbl.offsetWidth; lbl.classList.add("show");
+    clearTimeout(window._roomLblTimer);
+    window._roomLblTimer = setTimeout(()=>lbl.classList.remove("show"), 2500);
+  }
+  buildDecor();
+}
+function changeRoom(dir){
+  S.currentRoom = ((S.currentRoom||0) + dir + ROOMS.length) % ROOMS.length;
+  renderRoomBg();
+  save();
+  sfx("tab");
+}
+
 function buildDecor(){
   const d = document.getElementById("decor"); if(!d) return;
   d.innerHTML = "";
-  // quelques jouets poses sur le tapis, cote a cote du compagnon — plus d'herbe/buissons exterieurs
+  if(!currentRoomCfg().toys) return;
+  // quelques jouets poses sur le tapis, cote a cote du compagnon
   const spots = [12, 26, 74, 88];
   spots.forEach(x=>{
     const t = document.createElement("div");
@@ -5745,7 +5979,7 @@ buildCosmGrid();
 buildAchvList();
 buildWheelGradient();
 renderPet();
-buildDecor();
+renderRoomBg();
 popRarity();
 renderHUD();
 if(S.questDate !== today()) rollQuests();
