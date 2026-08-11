@@ -91,9 +91,15 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #worldBtn{background:var(--gem);display:none}
 #worldBtn.on{display:grid}
 #cpsLine{margin-top:2px;text-align:center;font-size:9px;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase}
-#frenzyWrap{width:78%;max-width:220px;height:9px;margin:3px auto 0;border:2px solid var(--ink);border-radius:999px;background:var(--card);overflow:hidden}
+#frenzyWrap{
+  width:78%;max-width:220px;height:11px;margin:4px auto 0;border:2.5px solid var(--ink);
+  border-radius:999px;overflow:hidden;position:relative;
+  background:repeating-linear-gradient(135deg, var(--card) 0 6px, rgba(0,0,0,.035) 6px 12px);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.12);
+}
+#frenzyBar{height:100%;width:0%;background:linear-gradient(90deg,var(--gem),var(--pink));transition:width .12s linear;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+#frenzyWrap.active{border-color:var(--gold-d);box-shadow:inset 0 1px 3px rgba(0,0,0,.12), 0 0 8px rgba(255,196,74,.5)}
 #frenzyPct{text-align:center;font-size:8px;color:var(--ink-soft);letter-spacing:.5px;margin-top:4px}
-#frenzyBar{height:100%;width:0%;background:linear-gradient(90deg,var(--gem),var(--pink));transition:width .12s linear}
 #frenzyWrap.active #frenzyBar{background:linear-gradient(90deg,var(--gold),#FF5C3D)}
 #app.frenzyOn{box-shadow:inset 0 0 30px 5px rgba(255,196,74,.4)}
 
@@ -212,7 +218,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 /* ---------- BANNIÈRE ---------- */
 #banner{
   flex:0 0 auto;margin:0 8px 6px;border:3px solid var(--ink);border-radius:var(--r);
-  box-shadow:var(--pop-sm);background:var(--pink);padding:7px 10px;font-size:9px;letter-spacing:.5px;
+  box-shadow:var(--pop-sm);background:linear-gradient(135deg,#FFD37A,#F2A94E);padding:7px 10px;font-size:9px;letter-spacing:.5px;
   display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;color:#2B2333;
 }
 #banner .bTxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -673,6 +679,7 @@ button:active{ filter:brightness(.96); }
 #stage{ justify-content:center; padding:8px 8px clamp(8px,3vh,24px); }
 #petName{ top:4px; padding:5px 12px; border-radius:999px; box-shadow:0 3px 0 rgba(61,40,23,.25); }
 #customizeBtn{ top:5px; right:7%; width:30px; height:30px; }
+#customizeBtn canvas{width:15px;height:15px;image-rendering:pixelated}
 #petWrap{ width:min(54vw,205px); height:min(54vw,205px); margin-top:-2vh; }
 #tapHint{ margin-top:4px; font-size:8px; letter-spacing:1.2px; }
 #propsStrip{ max-width:76%; margin-top:5px; gap:4px; }
@@ -774,6 +781,8 @@ button:active{ filter:brightness(.96); }
 #home.leaving{ opacity:0; transform:scale(1.035); }
 #homeBg{ position:absolute; inset:0; overflow:hidden; opacity:.42; pointer-events:none; }
 #homeBg canvas{ width:30px; height:30px; }
+#homeBg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:14%;
+  background:linear-gradient(180deg,transparent,rgba(120,150,60,.16));pointer-events:none}
 #homeTop{ position:relative; width:100%; text-align:center; margin:0; padding-top:2vh; }
 #homeTitle{ font-size:clamp(19px,6vw,25px); line-height:1.45; letter-spacing:2.5px;
   text-shadow:2px 2px 0 rgba(255,255,255,.65), 4px 4px 0 rgba(0,0,0,.13); }
@@ -916,6 +925,9 @@ button:active{ filter:brightness(.96); }
 .cloud.c1{top:8%;left:10%;width:56px;height:18px;animation:driftCloud 34s linear infinite}
 .cloud.c2{top:15%;right:12%;width:40px;height:14px;opacity:.7;animation:driftCloud 26s linear infinite reverse}
 @keyframes driftCloud{0%{transform:translateX(-14px)}50%{transform:translateX(14px)}100%{transform:translateX(-14px)}}
+body[data-theme="dark"] .cloud{background:#FFE9A8;width:4px!important;height:4px!important;border-radius:50%;filter:none;box-shadow:0 0 4px 1px rgba(255,233,168,.6);animation:twinkle 2.4s ease-in-out infinite}
+body[data-theme="dark"] .hill{background:#120F1C;opacity:.6}
+@keyframes twinkle{0%,100%{opacity:.35}50%{opacity:1}}
 
 /* ============================================================
    RARETÉS — halos progressifs sur les vignettes d'animaux
@@ -978,7 +990,7 @@ button:active{ filter:brightness(.96); }
     <div id="decor"></div>
     <div id="bug"></div>
     <div id="petName"><span id="petLabel">Poussin</span><span id="rarityTag">Commun</span></div>
-    <button id="customizeBtn" aria-label="Personnaliser">🎨</button>
+    <button id="customizeBtn" aria-label="Personnaliser"><canvas id="ico-customize"></canvas></button>
     <div id="petWrap" class="idle">
       <canvas id="pet" width="16" height="16"></canvas>
       <div id="shadow"></div>
@@ -1154,6 +1166,24 @@ const VERSION = "1.0.0";
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
    ============================================================ */
 const SPRITES = {
+  ui_palette:{size:17,pal:{"K":"#3D2817","W":"#FFF3D6","R":"#FF7A5C","B":"#5EA8FF","G":"#8FBC5A","Y":"#FFC94A"},px:[
+    ".................",".................","....KKKKKKKKK....","...KWWWWWWWWWK...",
+    "..KWWRRWWBBWWWK..",".KWWRRWWWBBWWWWK.",".KWWWWWWWWWWWKK..","KWWGGWWWWYYWWWWK.",
+    "KWWGGWWWWYYWWWWK.","KWWWWWKKKWWWWWWK.",".KWWWWKKKWWWWWK..",".KWWWWKKKWWWWK...",
+    "..KWWWWWWWWKK....","...KKWWWWWKK.....",".....KKKKK.......",".................","................."
+  ]},
+  ui_lock:{size:17,pal:{"K":"#3D2817","S":"#8B6F4E","L":"#D6CBB8","Y":"#FFC94A"},px:[
+    ".................",".................",".....KKKKKKK.....","....KSSSSSSSK....",
+    "....KS.....SK....","....KS.....SK....","...KKSSSSSSSKK...","..KLLLLLLLLLLLK..",
+    ".KLLLLLLLLLLLLLK.",".KLLLYYYYYLLLLLK.",".KLLLLYYYLLLLLLK.",".KLLLLLYLLLLLLLK.",
+    ".KLLLLLLLLLLLLLK.","..KLLLLLLLLLLLK..","...KKKKKKKKKKK...",".................","................."
+  ]},
+  ui_flame:{size:17,pal:{"K":"#8B2E0A","R":"#FF5C3D","O":"#FF9E3D","Y":"#FFE066"},px:[
+    ".................",".......KK........","......KRRK.......","......KRRK.......",
+    ".....KRROOK......","....KRROOOOK.....","....KROOOOOK.....","...KROOOOOOK.....",
+    "...KROOOYYOK.....","...KROOYYYYK.....","...KROOYYYOK.....","...KOOOOOOOK.....",
+    "....KOOOOOK......",".....KOOOK.......","......KKK........",".................","................."
+  ]},
   ui_trophy:{size:17,pal:{"K":"#7A5A00","G":"#FFC94A","Y":"#FFE066","W":"#FFF3D6"},px:[
     ".................",
     "....KGGGGGGGK....",
@@ -3091,6 +3121,7 @@ paint($("#ico-dex"),"ui_book"); paint($("#ico-prestige"),"ui_crown");
 paint($("#ico-world"),"ui_globe"); paint($("#ico-gear"),"ui_gear");
 paint($("#ico-tab-up"),"ui_lightning"); paint($("#ico-tab-labo"),"ui_flask");
 paint($("#ico-tab-daily"),"ui_gift");
+paint($("#ico-customize"),"ui_palette");
 
 /* Écriture mise en cache.
    CORRECTIF v2 : la v1 réécrivait 20+ boutons toutes les 400 ms, même sans
@@ -3384,7 +3415,7 @@ function buildLists(){
     r._name.textContent = w.name; $("#listWarp").appendChild(r); R.warp.push({w,r});
   });
   BOOSTS.forEach(b=>{
-    const r = makeRow({emoji:"🔥", btnClass:"gemBtn", onClick:()=>buyBoost(b)});
+    const r = makeRow({sprite:"ui_flame", btnClass:"gemBtn", onClick:()=>buyBoost(b)});
     r._name.textContent = b.name; r._sub.textContent = b.desc;
     $("#listBoosts").appendChild(r); R.boost.push({b,r});
   });
@@ -5116,9 +5147,10 @@ function bumpStreak(){
 }
 function refreshStreak(){
   const el = document.getElementById("streakBox"); if(!el) return;
-  setTxt(el, '<div class="row"><div class="thumb" style="font-size:20px">🔥</div><div class="rInfo">' +
+  setTxt(el, '<div class="row"><div class="thumb"><canvas id="streakIco"></canvas></div><div class="rInfo">' +
     '<div class="rName">'+(S.streak||0)+' jour'+((S.streak||0)>1?'s':'')+' d\'affilée</div>' +
     '<div class="rSub">Record : '+(S.streakBest||0)+' · reviens chaque jour pour ne pas la casser</div></div></div>');
+  const ic = document.getElementById("streakIco"); if(ic) paint(ic, "ui_flame");
 }
 function buildAchvList(){
   const box = document.getElementById("achvList"); if(!box) return;
@@ -5434,14 +5466,22 @@ const HOME_GREETS = [
 function buildHomeBg(){
   const el = document.getElementById("homeBg"); if(!el) return;
   const pool = ["cochon","hamster","lapin","perruche","chat","corgi","capybara","panda","dragon"];
-  for(let i=0;i<14;i++){
-    const cv = document.createElement("canvas");
-    paint(cv, pool[i % pool.length]);
-    cv.style.left = (Math.random()*90)+"%";
-    cv.style.top = (Math.random()*90)+"%";
-    cv.style.transform = "rotate("+(Math.random()*30-15)+"deg)";
-    el.appendChild(cv);
-  }
+  // bande du haut (lointain, petit) + bande du bas (sol, un peu plus grand) : jamais au milieu ou vit l'UI
+  const bands = [
+    {yMin:2, yMax:11, scale:.6, count:5},
+    {yMin:84, yMax:94, scale:.85, count:6}
+  ];
+  let i = 0;
+  bands.forEach(band=>{
+    for(let b=0; b<band.count; b++){
+      const cv = document.createElement("canvas");
+      paint(cv, pool[i % pool.length]); i++;
+      cv.style.left = (4 + Math.random()*88)+"%";
+      cv.style.top = (band.yMin + Math.random()*(band.yMax-band.yMin))+"%";
+      cv.style.transform = "scale("+band.scale+")";
+      el.appendChild(cv);
+    }
+  });
 }
 function startHome(){
   buildHomeBg();
