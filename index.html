@@ -90,6 +90,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #worldBtn.on{display:grid}
 #cpsLine{margin-top:2px;text-align:center;font-size:9px;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase}
 #frenzyWrap{width:78%;max-width:220px;height:9px;margin:3px auto 0;border:2px solid var(--ink);border-radius:999px;background:var(--card);overflow:hidden}
+#frenzyPct{text-align:center;font-size:8px;color:var(--ink-soft);letter-spacing:.5px;margin-top:4px}
 #frenzyBar{height:100%;width:0%;background:linear-gradient(90deg,var(--gem),var(--pink));transition:width .12s linear}
 #frenzyWrap.active #frenzyBar{background:linear-gradient(90deg,var(--gold),#FF5C3D)}
 #app.frenzyOn{box-shadow:inset 0 0 30px 5px rgba(255,196,74,.4)}
@@ -118,8 +119,9 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:6;
   font-size:10px;letter-spacing:1px;text-transform:uppercase;background:var(--cream);
   border:3px solid var(--ink);border-radius:999px;padding:5px 14px;box-shadow:var(--pop-sm);
-  display:flex;align-items:center;gap:6px;
+  display:flex;align-items:center;gap:6px;opacity:0;transition:opacity .5s ease;
 }
+#petName.show{opacity:1}
 #rarityTag{font-size:8px;padding:2px 6px;border-radius:6px;border:2px solid var(--ink);color:#2B2333}
 #petName.pop{}
 #petWrap{
@@ -643,6 +645,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
       <button class="iconBtn" id="gearBtn" aria-label="Options">⚙️</button>
     </div>
     <div id="cpsLine">0 pièces / sec</div>
+    <div id="frenzyPct"></div>
     <div id="frenzyWrap"><div id="frenzyBar"></div></div>
   </header>
 
@@ -2114,7 +2117,7 @@ function freshState(){
     noAds:false, starter:null, codes:{}, dex:{poussin:1},
     inv:{}, seen:{}, fc:0, miniPlays:0, miniDate:"", cosm:{}, equip:{},
     fusions:0, wheelLast:"", achv:{}, streak:0, streakBest:0, streakLast:"",
-    frenzyGauge:0, frenzyTier:0, frenzyTapsLeft:0, hatched:false, world:"W1",
+    frenzyGauge:0, frenzyTier:0, frenzyMsLeft:0, hatched:false, world:"W1",
     offCoinSteps:0, offGemPacks:{},
     totalEarned:0, lifetimeEarned:0,
     /* --- quotidien --- */
@@ -2607,34 +2610,42 @@ function doTap(cx, cy){
 /* Jauge de frénésie : se remplit en tapant, une fois pleine déclenche 25 s de
    gains multipliés. Réutilise le système de boost existant (banni pour la durée),
    donc aucune économie séparée à maintenir ailleurs. */
-const FRENZY_FILL_PER_TAP = 2.6;
-const FRENZY_TAPS = 500;
-function frenzyActive(){ return (S.frenzyTapsLeft||0) > 0; }
+/* Jauge de frénésie : se remplit en tapant (750 tapes pour la remplir), une fois pleine
+   déclenche 10 secondes réelles de gains multipliés — la durée s'écoule avec le temps,
+   plus avec les tapes. */
+const FRENZY_FILL_PER_TAP = 100/750;
+const FRENZY_SECONDS = 10;
+function frenzyActive(){ return (S.frenzyMsLeft||0) > 0; }
 function frenzyMultBase(){ return (S.frenzyTier >= 1 ? 6 : 3) * (1 + 0.01*pLvl("g11")); }
 function tickFrenzyGauge(){
-  if(frenzyActive()){
-    S.frenzyTapsLeft--;
-    if(S.frenzyTapsLeft <= 0) setCls(app, "frenzyOn", false);
-    return;
-  }
+  if(frenzyActive()) return;   // la duree s'ecoule via tickFrenzyTime(), pas au tap
   S.frenzyGauge = (S.frenzyGauge||0) + FRENZY_FILL_PER_TAP;
   if(S.frenzyGauge >= 100){
     S.frenzyGauge = 0;
-    S.frenzyTapsLeft = FRENZY_TAPS;
+    S.frenzyMsLeft = FRENZY_SECONDS*1000;
     setCls(app, "frenzyOn", true);
     sfx("big"); vibrate(80);
-    toast("Frénésie ! ×"+frenzyMultBase()+" pendant "+FRENZY_TAPS+" tapes");
+    toast("Frénésie ! ×"+frenzyMultBase()+" pendant "+FRENZY_SECONDS+"s");
   }
+}
+function tickFrenzyTime(dtMs){
+  if(!frenzyActive()) return;
+  S.frenzyMsLeft -= dtMs;
+  if(S.frenzyMsLeft <= 0){ S.frenzyMsLeft = 0; setCls(app, "frenzyOn", false); }
 }
 function refreshFrenzyBar(){
   const wrap = document.getElementById("frenzyWrap"), bar = document.getElementById("frenzyBar");
+  const pctEl = document.getElementById("frenzyPct");
   if(!wrap || !bar) return;
   if(frenzyActive()){
     setCls(wrap, "active", true);
-    bar.style.width = ((S.frenzyTapsLeft||0)/FRENZY_TAPS*100)+"%";
+    const pct = (S.frenzyMsLeft||0)/(FRENZY_SECONDS*1000)*100;
+    bar.style.width = pct+"%";
+    if(pctEl) setTxt(pctEl, "Frénésie · "+Math.ceil((S.frenzyMsLeft||0)/1000)+"s");
   }else{
     setCls(wrap, "active", false);
     bar.style.width = (S.frenzyGauge||0)+"%";
+    if(pctEl) setTxt(pctEl, Math.floor(S.frenzyGauge||0)+"%");
   }
 }
 stage.addEventListener("pointerdown", e=>{
@@ -2654,6 +2665,7 @@ function renderHUD(){
   setCls($("#prestigeBtn"), "on", true);
   setCls($("#worldBtn"), "on", (S.rebirths||0) >= 1);
 }
+let _petNameTimer = null;
 function renderPet(){
   const p = currentPet();
   paint(petCv, p.id);
@@ -2666,23 +2678,33 @@ function renderPet(){
   rarityTag.textContent = r.name;
   rarityTag.style.background = r.col;
   S.dex[p.id] = S.dex[p.id] || 1;
+  showPetNameBriefly();
+}
+function showPetNameBriefly(){
+  const el = document.getElementById("petName");
+  if(!el) return;
+  clearTimeout(_petNameTimer);
+  el.classList.add("show");
+  _petNameTimer = setTimeout(()=>{ el.classList.remove("show"); }, 3000);
 }
 function openRename(){
   const p = currentPet();
   const cur = (S.petNames && S.petNames[p.id]) || p.name;
   const palettes = [
-    {id:"defaut", name:"Défaut", css:""},
-    {id:"dore",   name:"Doré",    css:"sepia(.5) saturate(2) hue-rotate(-10deg) brightness(1.05)"},
-    {id:"glace",  name:"Glacé",   css:"saturate(1.3) hue-rotate(150deg) brightness(1.05)"},
-    {id:"toxique",name:"Toxique", css:"saturate(1.8) hue-rotate(70deg)"},
-    {id:"rose",   name:"Rosé",    css:"saturate(1.4) hue-rotate(-60deg)"},
-    {id:"sombre", name:"Sombre",  css:"saturate(1.2) brightness(.75) contrast(1.15)"},
-    {id:"arc",    name:"Prisme",  css:"saturate(2.2) hue-rotate(200deg) contrast(1.1)"}
+    {id:"defaut", name:"Défaut", css:"", swatch:"#E8DCC8"},
+    {id:"dore",   name:"Doré",    css:"sepia(.5) saturate(2) hue-rotate(-10deg) brightness(1.05)", swatch:"#D4A537"},
+    {id:"glace",  name:"Glacé",   css:"saturate(1.3) hue-rotate(150deg) brightness(1.05)", swatch:"#7EC8E3"},
+    {id:"toxique",name:"Toxique", css:"saturate(1.8) hue-rotate(70deg)", swatch:"#6FCB3B"},
+    {id:"rose",   name:"Rosé",    css:"saturate(1.4) hue-rotate(-60deg)", swatch:"#F08BB4"},
+    {id:"sombre", name:"Sombre",  css:"saturate(1.2) brightness(.75) contrast(1.15)", swatch:"#4A4650"},
+    {id:"arc",    name:"Prisme",  css:"saturate(2.2) hue-rotate(200deg) contrast(1.1)", swatch:"linear-gradient(135deg,#FF5C8A,#7C4DFF,#3DDCFF)"}
   ];
   const curPal = (S.petPalette && S.petPalette[p.id]) || "defaut";
-  let swatches = '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0 16px">';
+  let swatches = '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0 16px">';
   palettes.forEach(pl=>{
-    swatches += '<button class="qtyBtn'+(pl.id===curPal?' on':'')+'" data-pal="'+pl.id+'" style="flex:0 0 30%">'+pl.name+'</button>';
+    swatches += '<button class="qtyBtn palSwatchBtn'+(pl.id===curPal?' on':'')+'" data-pal="'+pl.id+'" style="flex:0 0 30%;display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:8px">' +
+      '<span style="width:22px;height:22px;border-radius:50%;background:'+pl.swatch+';border:2px solid var(--ink);display:block"></span>' +
+      '<span>'+pl.name+'</span></button>';
   });
   swatches += '</div>';
   openModal(
@@ -3228,84 +3250,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
-  {v:"1.0.0", lines:["Version de lancement — gain hors-ligne fiabilisé pour de bon (plusieurs causes racines corrigées), chevauchements d'affichage corrigés et vérifiés avec un vrai navigateur sur plusieurs profils de sauvegarde","27 parcours principaux testés avec de vrais clics avant cette version : ouverture/fermeture de toutes les fenêtres, achats, fusion, renommage, retour au menu"]},
-  {v:"4.17.0", lines:["Bouton Retour au menu principal dans les Réglages — change d'emplacement sans perdre la partie en cours","Vrai correctif du gain hors-ligne : un appel de sauvegarde oublié écrasait l'horodatage à chaque chargement, avant même d'entrer en jeu — il s'affiche maintenant dans la partie, plus sur l'accueil"]},
-  {v:"4.16.5", lines:["Audit complet du jeu avec de vrais clics — trouvé et corrigé un chevauchement entre le nom de l'animal et la barre de frénésie, apparu quand le HUD a été agrandi récemment","21 interactions principales revérifiées une par une (fenêtres, onglets, achats, fusion, renommage)"]},
-  {v:"4.16.4", lines:["LA vraie cause, cette fois confirmée avec un vrai navigateur : l'écran d'accueil restait au-dessus de l'oeuf et du choix du compagnon (mauvais ordre d'empilement), interceptant tous les vrais clics","Corrigé et vérifié avec de vrais clics simulés, pas juste du code — le parcours complet fonctionne enfin de bout en bout"]},
-  {v:"4.16.3", lines:["Vraie cause trouvée : l'oeuf se déclenchait tout seul au démarrage selon l'emplacement resté actif en mémoire, bloquant tout l'écran avant même de pouvoir choisir","Le sélecteur d'emplacements est maintenant toujours accessible en premier — plus aucun risque de tomber sur le mauvais emplacement"]},
-  {v:"4.16.2", lines:["Vrai correctif : après avoir choisi le starter, le jeu entre maintenant automatiquement en jeu — plus besoin de retaper JOUER une deuxième fois","C'était la cause du blocage et de l'oeuf qui semblait rester affiché"]},
-  {v:"4.16.1", lines:["Correctif : une nouvelle partie relance maintenant vraiment le tuto (oeuf + starter), au lieu d'afficher juste le Cochon","Gemmes et achats en gemmes partagés entre les 4 emplacements — jamais à repayer en créant une nouvelle partie","Suppression d'un emplacement avec confirmation, bouton Passer sur le tuto"]},
-  {v:"4.16.0", lines:["4 emplacements de sauvegarde sur l'écran d'accueil — ta partie actuelle est passée automatiquement en Emplacement 1, rien de perdu","Chaque emplacement affiche un résumé (animal, pièces, renaissances) avant de choisir"]},
-  {v:"4.15.1", lines:["Formulaire de support refait : catégorie de problème, où tu l'as vu, texte sans limite","Prêt pour un envoi direct sans quitter l'app dès qu'EmailJS est configuré (repli par mail en attendant)"]},
-  {v:"4.15.0", lines:["Tape sur le nom de ton animal pour le renommer et lui choisir une palette de couleurs (7 styles)","Bouton de retour sur l'écran d'accueil — envoie un mail direct avec les infos de la partie"]},
-  {v:"4.14.2", lines:["Bouton Menus déplacé en position fixe tout en fin de page — plus fiable, plus d'ambiguïté d'empilement possible","Devrait régler le souci de taps multiples et le décalage visuel"]},
-  {v:"4.14.1", lines:["Correctif : les pièces/gemmes/FC pouvaient s'afficher tronquées («2.00...») au lieu du nombre complet avec sa lettre","HUD réorganisé en deux lignes : stats en haut, boutons en dessous — plus propre, plus de place pour les grands nombres"]},
-  {v:"4.14.0", lines:["Chaque amélioration affiche maintenant le vrai pourcentage qu'elle ajoute à ton gain actuel — plus facile de voir ce qui vaut le coup","x50 et MAX vérifiés explicitement sur toutes les catégories (par tape, par animal, Renaissance)"]},
-  {v:"4.13.1", lines:["Achat en masse étendu à l'arbre de Renaissance (Pattes Célestes) — il n'y était pas encore","Arbre de Renaissance renommé en rangs clairs (Aura dorée I/II/III, Griffe critique I/II/III...) — fini les noms qui cachaient des doublons"]},
-  {v:"4.13.0", lines:["Tuto léger pour les nouveaux joueurs : 4 bulles courtes après le choix du starter (tape, améliorations, animaux, gemmes)","Ne s'affiche qu'une seule fois, jamais aux joueurs qui reviennent"]},
-  {v:"4.12.1", lines:["Grande célébration (anneau doré, confettis, secousse) sur succès débloqué, nouvel animal et Renaissance","Même niveau d'énergie que la tape, plus les moments importants ne font pas pâle figure"]},
-  {v:"4.12.0", lines:["Achat en masse : sélecteur ×1/×5/×10/×50/MAX en haut d'Améliorations, s'applique aux tapes, au passif et aux upgrades par animal","MAX calcule automatiquement ce que tu peux vraiment te permettre"]},
-  {v:"4.11.1", lines:["Herbe et fleurs repositionnées sur les côtés uniquement — ne tombent plus sur le visage de l'animal"]},
-  {v:"4.11.0", lines:["Analyse vidéo complète : décor caché par le bouton Menus en mode replié, corrigé (repositionné)","Animaux/Boutique/Dex ont maintenant un vrai voile sombre derrière, comme la Téléportation — fini l'effet deux menus","Texte trompeur «paiement simulé» corrigé alors que les vrais liens PayPal fonctionnaient déjà"]},
-  {v:"4.10.1", lines:["Correctif : le décor restait ancré à un pourcentage de la scène, se déplaçait mal quand le menu s'ouvrait/repliait","Allègement des performances : moins de touffes d'herbe animées en continu, moins de particules par tape"]},
-  {v:"4.10.0", lines:["Tape bien plus satisfaisante : écrasement plus marqué avec rebond, flash d'impact, pièces qui explosent plus loin","Les critiques secouent maintenant la scène brièvement — vraie différence ressentie, pas juste un chiffre plus gros"]},
-  {v:"4.9.1", lines:["Décor enrichi façon Pokémon : buissons aux deux coins, herbe en grappes irrégulières, fleurs éparpillées","Correctifs : z-index du bouton Menus renforcé, croix du panneau recentrée, défilement du Dex optimisé"]},
-  {v:"4.9.0", lines:["Navigation repensée : Animaux/Boutique/Dex s'ouvrent en fenêtre depuis le HUD, comme la Téléportation","Le bas ne garde que 3 onglets (Améliorations/Labo/Quotidien) · bouton Menus pleine largeur"]},
-  {v:"4.8.2", lines:["Correctif : bloc rose plein sur l'herbe (reste de l'ancien CSS), retiré","Correctif : badge du nom de l'animal bloqué visible sans texte — rendu permanent au lieu d'une animation qui se bloquait"]},
-  {v:"4.8.1", lines:["Menu du bas agrandi (38% -> 47% de l'écran)"]},
-  {v:"4.8.0", lines:["Fusion : taper une case ouvre une fenêtre pour choisir la créature, plus besoin de glisser-déposer","Cartes et cases dans le même style en relief que le reste de l'interface"]},
-  {v:"4.7.2", lines:["Arbre de Renaissance : niveau réel affiché sur le maximum (ex. niv. 12/90), plus un total général"]},
-  {v:"4.7.1", lines:["Correctif important : les cosmétiques (couronne, lunettes, écharpe...) étaient mal placés depuis le passage des animaux en 24×24","Système séparé du labo de fusion pour ne rien casser là-bas — testé des deux côtés avant envoi"]},
-  {v:"4.7.0", lines:["Monde de l'Air : 6 nouveaux animaux (Faucon, Chouette, Colibri, Libellule, Esprit du Vent, Papillon Géant)","N'apparaissent en Boutique qu'une fois le Monde 2 atteint — pas de vitrine vide avant"]},
-  {v:"4.6.1", lines:["Correctif + vrai mécanisme : Monde 2 se débloque en gardant 1 quadrillion de pièces sans les dépenser (au lieu d'un compteur de renaissances)","Vraie tension stratégique : dépenser maintenant ou économiser pour changer de monde"]},
-  {v:"4.6.0", lines:["Fondation du système de téléportation : bouton 🌍, Monde 1 (La Ferme) toujours accessible","Monde 2 verrouillé jusqu'à 500 Renaissances + arbre principal au max — le contenu du Monde 2 reste à définir"]},
-  {v:"4.5.0", lines:["Arbre de Renaissance étendu : 5 nouvelles améliorations, plafonds doublés à triplés sur les 10 existantes","Les Pattes Célestes gardent une vraie utilité beaucoup plus longtemps avant d'être toutes maximisées"]},
-  {v:"4.4.2", lines:["Herbe refaite en vrai pixel art (brins pointus, hauteurs variées) au lieu de capsules arrondies","Testé en conditions réelles (navigateur simulé) avant envoi cette fois, pas juste visuellement"]},
-  {v:"4.4.1", lines:["Correctif important : la grille Cosmétiques plantait sur les cadres, rendant impossible de les retirer","Renard Pionnier redessiné : silhouette triangulaire, museau fin et pointu, vraiment reconnaissable comme renard"]},
-  {v:"4.4.0", lines:["Nouvelle catégorie Boutique : Sessions — animaux exclusifs débloqués uniquement par code","Premier animal de session : Renard Pionnier (code PIONNIER1), ×16 sur tout"]},
-  {v:"4.3.0", lines:["Les 10 animaux du Biome Ferme redessinés en 24×24 — les 28 animaux du jeu sont maintenant à la même résolution","Vache et Oie retouchées 2 fois chacune avant validation finale"]},
-  {v:"4.2.1", lines:["Museaux propres à chaque espèce : Bouledogue (court, plat, plissé) et les 3 chats (petit nez triangulaire au lieu du museau générique)"]},
-  {v:"4.2.0", lines:["9 animaux premium redessinés en 24×24 : Siamois, Maine Coon, Sphynx, Shiba, Bouledogue, Berger Allemand, Cochon Doré, Lama, Singe","Chacun vérifié visuellement avant envoi, retouché 2 fois (Maine Coon, Singe) avant validation"]},
-  {v:"4.1.0", lines:["Les couleurs des animaux s'adaptent maintenant au thème actif (Dark/GameBoy/Cyberpunk), pas que l'interface","Dragon : museau allongé, yeux en amande dorés, cornes incurvées — nouvel essai"]},
-  {v:"4.0.2", lines:["Dragon : ailes vraiment angulaires (ne ressemble plus à des oreilles d'éléphant)","Perruche : vraie houppe pointue façon calopsite, avec la joue orange caractéristique"]},
-  {v:"4.0.1", lines:["Pattes/sabots dans une 3e couleur distincte sur 6 animaux (Hamster, Lapin, Chat, Corgi, Capybara, Dragon)","Même niveau de finition que le Cochon désormais — comparé côte à côte avant envoi"]},
-  {v:"4.0.0", lines:["Les 9 animaux classiques redessinés en 24×24 (Hamster, Lapin, Perruche, Chat, Corgi, Capybara, Panda, Dragon)","Chaque rendu vérifié visuellement avant intégration — traits distinctifs par espèce, pas de simples recolorations"]},
-  {v:"3.9.1", lines:["Cochon redessiné en 24×24 (au lieu de 16×16) : oreilles détaillées, reflet dans les yeux, ombres de volume","Le moteur gère maintenant des sprites de taille variable — les 199 autres restent identiques"]},
-  {v:"3.9.0", lines:["Palette réchauffée façon Stardew Valley / Egg Inc. : tons bois, terre, coucher de soleil","Uniquement le thème Pastel par défaut — Dark, GameBoy et Cyberpunk restent inchangés"]},
-  {v:"3.8.1", lines:["Correctif : l'herbe se fondait dans le fond (contraste trop faible selon le thème), maintenant contourée","Correctif : le fond animé de l'accueil pouvait bloquer le tap sur le numéro de version","Insecte plus fréquent et jamais deux fois le même type de suite"]},
-  {v:"3.8.0", lines:["Chaque animal a un trait (Gourmand/Joueur/Dormeur/Curieux) qui influence son comportement","Le trait s'affiche sur les animaux possédés · outil de test caché (7 tapes sur le numéro de version)"]},
-  {v:"3.7.0", lines:["Ouverture d'œuf mise en scène : l'œuf se fissure, flash, puis révélation de l'animal","Réutilise les sprites de l'accueil — plus de résultat instantané et plat"]},
-  {v:"3.6.0", lines:["Monde vivant : herbe animée, insecte de passage occasionnel, l'animal regarde autour de lui / s'assoit","Améliorations et Boutique regroupées en vraies catégories (Clic manuel/Automatique, Gemmes/Premium)"]},
-  {v:"3.5.0", lines:["Nouvelle séquence d'accueil : œuf à réchauffer en 5 tapes avant le choix du compagnon","Uniquement pour les tout nouveaux joueurs, ne touche pas les parties en cours"]},
-  {v:"3.4.1", lines:["Habillage visuel : HUD vitré, boutons et cartes en relief, onglets avec effet enfoncé","Aucune fonctionnalité touchée — uniquement du style par-dessus l'existant"]},
-  {v:"3.4.0", lines:["Frénésie : corrige le lag (animation coûteuse retirée), passe de 25s à 500 tapes","Hors-ligne : détection renforcée pour le passage en arrière-plan dans l'app (WebView)"]},
-  {v:"3.3.2", lines:["Correctif : l'animal s'affiche bien dès l'ouverture (plus besoin de changer d'animal)","Œufs payables en Pièces de Fusion OU en gemmes, 4e palier (Mythique), récompense du mini-jeu augmentée"]},
-  {v:"3.3.1", lines:["Tap Précis (Super Critique au centre), Oiseau de Nuit, piste secrète, Maître Éleveur"]},
-  {v:"3.3.0", lines:["Jauge de Frénésie : se remplit en tapant, 25s de gains ×3 (×6 avec l'amélioration en gemmes)"]},
-  {v:"3.2.0", lines:["Rééquilibrage : animaux ×3 à ×11 selon le palier (facile au début, dur à la fin)","Améliorations : croissance qui s'accélère aux niveaux 50 et 100, comme un vrai mur"]},
-  {v:"3.1.2", lines:["Esprit de Meute (+chiens possédés), Zoo Complet (×2 si une rareté de chaque), 2 cadres cosmétiques"]},
-  {v:"3.1.1", lines:["Clicker Fou (+crit selon le total de tapes), trickle FC/gemmes ambiant, 3 nouveaux succès"]},
-  {v:"3.1.0", lines:["Biome Ferme : 10 nouveaux animaux premium, silhouettes propres (pas des recolorations)","3 effets uniques : Cochon Tirelire (+tape), Vache Laitière (passif dédié), Chien de Berger (synergie Ferme)"]},
-  {v:"3.0.2", lines:["Arbre de Renaissance bien plus cher : coûts de base et croissance fortement augmentés"]},
-  {v:"3.0.1", lines:["Salutation en bulle sur l'animal (5s) au lieu d'un texte sur l'accueil","Nouveautés : la modale s'affiche bien par-dessus l'écran d'accueil"]},
-  {v:"3.0.0", lines:["Nouvel écran d'accueil : chargement, fond animaux, salutations, journal des nouveautés"]},
-  {v:"2.9.4", lines:["Roue : les logos des lots apparaissent sur la roue elle-même","Renaissance : la liste ne remonte plus en haut après un achat"]},
-  {v:"2.9.3", lines:["Le menu reste ouvert à chaque lancement, le replier ne dure que la session en cours"]},
-  {v:"2.9.2", lines:["Le nom de l'animal disparaît aussi avec l'étiquette de rareté, pas juste elle seule"]},
-  {v:"2.9.1", lines:["Roue de la chance : bouton ⓘ affichant les vrais % et effets de chaque lot"]},
-  {v:"2.9.0", lines:["Cochon remplace Poussin au départ · Cochon Doré (premium) renommé pour éviter le doublon","Renaissance : garde l'animal actif s'il est encore possédé · étiquette de rareté animée"]},
-  {v:"2.8.0", lines:["Vrais paiements PayPal branchés · gemmes créditées automatiquement au retour"]},
-  {v:"2.7.1", lines:["Hors-ligne rééquilibré : 12h max via Pattes Célestes, 12h max via 4 packs en gemmes"]},
-  {v:"2.7.0", lines:["Hors-ligne : plafond porté à 24h (base + Renaissance + gemmes)","Série de connexion quotidienne avec succès à 7/14/30 jours"]},
-  {v:"2.6.1", lines:["Extension hors-ligne : passe des pièces (perdue à chaque Renaissance) à l'arbre permanent"]},
-  {v:"2.6.0", lines:["Cochon, Lama, Singe : 3 nouveaux animaux premium","Renaissance rééquilibrée pour une vraie partie longue (20T) · bouton toujours visible"]},
-  {v:"2.5.0", lines:["Paliers de Renaissance (jusqu'à 150), PWA installable (manifest + icônes + hors-ligne)","Renaissance : ne garde vraiment que gemmes et achats en gemmes"]},
-  {v:"2.4.0", lines:["Arborescence d'améliorations par animal (18) avec objets visibles à l'écran"]},
-  {v:"2.3.0", lines:["Succès + profil, roue de la chance, cosmétiques, animations de vie","Thèmes : boutons désactivés lisibles partout · Renaissance rééquilibrée"]},
-  {v:"2.2.1", lines:["Grands nombres réels (Quadrillion...) · Renaissance testable plus tôt"]},
-  {v:"2.2.0", lines:["Quêtes cochées ✔ · thèmes retouchés · plusieurs musiques"]},
-  {v:"2.1.0", lines:["50 lignées (200 créatures), Laboratoire de Fusion, mini-jeu"]},
-  {v:"2.0.0", lines:["Starter, Renaissance, codes cadeaux, hors-ligne amélioré, thèmes"]}
+  {v:"1.0.0", lines:["Choix du compagnon de départ refait en œufs mystère : 3 œufs, silhouette à la sélection, confirme ou reviens en voir un autre — l'animal cadeau change vraiment à chaque partie","Correctif : le compagnon choisi au départ est maintenant vraiment celui qui apparaît (restait bloqué sur Cochon avant)","Frénésie repensée : se déclenche après 750 tapes, dure 10 vraies secondes, pourcentage de progression affiché au-dessus de la barre","Le nom de l'animal s'affiche 3 secondes puis s'efface, pour tous les animaux","Personnalisation : chaque palette de couleur a maintenant un aperçu visuel, pas juste un nom","Gain hors-ligne fiabilisé pour de bon, chevauchements d'affichage corrigés — vérifiés avec un vrai navigateur sur plusieurs profils de sauvegarde"]},
 ];
 function openSettings(){
   const themes = [["pastel","Pastel"],["dark","Dark Pixel"],["gameboy","GameBoy"],["cyber","Cyberpunk"]];
@@ -3478,6 +3423,8 @@ function loop(){
   const dt = Math.min(2, (now-lastTick)/1000);
   lastTick = now;
   if(dt > 0) earn(perSec()*dt);
+  tickFrenzyTime(dt*1000);
+  refreshFrenzyBar();
   /* Laboratoire Autonome + Ferme à Gemmes : trickle ambiant minime, pas une amélioration
      achetable — juste un petit plus qui tourne en fond, montants volontairement infimes. */
   S.fcAccum = (S.fcAccum||0) + dt;
@@ -3586,19 +3533,71 @@ function runTuto(){
   skipBtn.onclick = ()=>{ sfx("tab"); box.classList.remove("on"); };
   setTimeout(show, 500);
 }
+function paintSilhouette(cv, key, color){
+  const def = SPRITES[key]; if(!def || !cv) return;
+  const n = def.size || 16;
+  cv.width = n; cv.height = n;
+  const ctx = cv.getContext("2d");
+  ctx.clearRect(0,0,n,n);
+  for(let y=0;y<n;y++){
+    const row = (def.px[y]||"").padEnd(n,".");
+    for(let x=0;x<n;x++){
+      if(row[x] === ".") continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(x,y,1,1);
+    }
+  }
+}
+let _starterOrder = null;
+let _starterPeek = null;
 function showStarter(){
+  _starterOrder = STARTERS.map(s=>s).sort(()=>Math.random()-0.5);
+  _starterPeek = null;
+  renderStarterStep();
+  $("#starter").classList.add("on");
+}
+function renderStarterStep(){
+  const h1 = document.querySelector("#starter h1");
+  const sub = document.querySelector("#starter .sub");
   const row = $("#starterRow"); row.innerHTML = "";
-  STARTERS.forEach(s=>{
-    const card = document.createElement("button");
+
+  if(_starterPeek === null){
+    row.style.gridTemplateColumns = "repeat(3,1fr)";
+    h1.textContent = "Choisis un œuf";
+    sub.innerHTML = "Un compagnon différent se cache dans chacun.<br>Tu ne sauras lequel qu'en le confirmant.";
+    _starterOrder.forEach((s, idx)=>{
+      const card = document.createElement("button");
+      card.className = "starterCard";
+      const c = document.createElement("canvas"); paint(c, "egg0");
+      const n = document.createElement("div"); n.className = "sn"; n.textContent = "Œuf "+(idx+1);
+      card.append(c,n);
+      card.onclick = ()=>{ _starterPeek = idx; renderStarterStep(); sfx("tab"); };
+      row.appendChild(card);
+    });
+  } else {
+    row.style.gridTemplateColumns = "1fr";
+    const s = _starterOrder[_starterPeek];
+    h1.textContent = "Un mystère t'attend...";
+    sub.innerHTML = "Confirme pour le découvrir, ou reviens voir les autres œufs.";
+    const card = document.createElement("div");
     card.className = "starterCard";
-    const c = document.createElement("canvas"); paint(c, s.sprite);
-    const n = document.createElement("div"); n.className = "sn"; n.textContent = s.name;
-    const b = document.createElement("div"); b.className = "sb"; b.textContent = s.bonus;
-    card.append(c,n,b);
-    card.onclick = ()=>{
+    const c = document.createElement("canvas"); c.style.width="72px"; c.style.height="72px"; c.style.margin="0 auto";
+    paintSilhouette(c, s.sprite, "#2B2333");
+    card.appendChild(c);
+    row.appendChild(card);
+
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display:flex;gap:8px;margin-top:14px";
+    const backBtn = document.createElement("button");
+    backBtn.className = "mBtn ghost"; backBtn.textContent = "Retour"; backBtn.style.flex = "1";
+    backBtn.onclick = ()=>{ _starterPeek = null; renderStarterStep(); sfx("tab"); };
+    const confirmBtn = document.createElement("button");
+    confirmBtn.className = "mBtn"; confirmBtn.textContent = "Confirmer"; confirmBtn.style.flex = "1";
+    confirmBtn.onclick = ()=>{
       if(S.starter) return;
-      S.starter = s.key === "coin" ? "chat" : s.key === "speed" ? "chien" : "lapin";
-      card.classList.add("chosen"); sfx("evo"); vibrate(80);
+      S.starter = s.id; S.animal = s.id;
+      S.owned = S.owned || {}; S.owned[s.id] = true;
+      sfx("evo"); vibrate(80);
       setTimeout(()=>{
         flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go");
         setTimeout(()=>{
@@ -3610,9 +3609,9 @@ function showStarter(){
         }, 300);
       }, 620);
     };
-    row.appendChild(card);
-  });
-  $("#starter").classList.add("on");
+    btnRow.append(backBtn, confirmBtn);
+    row.appendChild(btnRow);
+  }
 }
 
 
