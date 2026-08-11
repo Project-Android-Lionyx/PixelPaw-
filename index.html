@@ -367,7 +367,7 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #eggIntro .sub{font-size:9px;color:var(--gold);text-align:center;margin-top:6px}
 #eggWrap{width:180px;height:180px;cursor:pointer}
 #eggWrap canvas{width:100%;height:100%}
-#eggWrap.shake{animation:eggShake .35s ease-in-out}
+#eggWrap.shake, .starterCard.shake{animation:eggShake .35s ease-in-out}
 @keyframes eggShake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-5px,2px) rotate(-4deg)}75%{transform:translate(5px,2px) rotate(4deg)}}
 #eggCounter{
   margin-top:24px;font-size:9px;background:var(--cream);border:3px solid var(--ink);border-radius:999px;
@@ -378,9 +378,10 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
 #starter .sub{font-size:9px;color:var(--ink-soft);text-align:center;margin-bottom:22px;line-height:1.9}
 .starterRow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:340px}
 .starterCard{
-  border:4px solid var(--ink);border-radius:16px;background:var(--card);padding:10px 4px;text-align:center;
+  border:4px solid var(--ink);border-radius:16px;background:var(--card);padding:16px 6px;text-align:center;
   box-shadow:var(--pop);transition:transform .15s;
 }
+.starterCard canvas{filter:drop-shadow(0 3px 0 rgba(0,0,0,.15));animation:breathe 2.4s ease-in-out infinite}
 .starterCard:active{transform:translateY(4px);box-shadow:none}
 .starterCard canvas{width:100%;max-width:64px;height:auto;aspect-ratio:1;margin:0 auto 6px}
 .starterCard .sn{font-size:9px;margin-bottom:4px}
@@ -1917,9 +1918,41 @@ const BOOSTS = [
    5. STARTERS — bonus permanent, choix unique
    ============================================================ */
 const STARTERS = [
-  {id:"chat",  sprite:"chat",  name:"Chat",  bonus:"+5 % de pièces",  key:"coin"},
-  {id:"chien", sprite:"corgi", name:"Chien", bonus:"+5 % de vitesse", key:"speed"},
-  {id:"lapin", sprite:"lapin", name:"Lapin", bonus:"+5 % de critique",key:"crit"}
+  {id:"cochon", name:"Cochon", bonusType:"coin", bonus:"+5 % de pièces"},
+  {id:"hamster", name:"Hamster", bonusType:"speed", bonus:"+5 % de vitesse"},
+  {id:"lapin", name:"Lapin", bonusType:"crit", bonus:"+5 % de critique"},
+  {id:"perruche", name:"Perruche", bonusType:"cost", bonus:"-4 % sur les coûts"},
+  {id:"chat", name:"Chat Européen", bonusType:"offline", bonus:"+8 % de gains hors-ligne"},
+  {id:"corgi", name:"Chien Corgi", bonusType:"coin", bonus:"+5 % de pièces"},
+  {id:"capybara", name:"Capybara", bonusType:"speed", bonus:"+5 % de vitesse"},
+  {id:"panda", name:"Panda", bonusType:"crit", bonus:"+5 % de critique"},
+  {id:"dragon", name:"Dragon Pixel", bonusType:"cost", bonus:"-4 % sur les coûts"},
+  {id:"siamois", name:"Chat Siamois", bonusType:"offline", bonus:"+8 % de gains hors-ligne"},
+  {id:"mainecoon", name:"Chat Maine Coon", bonusType:"coin", bonus:"+5 % de pièces"},
+  {id:"sphynx", name:"Chat Sphynx", bonusType:"speed", bonus:"+5 % de vitesse"},
+  {id:"shiba", name:"Chien Shiba Inu", bonusType:"crit", bonus:"+5 % de critique"},
+  {id:"bouledogue", name:"Bouledogue Français", bonusType:"cost", bonus:"-4 % sur les coûts"},
+  {id:"berger", name:"Berger Allemand", bonusType:"offline", bonus:"+8 % de gains hors-ligne"},
+  {id:"cochondore", name:"Cochon Doré", bonusType:"coin", bonus:"+5 % de pièces"},
+  {id:"lama", name:"Lama", bonusType:"speed", bonus:"+5 % de vitesse"},
+  {id:"singe", name:"Singe", bonusType:"crit", bonus:"+5 % de critique"},
+  {id:"cochontirelire", name:"Cochon Tirelire", bonusType:"cost", bonus:"-4 % sur les coûts"},
+  {id:"vachelait", name:"Vache Laitière", bonusType:"offline", bonus:"+8 % de gains hors-ligne"},
+  {id:"moutonor", name:"Mouton à Laine d'Or", bonusType:"coin", bonus:"+5 % de pièces"},
+  {id:"chevrepix", name:"Chèvre Pixel", bonusType:"speed", bonus:"+5 % de vitesse"},
+  {id:"chevaltrait", name:"Cheval de Trait", bonusType:"crit", bonus:"+5 % de critique"},
+  {id:"anetetu", name:"Âne Têtu", bonusType:"cost", bonus:"-4 % sur les coûts"},
+  {id:"oiebavarde", name:"Oie Bavarde", bonusType:"offline", bonus:"+8 % de gains hors-ligne"},
+  {id:"canardplastique", name:"Canard en Plastique", bonusType:"coin", bonus:"+5 % de pièces"},
+  {id:"dindonfurieux", name:"Dindon Furieux", bonusType:"speed", bonus:"+5 % de vitesse"},
+  {id:"chiendeberger", name:"Chien de Berger", bonusType:"crit", bonus:"+5 % de critique"},
+  {id:"renardpionnier", name:"Renard Pionnier", bonusType:"cost", bonus:"-4 % sur les coûts"},
+  {id:"faucon", name:"Faucon", bonusType:"offline", bonus:"+8 % de gains hors-ligne"},
+  {id:"chouette", name:"Chouette", bonusType:"coin", bonus:"+5 % de pièces"},
+  {id:"colibri", name:"Colibri", bonusType:"speed", bonus:"+5 % de vitesse"},
+  {id:"libellule", name:"Libellule", bonusType:"crit", bonus:"+5 % de critique"},
+  {id:"espritvent", name:"Esprit du Vent", bonusType:"cost", bonus:"-4 % sur les coûts"},
+  {id:"papillon", name:"Papillon Géant", bonusType:"offline", bonus:"+8 % de gains hors-ligne"},
 ];
 
 /* ============================================================
@@ -2246,7 +2279,11 @@ function fmtTime(sec){
    14. CALCULS
    ============================================================ */
 function pLvl(id){ return S.prest[id]||0; }
-function costMult(){ return Math.max(0.4, 1 - 0.03*pLvl("g2")); }          // Négociant
+function costMult(){
+  let m = Math.max(0.4, 1 - 0.03*pLvl("g2"));
+  if(starterHasBonus("cost")) m *= 0.96;
+  return m;
+}
 function upCost(u){ return Math.floor(tieredCost(u.base, u.rate, S.up[u.id]||0) * costMult()); }
 let buyQty = 1;
 function bulkCalcFn(costFn, curLvl, afford, maxLvl){
@@ -2286,6 +2323,11 @@ function dexCount(){ return Object.keys(S.dex).filter(k=>S.dex[k]>0).length; }
 
 /* Multiplicateur global. `withBoost=false` sert au calcul hors-ligne.
    CORRECTIF v2 : le boost ne comptait pas dans les gains hors-ligne (exploit). */
+function starterHasBonus(type){
+  if(!S.starter) return false;
+  const s = STARTERS.find(x=>x.id===S.starter);
+  return s && s.bonusType === type;
+}
 function globalMult(withBoost){
   let m = 1;
   PREMIUM.forEach(p=>{ if(S.premium[p.id] && p.mult) m *= p.mult; });
@@ -2296,7 +2338,7 @@ function globalMult(withBoost){
   m *= 1 + 0.02 * pLvl("g9");                                                          // Cœur généreux
   m *= 1 + 0.02 * pLvl("g13");                                                         // Écho doré
   m *= 1 + 0.15 * (S.pawPoints||0) / 10;                                               // Pattes Célestes
-  if(S.starter === "chat") m *= 1.05;
+  if(starterHasBonus("coin")) m *= 1.05;
   /* Biome Ferme : Chien de Berger boost les autres animaux de Ferme possédés */
   const dog = PREMIUM.find(p=>p.id === "chiendeberger");
   if(dog && S.premium.chiendeberger){
@@ -2332,7 +2374,7 @@ function farmIdleFlat(){
 }
 function critChance(){
   let c = 0.02*pLvl("g3") + 0.01*pLvl("g7") + 0.01*pLvl("g12");
-  if(S.starter === "lapin") c += 0.05;
+  if(starterHasBonus("crit")) c += 0.05;
   if(S.premium.anetetu) c += 0.03;
   c += 0.01 * Math.floor((S.taps||0)/1000);          // Clicker Fou : +1%/1000 tapes cumulées
   return Math.min(0.75, c);
@@ -2353,7 +2395,7 @@ function perSec(withBoost){
   _rtIdle.forEach(t=>{ s += (S.rup[t.id]||0) * t.add; });
   s += farmIdleFlat();
   s *= globalMult(withBoost);
-  if(S.starter === "chien") s *= 1.05;
+  if(starterHasBonus("speed")) s *= 1.05;
   return Math.floor(s);
 }
 function offlineCap(){
@@ -2361,7 +2403,11 @@ function offlineCap(){
   OFFLINE_GEM_PACKS.forEach(p=>{ if(S.offGemPacks[p.id]) cap += p.add; });
   return Math.min(OFFLINE_MAX, cap);
 }
-function offlineRate(){ return OFFLINE_RATE * (1 + 0.10*pLvl("g4") + 0.05*pLvl("g8") + 0.03*pLvl("g14")); }
+function offlineRate(){
+  let m = 1 + 0.10*pLvl("g4") + 0.05*pLvl("g8") + 0.03*pLvl("g14");
+  if(starterHasBonus("offline")) m += 0.08;
+  return OFFLINE_RATE * m;
+}
 function earn(n){ S.coins += n; S.totalEarned += n; S.lifetimeEarned += n; bump("earned", n); }
 
 /* ============================================================
@@ -3258,7 +3304,7 @@ function doPrestige(){
    ============================================================ */
 /* Historique bref, affiché dans les options. Ajoute une entrée en tête à chaque lot. */
 const CHANGELOG = [
-  {v:"1.0.0", lines:["🥚 Œufs mystère au départ","🐾 Bug du compagnon corrigé","⚡ Frénésie en secondes (750 tapes → 10s)","🎨 Personnalisation avec aperçus couleur","💾 Gains hors-ligne fiabilisés"]},
+  {v:"1.0.0", lines:["🥚 35 compagnons possibles au départ, vraiment au hasard","🐾 Bug du compagnon corrigé","⚡ Frénésie en secondes (750 tapes → 10s)","🎨 Personnalisation avec aperçus couleur","💾 Gains hors-ligne fiabilisés"]},
 ];
 function openSettings(){
   const themes = [["pastel","Pastel"],["dark","Dark Pixel"],["gameboy","GameBoy"],["cyber","Cyberpunk"]];
@@ -3556,10 +3602,16 @@ function paintSilhouette(cv, key, color){
     }
   }
 }
-let _starterOrder = null;
+let _starterPool = null;
 let _starterPeek = null;
+let _starterTapsLeft = 0;
+function pick3Random(arr){
+  const copy = arr.slice();
+  for(let i=copy.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [copy[i],copy[j]]=[copy[j],copy[i]]; }
+  return copy.slice(0,3);
+}
 function showStarter(){
-  _starterOrder = STARTERS.map(s=>s).sort(()=>Math.random()-0.5);
+  _starterPool = pick3Random(STARTERS);
   _starterPeek = null;
   renderStarterStep();
   $("#starter").classList.add("on");
@@ -3572,25 +3624,49 @@ function renderStarterStep(){
   if(_starterPeek === null){
     row.style.gridTemplateColumns = "repeat(3,1fr)";
     h1.textContent = "Choisis un œuf";
-    sub.innerHTML = "Un compagnon différent se cache dans chacun.<br>Tu ne sauras lequel qu'en le confirmant.";
-    _starterOrder.forEach((s, idx)=>{
+    sub.innerHTML = "Une silhouette se devine dans chacun.<br>Tape pour le réchauffer et le découvrir.";
+    _starterPool.forEach((s, idx)=>{
       const card = document.createElement("button");
       card.className = "starterCard";
-      const c = document.createElement("canvas"); paint(c, "egg0");
+      const c = document.createElement("canvas"); c.style.width="72px"; c.style.height="72px"; c.style.margin="0 auto";
+      paintSilhouette(c, s.id, "#2B2333");
       const n = document.createElement("div"); n.className = "sn"; n.textContent = "Œuf "+(idx+1);
       card.append(c,n);
-      card.onclick = ()=>{ _starterPeek = idx; renderStarterStep(); sfx("tab"); };
+      card.onclick = ()=>{ _starterPeek = idx; _starterTapsLeft = 5; renderStarterStep(); sfx("tab"); };
       row.appendChild(card);
     });
+  } else if(_starterTapsLeft > 0){
+    row.style.gridTemplateColumns = "1fr";
+    const s = _starterPool[_starterPeek];
+    h1.textContent = "Ça bouge...";
+    sub.innerHTML = "Tape sur l'œuf pour le réchauffer.";
+    const card = document.createElement("button");
+    card.className = "starterCard"; card.id = "hatchCard";
+    const c = document.createElement("canvas"); c.id="hatchCv"; c.style.width="72px"; c.style.height="72px"; c.style.margin="0 auto";
+    paintSilhouette(c, s.id, "#2B2333");
+    const n = document.createElement("div"); n.className = "sn"; n.id = "hatchCounter"; n.textContent = _starterTapsLeft+" touches restantes";
+    card.append(c,n);
+    card.onclick = ()=>{
+      _starterTapsLeft--;
+      document.getElementById("hatchCard").classList.remove("shake"); void document.getElementById("hatchCard").offsetWidth; document.getElementById("hatchCard").classList.add("shake");
+      sfx("click"); vibrate(30);
+      if(_starterTapsLeft <= 0){ setTimeout(renderStarterStep, 350); }
+      else document.getElementById("hatchCounter").textContent = _starterTapsLeft+" touches restantes";
+    };
+    row.appendChild(card);
+    const backBtn = document.createElement("button");
+    backBtn.className = "mBtn ghost"; backBtn.textContent = "Retour"; backBtn.style.marginTop = "14px";
+    backBtn.onclick = ()=>{ _starterPeek = null; renderStarterStep(); sfx("tab"); };
+    row.appendChild(backBtn);
   } else {
     row.style.gridTemplateColumns = "1fr";
-    const s = _starterOrder[_starterPeek];
-    h1.textContent = "Un mystère t'attend...";
-    sub.innerHTML = "Confirme pour le découvrir, ou reviens voir les autres œufs.";
+    const s = _starterPool[_starterPeek];
+    h1.textContent = s.name;
+    sub.innerHTML = s.bonus+" pour toujours";
     const card = document.createElement("div");
     card.className = "starterCard";
     const c = document.createElement("canvas"); c.style.width="72px"; c.style.height="72px"; c.style.margin="0 auto";
-    paintSilhouette(c, s.sprite, "#2B2333");
+    paint(c, s.id);
     card.appendChild(c);
     row.appendChild(card);
 
@@ -5029,7 +5105,7 @@ tickBanner();
    caché sans savoir pourquoi. */
 // resume() se declenche desormais depuis enterGame(), une fois reellement dans
 // la partie choisie — jamais avant le choix d'emplacement sur l'ecran d'accueil.
-function checkFtue(){ if(!S.starter){ if(!S.hatched) showEggIntro(); else showStarter(); } }
+function checkFtue(){ if(!S.starter) showStarter(); }
 function enterGame(){
   const h = document.getElementById("home");
   h.classList.add("leaving");
