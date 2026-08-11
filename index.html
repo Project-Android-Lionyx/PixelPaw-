@@ -84,6 +84,8 @@ body[data-theme="cyber"] canvas{filter:saturate(1.5) hue-rotate(8deg) contrast(1
   width:38px;display:grid;place-items:center;font-size:14px;
 }
 .iconBtn:active{transform:translateY(3px);box-shadow:none}
+.btnIco{width:17px;height:17px;image-rendering:pixelated}
+.tIco{width:16px;height:16px;display:block;margin:0 auto 3px;image-rendering:pixelated}
 #prestigeBtn{background:var(--paw);display:none}
 #prestigeBtn.on{display:grid}
 #worldBtn{background:var(--gem);display:none}
@@ -903,6 +905,49 @@ button:active{ filter:brightness(.96); }
 }
 .qtyBtn.on{ box-shadow:0 3px 0 var(--gold-d), inset 0 0 0 2px rgba(255,255,255,.4); }
 
+/* ============================================================
+   PROFONDEUR DE SCÈNE — collines et nuages en arrière-plan
+   ============================================================ */
+#stageBg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.hill{position:absolute;bottom:40px;border-radius:50% 50% 0 0;opacity:.35}
+.hill.h1{left:-10%;width:70%;height:80px;background:var(--bg4)}
+.hill.h2{right:-15%;width:60%;height:60px;background:var(--bg4);opacity:.25}
+.cloud{position:absolute;border-radius:999px;background:rgba(255,255,255,.5);filter:blur(1px)}
+.cloud.c1{top:8%;left:10%;width:56px;height:18px;animation:driftCloud 34s linear infinite}
+.cloud.c2{top:15%;right:12%;width:40px;height:14px;opacity:.7;animation:driftCloud 26s linear infinite reverse}
+@keyframes driftCloud{0%{transform:translateX(-14px)}50%{transform:translateX(14px)}100%{transform:translateX(-14px)}}
+
+/* ============================================================
+   RARETÉS — halos progressifs sur les vignettes d'animaux
+   ============================================================ */
+.thumb.rar-peucommun{box-shadow:0 3px 0 var(--ink-soft), 0 0 0 2px rgba(125,211,192,.5)}
+.thumb.rar-rare{box-shadow:0 3px 0 var(--ink-soft), 0 0 8px 1px rgba(94,168,255,.55)}
+.thumb.rar-epique{box-shadow:0 3px 0 var(--ink-soft), 0 0 10px 2px rgba(180,123,255,.6)}
+.thumb.rar-legendaire{box-shadow:0 3px 0 var(--ink-soft), 0 0 12px 2px rgba(255,176,32,.65);animation:rarPulse 2.4s ease-in-out infinite}
+.thumb.rar-mythique{box-shadow:0 3px 0 var(--ink-soft), 0 0 14px 3px rgba(255,92,138,.7);animation:rarPulse 2s ease-in-out infinite}
+@keyframes rarPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.08)}}
+
+/* ============================================================
+   IDENTITÉ VISUELLE PAR SYSTÈME — Renaissance
+   ============================================================ */
+.modal-prestige{
+  background:linear-gradient(160deg, #3A2B52 0%, #241933 100%);
+  border-color:#FFD666;
+  box-shadow:0 6px 0 rgba(0,0,0,.45), 0 0 30px rgba(255,214,102,.18);
+}
+.modal-prestige h2, .modal-prestige .big{color:#FFE9A8;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.modal-prestige p{color:#C9BEE0}
+.modal-prestige .row{background:rgba(255,255,255,.06);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.modal-prestige .rName{color:#FFE9A8}
+.modal-prestige .rSub{color:#B3A8D6}
+.modal-prestige .thumb{background-image:linear-gradient(135deg,#4A3868,#2E2248);border-color:#FFD666}
+
+/* ============================================================
+   IDENTITÉ VISUELLE PAR SYSTÈME — Succès
+   ============================================================ */
+.achvRow{background-image:linear-gradient(135deg,#FFF6DE,#FFE9B8);border:2px solid #E0A61E}
+.achvRow .thumb{background-image:linear-gradient(135deg,#FFE9A8,#FFD666);border-color:#E0A61E}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
@@ -916,12 +961,12 @@ button:active{ filter:brightness(.96); }
       <div class="stat"><span class="ico" style="font-size:12px;line-height:1">🧪</span><span class="val" id="fcVal">0</span></div>
     </div>
     <div class="hud-row icons-row">
-      <button class="iconBtn" id="animalsBtn" aria-label="Animaux">🐾<i class="dot" id="dot-animals"></i></button>
-      <button class="iconBtn" id="shopBtn" aria-label="Boutique">💎<i class="dot" id="dot-shop"></i></button>
-      <button class="iconBtn" id="dexBtn" aria-label="Dex">📖</button>
-      <button class="iconBtn" id="prestigeBtn" aria-label="Renaissance">👑</button>
-      <button class="iconBtn" id="worldBtn" aria-label="Téléportation">🌍</button>
-      <button class="iconBtn" id="gearBtn" aria-label="Options">⚙️</button>
+      <button class="iconBtn" id="animalsBtn" aria-label="Animaux"><canvas class="btnIco" id="ico-animals"></canvas><i class="dot" id="dot-animals"></i></button>
+      <button class="iconBtn" id="shopBtn" aria-label="Boutique"><canvas class="btnIco" id="ico-shop"></canvas><i class="dot" id="dot-shop"></i></button>
+      <button class="iconBtn" id="dexBtn" aria-label="Dex"><canvas class="btnIco" id="ico-dex"></canvas></button>
+      <button class="iconBtn" id="prestigeBtn" aria-label="Renaissance"><canvas class="btnIco" id="ico-prestige"></canvas></button>
+      <button class="iconBtn" id="worldBtn" aria-label="Téléportation"><canvas class="btnIco" id="ico-world"></canvas></button>
+      <button class="iconBtn" id="gearBtn" aria-label="Options"><canvas class="btnIco" id="ico-gear"></canvas></button>
     </div>
     <div id="cpsLine">0 pièces / sec</div>
     <div id="frenzyPct"></div>
@@ -929,6 +974,7 @@ button:active{ filter:brightness(.96); }
   </header>
 
   <main id="stage">
+    <div id="stageBg"><div class="cloud c1"></div><div class="cloud c2"></div><div class="hill h1"></div><div class="hill h2"></div></div>
     <div id="decor"></div>
     <div id="bug"></div>
     <div id="petName"><span id="petLabel">Poussin</span><span id="rarityTag">Commun</span></div>
@@ -1040,9 +1086,9 @@ button:active{ filter:brightness(.96); }
   </section>
 
   <nav id="tabs">
-    <button class="tab on" data-tab="upgrades"><span class="tIco">⚡</span><span class="tTxt">Amélio</span><i class="dot" id="dot-upgrades"></i></button>
-    <button class="tab" data-tab="labo"><span class="tIco">🧪</span><span class="tTxt">Labo</span><i class="dot" id="dot-labo"></i></button>
-    <button class="tab" data-tab="daily"><span class="tIco">🎁</span><span class="tTxt">Quotidien</span><i class="dot" id="dot-daily"></i></button>
+    <button class="tab on" data-tab="upgrades"><canvas class="tIco" id="ico-tab-up"></canvas><span class="tTxt">Amélio</span><i class="dot" id="dot-upgrades"></i></button>
+    <button class="tab" data-tab="labo"><canvas class="tIco" id="ico-tab-labo"></canvas><span class="tTxt">Labo</span><i class="dot" id="dot-labo"></i></button>
+    <button class="tab" data-tab="daily"><canvas class="tIco" id="ico-tab-daily"></canvas><span class="tTxt">Quotidien</span><i class="dot" id="dot-daily"></i></button>
   </nav>
 
   <button id="reopen">▲ Menus</button>
@@ -1108,6 +1154,196 @@ const VERSION = "1.0.0";
    1. SPRITES — grilles 16x16, une lettre = une couleur du palette
    ============================================================ */
 const SPRITES = {
+  ui_trophy:{size:17,pal:{"K":"#7A5A00","G":"#FFC94A","Y":"#FFE066","W":"#FFF3D6"},px:[
+    ".................",
+    "....KGGGGGGGK....",
+    "...KGYYYYYYYGK...",
+    "..KGYWWWWWWWYGK..",
+    ".KKGYWWWWWWWYGKK.",
+    "K.KGYWWWWWWWYGK.K",
+    "K.KGYYYYYYYYYGK.K",
+    "..KKGGGGGGGGGKK..",
+    "....KGGGGGGGK....",
+    ".....KGGGGGK.....",
+    "......KKKKK......",
+    ".......KGK.......",
+    "......KGGGK......",
+    ".....KGGGGGK.....",
+    "....KKKKKKKKK....",
+    ".................",
+    "................."
+  ]},
+  ui_star:{size:17,pal:{"K":"#7A4A00","Y":"#FFC94A","W":"#FFF3D6"},px:[
+    ".................",
+    ".........K.......",
+    ".........Y.......",
+    "........WYW......",
+    "........WYW......",
+    ".K......WYW......K",
+    ".KY....WWYWW....YK",
+    "..KYY.WWWYWWW.YYK",
+    "...KYYYYYYYYYYK..",
+    "..KYYYWWYWWYYYK..",
+    ".KYYYWWWYWWWYYYK.",
+    "KYYWWW.Y.WWWYYK..",
+    ".KWW....Y....WK..",
+    "..K.....Y.....K..",
+    "........Y........",
+    ".................",
+    "................."
+  ]},
+  ui_paw:{size:17,pal:{"K":"#3D2817","P":"#C17A4F","D":"#8B5A2B"},px:[
+    ".................",
+    ".................",
+    ".....K.......K...",
+    "....KPK.....KPK..",
+    "....KPK.....KPK..",
+    ".....K.......K...",
+    ".................",
+    "...K.........K...",
+    "..KPK.......KPK..",
+    "..KPK.......KPK..",
+    "...K.........K...",
+    "....KKKKKKKKK....",
+    "...KPPPPPPPPPK...",
+    "...KPPPPPPPPPK...",
+    "...KPPPPPPPPPK...",
+    "....KKKKKKKKK....",
+    "................."
+  ]},
+  ui_crown:{size:17,pal:{"K":"#5A3A00","G":"#FFC94A","Y":"#FFE066","R":"#FF5C8A"},px:[
+    ".................",
+    ".................",
+    "..K...K...K...K..",
+    "..KG..KG..KG..K..",
+    ".KGGK.KY.KGGK.K..",
+    ".KGGKGGYGGGGK.K..",
+    "KGGGGGGGGGGGGGK..",
+    "KGYGGGRGGGRGYGK..",
+    "KGGGGGGGGGGGGGK..",
+    ".KGGGGGGGGGGGK...",
+    ".KGGGGGGGGGGGK...",
+    "..KKKKKKKKKKK....",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    "................."
+  ]},
+  ui_book:{size:17,pal:{"K":"#3D2817","W":"#FFF3D6","B":"#5EA8FF","R":"#FF7A5C"},px:[
+    ".................",
+    ".................",
+    "...KKKKKKKKKKK...",
+    "..KWWWWWKWWWWWK..",
+    "..KWBWWWKWWWRWK..",
+    "..KWBWWWKWWWRWK..",
+    "..KWBWWWKWWWRWK..",
+    "..KWBWWWKWWWRWK..",
+    "..KWBWWWKWWWRWK..",
+    "..KWWWWWKWWWWWK..",
+    "..KKKKKKKKKKKKK..",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    "................."
+  ]},
+  ui_globe:{size:17,pal:{"K":"#123420","G":"#5CCB5F","B":"#5EA8FF","W":"#FFFFFF"},px:[
+    ".................",
+    ".....KKKKK.......",
+    "...KKBBBBBKK.....",
+    "..KBBGGBBBGBK....",
+    ".KBBBGGBBBGGBK...",
+    ".KBGGBBBGGBBBK...",
+    ".KBBBBGGBBBBBK...",
+    ".KBBGGBBBBGGBK...",
+    ".KBBBBBGGBBBBK...",
+    "..KBGGBBBGGBK....",
+    "...KKBBBBBKK.....",
+    ".....KKKKK.......",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    "................."
+  ]},
+  ui_gear:{size:17,pal:{"K":"#3D2817","S":"#8B6F4E","L":"#D6CBB8"},px:[
+    ".................",
+    ".......KK........",
+    ".......SS........",
+    "...K...SS...K....",
+    "..KSK..SS..KSK...",
+    "...KS..SS..SK....",
+    "KK..SSSSSSSSS..KK",
+    "SS..SSSLLLSSS..SS",
+    "KK..SLLLLLLLS..KK",
+    "SS..SLLLLLLLS..SS",
+    "KK..SSSLLLSSS..KK",
+    "SS..SSSSSSSSS..SS",
+    "...KS..SS..SK....",
+    "..KSK..SS..KSK...",
+    "...K...SS...K....",
+    ".......SS........",
+    ".......KK........"
+  ]},
+  ui_lightning:{size:17,pal:{"K":"#5A3A00","Y":"#FFC94A","W":"#FFF3D6"},px:[
+    ".................",
+    ".........KK......",
+    ".........KYK.....",
+    "........KYYK.....",
+    "........KYYK.....",
+    ".......KYYYK.....",
+    "......KYYYYKKK...",
+    "....KKYYYYYYYK...",
+    "...KYYYYYYYKK....",
+    "....KKYYYK.......",
+    ".......KYYK......",
+    ".......KYYK......",
+    ".......KYK.......",
+    ".......KKK.......",
+    ".................",
+    ".................",
+    "................."
+  ]},
+  ui_flask:{size:17,pal:{"K":"#3D2817","G":"#7AA7FF","L":"#B9D4FF","W":"#FFF3D6"},px:[
+    ".................",
+    ".......KKK.......",
+    ".......KWK.......",
+    ".......KWK.......",
+    "......KWWWK......",
+    "......K...K......",
+    ".....K.....K.....",
+    "....K.GGGGG.K....",
+    "...K.GGGGGGG.K...",
+    "...KGGGLLLGGGK...",
+    "...KGGLLLLLGGK...",
+    "...KGGGLLLGGGK...",
+    "...KGGGGGGGGGK...",
+    "....KKKKKKKKK....",
+    ".................",
+    ".................",
+    "................."
+  ]},
+  ui_gift:{size:17,pal:{"K":"#5A3A00","R":"#FF7A5C","W":"#FFF3D6","Y":"#FFC94A"},px:[
+    ".................",
+    "..K.........K....",
+    "..KY.......YK....",
+    "...KYY...YYK.....",
+    "....KYYYYYK......",
+    "..KKKKKKKKKKK....",
+    "..KRRRRYRRRRK....",
+    "..KRRRRYRRRRK....",
+    "..KKKKKYKKKKK....",
+    "..KRRRRYRRRRK....",
+    "..KRRRRYRRRRK....",
+    "..KRRRRYRRRRK....",
+    "..KKKKKKKKKKK....",
+    ".................",
+    ".................",
+    ".................",
+    "................."
+  ]},
 egg0:{pal:{C:"#FFF7E8",D:"#8B5A2B",G:"#9BDBA0"},px:[
 "................","......DDDD......",".....CCCCCC.....","....CCCCCCCC....",
 "...CCGCCCCGCC...","...CCCCCCCCCC...","..CCCCCCCCCCCC..","..CCCCCCCCCCCC..",
@@ -2850,6 +3086,11 @@ const bannerEl=$("#banner"), bannerTxt=$("#bannerTxt"), bannerBtn=$("#bannerBtn"
 const veil=$("#veil"), modal=$("#modal"), flash=$("#flash");
 
 paint($("#icoCoin"),"coin"); paint($("#icoGem"),"gem");
+paint($("#ico-animals"),"ui_paw"); paint($("#ico-shop"),"ui_star");
+paint($("#ico-dex"),"ui_book"); paint($("#ico-prestige"),"ui_crown");
+paint($("#ico-world"),"ui_globe"); paint($("#ico-gear"),"ui_gear");
+paint($("#ico-tab-up"),"ui_lightning"); paint($("#ico-tab-labo"),"ui_flask");
+paint($("#ico-tab-daily"),"ui_gift");
 
 /* Écriture mise en cache.
    CORRECTIF v2 : la v1 réécrivait 20+ boutons toutes les 400 ms, même sans
@@ -2865,7 +3106,7 @@ function toast(msg){
   clearTimeout(toastT);
   toastT = setTimeout(()=>toastEl.classList.remove("on"), 1700);
 }
-function openModal(html){ modal.innerHTML = html; veil.classList.add("on"); modal.scrollTop = 0; }
+function openModal(html, extraClass){ modal.className = "modal" + (extraClass ? " "+extraClass : ""); modal.innerHTML = html; veil.classList.add("on"); modal.scrollTop = 0; }
 function closeModal(){ veil.classList.remove("on"); }
 veil.addEventListener("click", e=>{ if(e.target === veil) closeModal(); });
 
@@ -3091,7 +3332,7 @@ function makeRow(o){
   const th = document.createElement("div"); th.className = "thumb";
   if(o.sprite){ const c = document.createElement("canvas"); paint(c, o.sprite); th.appendChild(c); }
   else { th.textContent = o.emoji||"?"; th.style.fontSize = "20px"; }
-  if(o.rar){ const d = document.createElement("i"); d.className = "rarityDot"; d.style.background = RARITIES[o.rar].col; th.appendChild(d); }
+  if(o.rar){ th.classList.add("rar-"+o.rar); const d = document.createElement("i"); d.className = "rarityDot"; d.style.background = RARITIES[o.rar].col; th.appendChild(d); }
   const info = document.createElement("div"); info.className = "rInfo";
   info.innerHTML = '<div class="rName"></div><div class="rSub"></div>';
   const btn = document.createElement("button"); btn.className = "rBtn " + (o.btnClass||"");
@@ -3527,7 +3768,8 @@ function openPrestige(){
     '</div>' +
     tree +
     '<p style="margin-top:10px">Perdu : pièces, animaux classiques, améliorations.<br>Gardé : gemmes, races premium, pass, arbre de Renaissance, PixelDex, limites hors-ligne.</p>' +
-    '<button class="mBtn ghost" id="mNo">Fermer</button>'
+    '<button class="mBtn ghost" id="mNo">Fermer</button>',
+    "modal-prestige"
   );
   paint($("#pawBig"),"paw");
   $("#mNo").onclick = closeModal;
@@ -4882,7 +5124,8 @@ function buildAchvList(){
   const box = document.getElementById("achvList"); if(!box) return;
   box.innerHTML = ""; R.achv = [];
   ACHIEVEMENTS.forEach(a=>{
-    const r = makeRow({emoji:"🏆", btnClass:"pawBtn", onClick:()=>claimAchv(a.id)});
+    const r = makeRow({sprite:"ui_trophy", btnClass:"pawBtn", onClick:()=>claimAchv(a.id)});
+    r.classList.add("achvRow");
     r._name.textContent = a.name;
     box.appendChild(r); R.achv.push(r);
   });
