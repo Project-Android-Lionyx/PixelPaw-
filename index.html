@@ -46,7 +46,7 @@ body[data-theme="cyber"]{
   --bg1:#2A0B4A; --bg2:#12042A; --bg3:#0A0620; --bg4:#05010F;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:var(--bg4)}
+html,body{height:100%;overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center}
 body{
   font-family:var(--font); color:var(--ink); touch-action:manipulation;
   -webkit-user-select:none;user-select:none; font-size:13px;line-height:1.5;
@@ -1719,6 +1719,31 @@ dragon:{size:24,pal:{"K":"#13241b","G":"#3eb489","L":"#7eedb3","Y":"#ffd15c","R"
 "........................"]},
 
 /* --- races premium --- */
+chatlancement:{size:24,pal:{"K":"#3a2a10","C":"#FFE9A8","D":"#B8860B","B":"#FF5C8A","W":"#ffffff","P":"#FFC94A"},px:[
+"........................",
+"..KKKK........KKKK......",
+".KDDDK......KKDDDK......",
+".KDDDDK....KKDDDDK......",
+".KDDDDCCCCCCCDDDDK......",
+"KDDDDCCCCCCCCCDDDDK.....",
+"KDDDCCCCCCDDDDDDCDK.....",
+"KCCCCCCCCDDDDDDDDDK.....",
+"KCCCCCCCDBBWDDWBBDK.....",
+"KCCCCCCCDDBBDDDBBDK.....",
+"KCCCCCCCDDDDWDDDDKK.....",
+"KCCCCCCCCCDDPDDCDKK.....",
+"KCCCCCCCCCCCCCCCDDK.....",
+"KCCCCCCCCCCCCCCCCDK.....",
+".KCCCCCCCCCCCCCCCDK.....",
+"..KKCCCCCCCCCCCCDDK.....",
+"...KCCCCCCCCCCCCCCK.....",
+"...KCCCCCCCCCCCCCCK.KK..",
+"...KCDDCCCCCCCCDDDKKDK..",
+"...KCDDCCCCCCCCDDDKDDK..",
+"...KCCCCCCCCCCCCCDKDK...",
+"...KDDDDCCCCCCDDDDDK....",
+"....KKKK......KKKKK.....",
+"........................"]},
 siamois:{size:24,pal:{"K":"#261c18","C":"#f2e3d5","D":"#4a3429","B":"#3aa8f2","W":"#ffffff","P":"#e89bb0"},px:[
 "........................",
 "..KKKK........KKKK......",
@@ -2531,6 +2556,7 @@ const PREMIUM = [
   {id:"canardplastique", name:"Canard en Plastique", gems:40, mult:1.5, tap:500, rar:"commun",  trait:"Curieux", desc:"×1,5 sur tout.", biome:"ferme"},
   {id:"dindonfurieux",   name:"Dindon Furieux",  gems:65,  mult:2.5, tap:1.1e3, rar:"peucommun", trait:"Joueur", desc:"×2,5 sur tout.", biome:"ferme"},
   {id:"chiendeberger",   name:"Chien de Berger", gems:150, mult:1,   tap:2.5e3, rar:"legendaire", trait:"Joueur", desc:"+8 % par animal de la Ferme possédé.", packBonus:0.08, biome:"ferme"},
+  {id:"chatlancement", name:"Chat de Lancement", gems:0, mult:15, tap:7e10, rar:"mythique", trait:"Curieux", desc:"Réservé au lancement du jeu. ×15 sur tout.", codeOnly:true, session:"S1"},
   {id:"renardpionnier", name:"Renard Pionnier", gems:0, mult:16, tap:8e10, rar:"mythique", trait:"Curieux", desc:"Réservé aux tout premiers testeurs. ×16 sur tout.", codeOnly:true, session:"S1"},
   {id:"faucon",     name:"Faucon",       gems:3000, mult:35, tap:5e11, rar:"mythique", trait:"Curieux",  desc:"×35 sur tout.", world:"W2"},
   {id:"chouette",   name:"Chouette",     gems:2600, mult:30, tap:3e11, rar:"mythique", trait:"Dormeur",  desc:"×30 sur tout.", world:"W2"},
@@ -2752,7 +2778,8 @@ const CODES = {
   PIXELPAW: {gems:50,  coins:25e3, boost:{mult:3,secs:120}, label:"Merci de jouer !"},
   STARTER:  {gems:75,  coins:1e3,  label:"Coup de pouce de départ"},
   PATTES:   {gems:150,             label:"Cadeau de la communauté"},
-  PIONNIER1:{animal:"renardpionnier", label:"Renard Pionnier débloqué !"}
+  PIONNIER1:{animal:"renardpionnier", label:"Renard Pionnier débloqué !"},
+  LANCEMENT:{gems:750, animal:"chatlancement", label:"Chat de Lancement débloqué !"}
 };
 
 /* ============================================================
@@ -2985,7 +3012,9 @@ function starterHasBonus(type){
 }
 function globalMult(withBoost){
   let m = 1;
-  PREMIUM.forEach(p=>{ if(S.premium[p.id] && p.mult) m *= p.mult; });
+  let premiumBonus = 0;
+  PREMIUM.forEach(p=>{ if(S.premium[p.id] && p.mult) premiumBonus += (p.mult - 1); });
+  m *= 1 + premiumBonus;                                                             // additif : garde le ×N annonce pour un seul animal, evite l'explosion en cumulant
   m *= 1 + 0.05 * Math.max(0, Object.keys(S.owned).filter(k=>S.owned[k]).length - 1); // +5 %/animal
   m *= 1 + 0.02 * dexCount();
   m *= collectionMult();                                    // lot 2 : collection                                                          // +2 %/PixelDex
